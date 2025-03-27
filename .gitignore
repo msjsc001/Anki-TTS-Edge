@@ -16,6 +16,9 @@ venv/
 音频/
 github-edge_tts/
 voice_settings.json
+/dist/
+/build/
+*.spec
 
 # Documentation
 计划.md
