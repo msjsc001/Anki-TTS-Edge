@@ -33,4 +33,4 @@ python Anki-TTS-Edge.py
 
 ---
 
-🌐 项目地址：`https://github.com/你的用户名/Anki-TTS-Edge`
+🌐 项目地址：`https://github.com/msjsc001/Anki-TTS-Edge`
