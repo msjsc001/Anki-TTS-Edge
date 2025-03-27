@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.python-version
+
+# Virtual Environment
+.venv/
+venv/
+
+# Local Development
+*.swp
+*.swo
+.DS_Store
+
+# Project Specific
+音频/
+github-edge_tts/
+voice_settings.json
+
+# Documentation
+计划.md
+
+# IDE
+.vscode/
+.idea/
