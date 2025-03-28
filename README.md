@@ -1,5 +1,7 @@
-基于 [Edge-TTS](https://github.com/rany2/edge-tts) 的 Anki 音频生成工具，免费、快速地为你的 Anki 学习卡片添加高质量的微软 Edge 语音。
+# Anki-TTS-Edge 🎵➡️📚
 
+基于 [Edge-TTS](https://github.com/rany2/edge-tts) 的 Anki 音频生成工具，免费、快速地为你的 Anki 学习卡片添加高质量的微软 Edge 语音。
+![image](https://github.com/user-attachments/assets/2ea64a3d-12d0-40d5-93f2-3a0ff3ae712d)
 ## ✨ 功能特性
 
 *   **一键生成**：快速为 Anki 卡片选中的文本生成 `.mp3` 音频文件。
@@ -21,11 +23,14 @@
 如果你熟悉 Python 并希望自行修改或运行源码，请按以下步骤操作：
 
 1.  **克隆仓库**：
+
     ```bash
     git clone https://github.com/msjsc001/Anki-TTS-Edge.git
     cd Anki-TTS-Edge
     ```
+
 2.  **创建并激活虚拟环境** (推荐)：
+
     ```bash
     python -m venv .venv
     # Windows
@@ -33,11 +38,15 @@
     # macOS/Linux
     # source .venv/bin/activate
     ```
+
 3.  **安装依赖**：
+
     ```bash
     pip install -r requirements.txt
     ```
+
 4.  **运行程序**：
+
     ```bash
     python Anki-TTS-Edge.py
     ```
@@ -47,10 +56,13 @@
 本项目使用 PyInstaller 进行打包。如果你修改了代码并希望重新打包：
 
 1.  确保已在虚拟环境中安装 `pyinstaller` (`pip install pyinstaller`)。
+
 2.  执行打包命令：
+
     ```bash
     .\.venv\Scripts\activate && pyinstaller Anki-TTS-Edge.spec
     ```
+
 3.  打包后的 `.exe` 文件位于 `dist/Anki-TTS-Edge` 目录下。
 
 ## 📄 版权与依赖
