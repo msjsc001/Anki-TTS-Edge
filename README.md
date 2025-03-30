@@ -3,6 +3,10 @@
 ![PixPin_2025-03-31_02-26-04](https://github.com/user-attachments/assets/2668f79b-4e89-4e45-a476-c04b9afae4bb)
 ![PixPin_2025-03-31_02-33-29](https://github.com/user-attachments/assets/97cc104d-5a92-48bc-b7b8-7465b2cea18a)
 ![20210606180518](https://github.com/user-attachments/assets/bf232f6c-9e19-418c-a943-2dc3dfd3ea7b)
+![image](https://github.com/user-attachments/assets/f860a117-1b18-467d-9040-9cb0f78c065d)
+
+[**点这进入下载地址**](https://github.com/msjsc001/Anki-TTS-Edge/releases)
+👆🙋🙋‍♂️🙋‍♀️
 
 基于 [Edge-TTS](https://github.com/rany2/edge-tts) 的 Anki 音频生成工具，免费、快速地为你的 Anki 学习卡片添加高质量的微软 Edge 语音。
 
