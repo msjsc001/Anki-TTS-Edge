@@ -1,7 +1,9 @@
-# Anki-TTS-Edge 🎵➡️📚
+# Anki快捷文生音！基于微软免费！助力学习！（Anki-TTS-Edge 📚➡️🎵
+![PixPin_2025-03-31_02-26-04](https://github.com/user-attachments/assets/2668f79b-4e89-4e45-a476-c04b9afae4bb)
+![PixPin_2025-03-31_02-33-29](https://github.com/user-attachments/assets/97cc104d-5a92-48bc-b7b8-7465b2cea18a)
+![20210606180518](https://github.com/user-attachments/assets/bf232f6c-9e19-418c-a943-2dc3dfd3ea7b)
 
 基于 [Edge-TTS](https://github.com/rany2/edge-tts) 的 Anki 音频生成工具，免费、快速地为你的 Anki 学习卡片添加高质量的微软 Edge 语音。
-![image](https://github.com/user-attachments/assets/2ea64a3d-12d0-40d5-93f2-3a0ff3ae712d)
 
 ## ✨ 功能特性
 
