@@ -3,8 +3,11 @@
 ![PixPin_2025-03-31_02-26-04](https://github.com/user-attachments/assets/2668f79b-4e89-4e45-a476-c04b9afae4bb)
 ![PixPin_2025-03-31_02-33-29](https://github.com/user-attachments/assets/97cc104d-5a92-48bc-b7b8-7465b2cea18a)
 ![20210606180518](https://github.com/user-attachments/assets/bf232f6c-9e19-418c-a943-2dc3dfd3ea7b)
+
+# GIF动图功能演示
 ![image](https://github.com/user-attachments/assets/f860a117-1b18-467d-9040-9cb0f78c065d)
 
+# 下载地址
 [**点这进入下载地址**](https://github.com/msjsc001/Anki-TTS-Edge/releases)
 
 👆 🙋 🙋‍♂️ 🙋‍♀️ 👆
@@ -22,7 +25,7 @@
 *   **简洁界面**：提供易于使用的图形用户界面 (GUI)。
 *   **自动保存**：生成的音频文件自动保存到你指定的 Anki 媒体库文件夹 (`collection.media`)。
 
-## 🚀 快速开始 (推荐)
+## 🚀 快速开始 (推荐) 
 
 如果你不想配置 Python 环境，可以直接下载我们为你打包好的 Windows 可执行文件 (`.exe`)：
 
@@ -30,7 +33,7 @@
 2.  **下载最新版本**：找到最新的版本，下载名为 `Anki-TTS-Edge.zip` (或类似名称) 的压缩包。
 3.  **解压运行**：将压缩包解压到你喜欢的任意位置，然后双击运行 `Anki-TTS-Edge.exe` 即可！ 🎉
 
-## 🛠️ 从源码运行 (适合开发者)
+## 🛠️ 从源码运行 (适合开发者) 
 
 如果你熟悉 Python 并希望自行修改或运行源码，请按以下步骤操作：
 
@@ -63,7 +66,7 @@
     python Anki-TTS-Edge.py
     ```
 
-## ⚙️ 如何打包 (开发者参考)
+## ⚙️ 如何打包 (开发者参考) 
 
 本项目使用 PyInstaller 进行打包。如果你修改了代码并希望重新打包：
 
