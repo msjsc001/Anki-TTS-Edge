@@ -1,5 +1,5 @@
-# Anki快捷文生音！基于微软免费！助力学习！
-# 🎵 Anki-TTS-Edge 🎵
+# 🎵 Anki快捷文生音！基于微软免费！助力学习！🎵
+#  Anki-TTS-Edge 
 ![PixPin_2025-03-31_02-26-04](https://github.com/user-attachments/assets/2668f79b-4e89-4e45-a476-c04b9afae4bb)
 ![PixPin_2025-03-31_02-33-29](https://github.com/user-attachments/assets/97cc104d-5a92-48bc-b7b8-7465b2cea18a)
 ![20210606180518](https://github.com/user-attachments/assets/bf232f6c-9e19-418c-a943-2dc3dfd3ea7b)
