@@ -38,8 +38,6 @@
 
 以下是将内容按语言代码（例如 `af-ZA`、`ar-AE` 等），每项后面附上中文注释。注释主要包括语言和地区的说明，以及性别、内容类别和语音个性的翻译。使用时填入最开头两位如`zh`。
 
----
-
 - **af-ZA（南非荷兰语 - 南非）**
   - af-ZA-AdriNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
   - af-ZA-WillemNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
@@ -591,8 +589,6 @@
 - **zu-ZA（祖鲁语 - 南非）**
   - zu-ZA-ThandoNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
   - zu-ZA-ThembaNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
----
 
 
 ## 🛠️ 从源码运行 (适合开发者) 
