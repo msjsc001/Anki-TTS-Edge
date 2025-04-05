@@ -1,610 +1,615 @@
-# 🎵 Anki快捷文生音！基于微软免费！助力学习！🎵
-#  Anki-TTS-Edge 
-![PixPin_2025-03-31_02-26-04](https://github.com/user-attachments/assets/2668f79b-4e89-4e45-a476-c04b9afae4bb)
-![PixPin_2025-03-31_02-33-29](https://github.com/user-attachments/assets/97cc104d-5a92-48bc-b7b8-7465b2cea18a)
-（ctrl+c 后点击 🔵 蓝点生成音频，生成音频中会出现🟢，生成结束后变为🔴。）
+<div align="center">
 
-# GIF动图功能演示
-![20210606180518](https://github.com/user-attachments/assets/bf232f6c-9e19-418c-a943-2dc3dfd3ea7b)
+# 🎵 Anki-TTS-Edge: Anki Audio Generator! 🎵
+## Anki快捷文生音！基于微软免费！助力学习！
+**(Customizable Colors, Chinese/English Support / 自定义色彩界面，中英支持)**
 
-# 现在就下载使用
-![image](https://github.com/user-attachments/assets/f860a117-1b18-467d-9040-9cb0f78c065d)
-
-# 下载地址
-[**点这进入下载地址**](https://github.com/msjsc001/Anki-TTS-Edge/releases)
-
-👆 🙋 🙋‍♂️ 🙋‍♀️ 👆
+</div>
 
 ---
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2668f79b-4e89-4e45-a476-c04b9afae4bb" alt="Light Mode Screenshot" width="48%">
+    
+  <img src="https://github.com/user-attachments/assets/97cc104d-5a92-48bc-b7b8-7465b2cea18a" alt="Dark Mode Screenshot" width="48%">
+</p>
 
-## ✨ 功能特性
+<div align="center">
+
+**Select** or **Ctrl+C** text, click the 🔵 blue dot to generate audio.<br>A 🟢 green dot appears during generation, turning 🔴 red upon completion.<br>Then, use **Ctrl+V** to paste the audio file into Anki!
+
+**(划选** 或 **Ctrl+C** 文字后点击 🔵 蓝点生成音频，生成音频中会出现 🟢 绿点，<br>生成结束后变为 🔴 红点，而后可按 **Ctrl+V** 快捷粘贴文件！**)**
+
+</div>
+
+---
+
+## ✨ Features / 功能特性
+
+<details>
+<summary><strong>English</strong>  👈🏼 Click to expand</summary>
+
+An Anki audio generation tool based on [Edge-TTS](https://github.com/rany2/edge-tts), providing a free and fast way to add high-quality Microsoft Edge voices to your Anki flashcards.
+
+*   **One-Click Generation**: Quickly generate `.mp3` audio files for selected text in your Anki cards using the main interface.
+*   **Quick Actions**:
+    *   Copy text (Ctrl+C).
+    *   Alternatively, select text with your mouse (if enabled in settings).
+    *   Click the floating 🔵 blue button that appears near your cursor.
+    *   Wait for the 🟢 green processing indicator to disappear.
+    *   A 🔴 red confirmation dot appears briefly.
+    *   Audio file is automatically copied to your clipboard.
+    *   Paste (Ctrl+V) directly into your Anki field!
+*   **Multiple Voices**: Supports various languages and voice roles provided by Microsoft Edge TTS.
+*   **Customizable UI**: Easy-to-use graphical interface with theme and color customization.
+*   **Language Support**: Interface available in English and Chinese (中文).
+*   **Auto Cleanup**: Automatically manages the number of cached audio files.
+
+</details>
+
+<details>
+<summary><strong>中文 (Chinese)</strong>  👈🏼 点击展开</summary>
 
 基于 [Edge-TTS](https://github.com/rany2/edge-tts) 的 Anki 音频生成工具，免费、快速地为你的 Anki 学习卡片添加高质量的微软 Edge 语音。
 
-*   **一键生成**：快速为 Anki 卡片选中的文本生成 `.mp3` 音频文件。
-*   **快捷操作**：支持右键复制文本后，点击界面上的 🔵 蓝色按钮快速生成音频，并自动将音频文件名复制到剪贴板 (方便粘贴到 Anki 字段)。 生成音频中会出现🟢，生成结束后变为🔴。
+*   **一键生成**：通过界面输入框快速为文本生成 `.mp3` 音频文件。
+*   **快捷操作**：
+    *   复制文本 (Ctrl+C)。
+    *   或者，用鼠标划选文本（需在设置中开启）。
+    *   点击鼠标附近浮现的 🔵 蓝色按钮。
+    *   等待 🟢 绿色处理提示消失。
+    *   短暂出现 🔴 红色确认提示。
+    *   音频文件已自动复制到剪贴板。
+    *   直接在 Anki 字段中粘贴 (Ctrl+V)！
 *   **多种语音**：支持微软 Edge TTS 提供的多种语言和语音角色选择。
-*   **简洁界面**：提供易于使用的图形用户界面 (GUI)。
-*   **自动保存**：生成的音频文件自动保存到你指定的 Anki 媒体库文件夹 (`collection.media`)。
+*   **自定义界面**：提供易于使用的图形用户界面 (GUI)，支持主题和主颜色自定义。
+*   **语言支持**：界面支持英文和中文。
+*   **自动清理**：自动管理缓存的音频文件数量。
 
-## 🚀 快速开始 (推荐) 
+</details>
+
+---
+
+## 🎬 GIF Demo / GIF 功能演示
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/bf232f6c-9e19-418c-a943-2dc3dfd3ea7b" alt="GIF Demo">
+</p>
+
+---
+
+## 🚀 Quick Start (Recommended) / 快速开始 (推荐)
+
+<details>
+<summary><strong>English</strong>  👈🏼 Click to expand</summary>
+
+If you prefer not to set up a Python environment, you can download the pre-packaged Windows executable (`.exe`):
+
+1.  **Go to the Releases Page**: Visit the project's [GitHub Releases](https://github.com/msjsc001/Anki-TTS-Edge/releases) page.
+2.  **Download the Latest Version**: Find the newest release and download the `.zip` archive (e.g., `Anki-TTS-Edge_vX.X.X.zip`).
+3.  **Extract and Run**: Extract the contents of the zip file to any location you prefer. Double-click `Anki-TTS-Edge.exe` to run the application! 🎉
+
+</details>
+
+<details>
+<summary><strong>中文 (Chinese)</strong>  👈🏼 点击展开</summary>
 
 如果你不想配置 Python 环境，可以直接下载我们为你打包好的 Windows 可执行文件 (`.exe`)：
 
 1.  **前往 Releases 页面**：访问项目的 [GitHub Releases](https://github.com/msjsc001/Anki-TTS-Edge/releases) 页面。
-2.  **下载最新版本**：找到最新的版本，下载名为 `Anki-TTS-Edge.zip` (或类似名称) 的压缩包。
+2.  **下载最新版本**：找到最新的版本，下载 `.zip` 压缩包 (例如 `Anki-TTS-Edge_vX.X.X.zip`)。
 3.  **解压运行**：将压缩包解压到你喜欢的任意位置，然后双击运行 `Anki-TTS-Edge.exe` 即可！ 🎉
-## 🗨 现在支持的语言列表 2025-04-01
-
-以下是将内容按语言代码（例如 `af-ZA`、`ar-AE` 等），每项后面附上中文注释。注释主要包括语言和地区的说明，以及性别、内容类别和语音个性的翻译。使用时填入最开头两位如`zh`。
-
-- **af-ZA（南非荷兰语 - 南非）**
-  - af-ZA-AdriNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - af-ZA-WillemNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **am-ET（阿姆哈拉语 - 埃塞俄比亚）**
-  - am-ET-AmehaNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - am-ET-MekdesNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **ar（阿拉伯语 - 多个地区）**
-  - **ar-AE（阿拉伯语 - 阿联酋）**
-    - ar-AE-FatimaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - ar-AE-HamdanNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **ar-BH（阿拉伯语 - 巴林）**
-    - ar-BH-AliNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - ar-BH-LailaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **ar-DZ（阿拉伯语 - 阿尔及利亚）**
-    - ar-DZ-AminaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - ar-DZ-IsmaelNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **ar-EG（阿拉伯语 - 埃及）**
-    - ar-EG-SalmaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - ar-EG-ShakirNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **ar-IQ（阿拉伯语 - 伊拉克）**
-    - ar-IQ-BasselNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - ar-IQ-RanaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **ar-JO（阿拉伯语 - 约旦）**
-    - ar-JO-SanaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - ar-JO-TaimNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **ar-KW（阿拉伯语 - 科威特）**
-    - ar-KW-FahedNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - ar-KW-NouraNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **ar-LB（阿拉伯语 - 黎巴嫩）**
-    - ar-LB-LaylaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - ar-LB-RamiNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **ar-LY（阿拉伯语 - 利比亚）**
-    - ar-LY-ImanNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - ar-LY-OmarNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **ar-MA（阿拉伯语 - 摩洛哥）**
-    - ar-MA-JamalNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - ar-MA-MounaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **ar-OM（阿拉伯语 - 阿曼）**
-    - ar-OM-AbdullahNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - ar-OM-AyshaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **ar-QA（阿拉伯语 - 卡塔尔）**
-    - ar-QA-AmalNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - ar-QA-MoazNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **ar-SA（阿拉伯语 - 沙特阿拉伯）**
-    - ar-SA-HamedNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - ar-SA-ZariyahNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **ar-SY（阿拉伯语 - 叙利亚）**
-    - ar-SY-AmanyNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - ar-SY-LaithNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **ar-TN（阿拉伯语 - 突尼斯）**
-    - ar-TN-HediNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - ar-TN-ReemNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **ar-YE（阿拉伯语 - 也门）**
-    - ar-YE-MaryamNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - ar-YE-SalehNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **az-AZ（阿塞拜疆语 - 阿塞拜疆）**
-  - az-AZ-BabekNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - az-AZ-BanuNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **bg-BG（保加利亚语 - 保加利亚）**
-  - bg-BG-BorislavNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - bg-BG-KalinaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **bn（孟加拉语 - 多个地区）**
-  - **bn-BD（孟加拉语 - 孟加拉国）**
-    - bn-BD-NabanitaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - bn-BD-PradeepNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **bn-IN（孟加拉语 - 印度）**
-    - bn-IN-BashkarNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - bn-IN-TanishaaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **bs-BA（波斯尼亚语 - 波斯尼亚和黑塞哥维那）**
-  - bs-BA-GoranNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - bs-BA-VesnaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **ca-ES（加泰罗尼亚语 - 西班牙）**
-  - ca-ES-EnricNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - ca-ES-JoanaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **cs-CZ（捷克语 - 捷克）**
-  - cs-CZ-AntoninNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - cs-CZ-VlastaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **cy-GB（威尔士语 - 英国）**
-  - cy-GB-AledNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - cy-GB-NiaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **da-DK（丹麦语 - 丹麦）**
-  - da-DK-ChristelNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - da-DK-JeppeNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **de（德语 - 多个地区）**
-  - **de-AT（德语 - 奥地利）**
-    - de-AT-IngridNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - de-AT-JonasNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **de-CH（德语 - 瑞士）**
-    - de-CH-JanNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - de-CH-LeniNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **de-DE（德语 - 德国）**
-    - de-DE-AmalaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - de-DE-ConradNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - de-DE-FlorianMultilingualNeural - Male, General, Friendly, Positive（男性，通用，友好，积极，多语言）
-    - de-DE-KatjaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - de-DE-KillianNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - de-DE-SeraphinaMultilingualNeural - Female, General, Friendly, Positive（女性，通用，友好，积极，多语言）
-
-- **el-GR（希腊语 - 希腊）**
-  - el-GR-AthinaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - el-GR-NestorasNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **en（英语 - 多个地区）**
-  - **en-AU（英语 - 澳大利亚）**
-    - en-AU-NatashaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - en-AU-WilliamNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **en-CA（英语 - 加拿大）**
-    - en-CA-ClaraNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - en-CA-LiamNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **en-GB（英语 - 英国）**
-    - en-GB-LibbyNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - en-GB-MaisieNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - en-GB-RyanNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - en-GB-SoniaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - en-GB-ThomasNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **en-HK（英语 - 香港）**
-    - en-HK-SamNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - en-HK-YanNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **en-IE（英语 - 爱尔兰）**
-    - en-IE-ConnorNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - en-IE-EmilyNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **en-IN（英语 - 印度）**
-    - en-IN-NeerjaExpressiveNeural - Female, General, Friendly, Positive（女性，通用，友好，积极，表达丰富）
-    - en-IN-NeerjaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - en-IN-PrabhatNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **en-KE（英语 - 肯尼亚）**
-    - en-KE-AsiliaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - en-KE-ChilembaNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **en-NG（英语 - 尼日利亚）**
-    - en-NG-AbeoNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - en-NG-EzinneNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **en-NZ（英语 - 新西兰）**
-    - en-NZ-MitchellNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - en-NZ-MollyNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **en-PH（英语 - 菲律宾）**
-    - en-PH-JamesNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - en-PH-RosaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **en-SG（英语 - 新加坡）**
-    - en-SG-LunaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - en-SG-WayneNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **en-TZ（英语 - 坦桑尼亚）**
-    - en-TZ-ElimuNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - en-TZ-ImaniNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **en-US（英语 - 美国）**
-    - en-US-AnaNeural - Female, Cartoon, Conversation, Cute（女性，卡通，会话，可爱）
-    - en-US-AndrewMultilingualNeural - Male, Conversation, Copilot, Warm, Confident, Authentic, Honest（男性，会话，副驾驶，温暖，自信，真实，诚实，多语言）
-    - en-US-AndrewNeural - Male, Conversation, Copilot, Warm, Confident, Authentic, Honest（男性，会话，副驾驶，温暖，自信，真实，诚实）
-    - en-US-AriaNeural - Female, News, Novel, Positive, Confident（女性，新闻，小说，积极，自信）
-    - en-US-AvaMultilingualNeural - Female, Conversation, Copilot, Expressive, Caring, Pleasant, Friendly（女性，会话，副驾驶，表达丰富，关怀，愉快，友好，多语言）
-    - en-US-AvaNeural - Female, Conversation, Copilot, Expressive, Caring, Pleasant, Friendly（女性，会话，副驾驶，表达丰富，关怀，愉快，友好）
-    - en-US-BrianMultilingualNeural - Male, Conversation, Copilot, Approachable, Casual, Sincere（男性，会话，副驾驶，平易近人，随和，真诚，多语言）
-    - en-US-BrianNeural - Male, Conversation, Copilot, Approachable, Casual, Sincere（男性，会话，副驾驶，平易近人，随和，真诚）
-    - en-US-ChristopherNeural - Male, News, Novel, Reliable, Authority（男性，新闻，小说，可靠，权威）
-    - en-US-EmmaMultilingualNeural - Female, Conversation, Copilot, Cheerful, Clear, Conversational（女性，会话，副驾驶，欢快，清晰，会话，多语言）
-    - en-US-EmmaNeural - Female, Conversation, Copilot, Cheerful, Clear, Conversational（女性，会话，副驾驶，欢快，清晰，会话）
-    - en-US-EricNeural - Male, News, Novel, Rational（男性，新闻，小说，理性）
-    - en-US-GuyNeural - Male, News, Novel, Passion（男性，新闻，小说，激情）
-    - en-US-JennyNeural - Female, General, Friendly, Considerate, Comfort（女性，通用，友好，体贴，舒适）
-    - en-US-MichelleNeural - Female, News, Novel, Friendly, Pleasant（女性，新闻，小说，友好，愉快）
-    - en-US-RogerNeural - Male, News, Novel, Lively（男性，新闻，小说，活泼）
-    - en-US-SteffanNeural - Male, News, Novel, Rational（男性，新闻，小说，理性）
-  - **en-ZA（英语 - 南非）**
-    - en-ZA-LeahNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - en-ZA-LukeNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **es（西班牙语 - 多个地区）**
-  - **es-AR（西班牙语 - 阿根廷）**
-    - es-AR-ElenaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - es-AR-TomasNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **es-BO（西班牙语 - 玻利维亚）**
-    - es-BO-MarceloNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - es-BO-SofiaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **es-CL（西班牙语 - 智利）**
-    - es-CL-CatalinaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - es-CL-LorenzoNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **es-CO（西班牙语 - 哥伦比亚）**
-    - es-CO-GonzaloNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - es-CO-SalomeNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **es-CR（西班牙语 - 哥斯达黎加）**
-    - es-CR-JuanNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - es-CR-MariaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **es-CU（西班牙语 - 古巴）**
-    - es-CU-BelkysNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - es-CU-ManuelNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **es-DO（西班牙语 - 多米尼加共和国）**
-    - es-DO-EmilioNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - es-DO-RamonaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **es-EC（西班牙语 - 厄瓜多尔）**
-    - es-EC-AndreaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - es-EC-LuisNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **es-ES（西班牙语 - 西班牙）**
-    - es-ES-AlvaroNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - es-ES-ElviraNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - es-ES-XimenaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **es-GQ（西班牙语 - 赤道几内亚）**
-    - es-GQ-JavierNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - es-GQ-TeresaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **es-GT（西班牙语 - 危地马拉）**
-    - es-GT-AndresNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - es-GT-MartaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **es-HN（西班牙语 - 洪都拉斯）**
-    - es-HN-CarlosNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - es-HN-KarlaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **es-MX（西班牙语 - 墨西哥）**
-    - es-MX-DaliaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - es-MX-JorgeNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **es-NI（西班牙语 - 尼加拉瓜）**
-    - es-NI-FedericoNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - es-NI-YolandaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **es-PA（西班牙语 - 巴拿马）**
-    - es-PA-MargaritaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - es-PA-RobertoNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **es-PE（西班牙语 - 秘鲁）**
-    - es-PE-AlexNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - es-PE-CamilaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **es-PR（西班牙语 - 波多黎各）**
-    - es-PR-KarinaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - es-PR-VictorNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **es-PY（西班牙语 - 巴拉圭）**
-    - es-PY-MarioNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - es-PY-TaniaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **es-SV（西班牙语 - 萨尔瓦多）**
-    - es-SV-LorenaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - es-SV-RodrigoNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **es-US（西班牙语 - 美国）**
-    - es-US-AlonsoNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - es-US-PalomaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **es-UY（西班牙语 - 乌拉圭）**
-    - es-UY-MateoNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - es-UY-ValentinaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **es-VE（西班牙语 - 委内瑞拉）**
-    - es-VE-PaolaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - es-VE-SebastianNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **et-EE（爱沙尼亚语 - 爱沙尼亚）**
-  - et-EE-AnuNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - et-EE-KertNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **fa-IR（波斯语 - 伊朗）**
-  - fa-IR-DilaraNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - fa-IR-FaridNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **fi-FI（芬兰语 - 芬兰）**
-  - fi-FI-HarriNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - fi-FI-NooraNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **fil-PH（菲律宾语 - 菲律宾）**
-  - fil-PH-AngeloNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - fil-PH-BlessicaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **fr（法语 - 多个地区）**
-  - **fr-BE（法语 - 比利时）**
-    - fr-BE-CharlineNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - fr-BE-GerardNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **fr-CA（法语 - 加拿大）**
-    - fr-CA-AntoineNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - fr-CA-JeanNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - fr-CA-SylvieNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - fr-CA-ThierryNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **fr-CH（法语 - 瑞士）**
-    - fr-CH-ArianeNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - fr-CH-FabriceNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **fr-FR（法语 - 法国）**
-    - fr-FR-DeniseNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - fr-FR-EloiseNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - fr-FR-HenriNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - fr-FR-RemyMultilingualNeural - Male, General, Friendly, Positive（男性，通用，友好，积极，多语言）
-    - fr-FR-VivienneMultilingualNeural - Female, General, Friendly, Positive（女性，通用，友好，积极，多语言）
-
-- **ga-IE（爱尔兰语 - 爱尔兰）**
-  - ga-IE-ColmNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - ga-IE-OrlaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **gl-ES（加利西亚语 - 西班牙）**
-  - gl-ES-RoiNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - gl-ES-SabelaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **gu-IN（古吉拉特语 - 印度）**
-  - gu-IN-DhwaniNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - gu-IN-NiranjanNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **he-IL（希伯来语 - 以色列）**
-  - he-IL-AvriNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - he-IL-HilaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **hi-IN（印地语 - 印度）**
-  - hi-IN-MadhurNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - hi-IN-SwaraNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **hr-HR（克罗地亚语 - 克罗地亚）**
-  - hr-HR-GabrijelaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - hr-HR-SreckoNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **hu-HU（匈牙利语 - 匈牙利）**
-  - hu-HU-NoemiNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - hu-HU-TamasNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **id-ID（印尼语 - 印尼）**
-  - id-ID-ArdiNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - id-ID-GadisNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **is-IS（冰岛语 - 冰岛）**
-  - is-IS-GudrunNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - is-IS-GunnarNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **it-IT（意大利语 - 意大利）**
-  - it-IT-DiegoNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - it-IT-ElsaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - it-IT-GiuseppeMultilingualNeural - Male, General, Friendly, Positive（男性，通用，友好，积极，多语言）
-  - it-IT-IsabellaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **iu（因纽特语 - 加拿大）**
-  - **iu-Cans-CA（因纽特语 - 加拿大，加拿大音节文字）**
-    - iu-Cans-CA-SiqiniqNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - iu-Cans-CA-TaqqiqNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **iu-Latn-CA（因纽特语 - 加拿大，拉丁字母）**
-    - iu-Latn-CA-SiqiniqNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - iu-Latn-CA-TaqqiqNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **ja-JP（日语 - 日本）**
-  - ja-JP-KeitaNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - ja-JP-NanamiNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **jv-ID（爪哇语 - 印尼）**
-  - jv-ID-DimasNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - jv-ID-SitiNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **ka-GE（格鲁吉亚语 - 格鲁吉亚）**
-  - ka-GE-EkaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - ka-GE-GiorgiNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **kk-KZ（哈萨克语 - 哈萨克斯坦）**
-  - kk-KZ-AigulNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - kk-KZ-DauletNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **km-KH（高棉语 - 柬埔寨）**
-  - km-KH-PisethNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - km-KH-SreymomNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **kn-IN（卡纳达语 - 印度）**
-  - kn-IN-GaganNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - kn-IN-SapnaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **ko-KR（韩语 - 韩国）**
-  - ko-KR-HyunsuMultilingualNeural - Male, General, Friendly, Positive（男性，通用，友好，积极，多语言）
-  - ko-KR-InJoonNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - ko-KR-SunHiNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **lo-LA（老挝语 - 老挝）**
-  - lo-LA-ChanthavongNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - lo-LA-KeomanyNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **lt-LT（立陶宛语 - 立陶宛）**
-  - lt-LT-LeonasNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - lt-LT-OnaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **lv-LV（拉脱维亚语 - 拉脱维亚）**
-  - lv-LV-EveritaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - lv-LV-NilsNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **mk-MK（马其顿语 - 北马其顿）**
-  - mk-MK-AleksandarNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - mk-MK-MarijaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **ml-IN（马拉雅拉姆语 - 印度）**
-  - ml-IN-MidhunNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - ml-IN-SobhanaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **mn-MN（蒙古语 - 蒙古）**
-  - mn-MN-BataaNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - mn-MN-YesuiNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **mr-IN（马拉地语 - 印度）**
-  - mr-IN-AarohiNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - mr-IN-ManoharNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **ms-MY（马来语 - 马来西亚）**
-  - ms-MY-OsmanNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - ms-MY-YasminNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **mt-MT（马耳他语 - 马耳他）**
-  - mt-MT-GraceNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - mt-MT-JosephNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **my-MM（缅甸语 - 缅甸）**
-  - my-MM-NilarNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - my-MM-ThihaNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **nb-NO（挪威语 - 挪威）**
-  - nb-NO-FinnNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - nb-NO-PernilleNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **ne-NP（尼泊尔语 - 尼泊尔）**
-  - ne-NP-HemkalaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - ne-NP-SagarNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **nl（荷兰语 - 多个地区）**
-  - **nl-BE（荷兰语 - 比利时）**
-    - nl-BE-ArnaudNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - nl-BE-DenaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **nl-NL（荷兰语 - 荷兰）**
-    - nl-NL-ColetteNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - nl-NL-FennaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - nl-NL-MaartenNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **pl-PL（波兰语 - 波兰）**
-  - pl-PL-MarekNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - pl-PL-ZofiaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **ps-AF（普什图语 - 阿富汗）**
-  - ps-AF-GulNawazNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - ps-AF-LatifaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **pt（葡萄牙语 - 多个地区）**
-  - **pt-BR（葡萄牙语 - 巴西）**
-    - pt-BR-AntonioNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - pt-BR-FranciscaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - pt-BR-ThalitaMultilingualNeural - Female, General, Friendly, Positive（女性，通用，友好，积极，多语言）
-  - **pt-PT（葡萄牙语 - 葡萄牙）**
-    - pt-PT-DuarteNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - pt-PT-RaquelNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **ro-RO（罗马尼亚语 - 罗马尼亚）**
-  - ro-RO-AlinaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - ro-RO-EmilNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **ru-RU（俄语 - 俄罗斯）**
-  - ru-RU-DmitryNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - ru-RU-SvetlanaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **si-LK（僧伽罗语 - 斯里兰卡）**
-  - si-LK-SameeraNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - si-LK-ThiliniNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **sk-SK（斯洛伐克语 - 斯洛伐克）**
-  - sk-SK-LukasNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - sk-SK-ViktoriaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **sl-SI（斯洛文尼亚语 - 斯洛文尼亚）**
-  - sl-SI-PetraNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - sl-SI-RokNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **so-SO（索马里语 - 索马里）**
-  - so-SO-MuuseNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - so-SO-UbaxNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **sq-AL（阿尔巴尼亚语 - 阿尔巴尼亚）**
-  - sq-AL-AnilaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - sq-AL-IlirNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **sr-RS（塞尔维亚语 - 塞尔维亚）**
-  - sr-RS-NicholasNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - sr-RS-SophieNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **su-ID（巽他语 - 印尼）**
-  - su-ID-JajangNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - su-ID-TutiNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **sv-SE（瑞典语 - 瑞典）**
-  - sv-SE-MattiasNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - sv-SE-SofieNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **sw（斯瓦希里语 - 多个地区）**
-  - **sw-KE（斯瓦希里语 - 肯尼亚）**
-    - sw-KE-RafikiNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - sw-KE-ZuriNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **sw-TZ（斯瓦希里语 - 坦桑尼亚）**
-    - sw-TZ-DaudiNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - sw-TZ-RehemaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **ta（泰米尔语 - 多个地区）**
-  - **ta-IN（泰米尔语 - 印度）**
-    - ta-IN-PallaviNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - ta-IN-ValluvarNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **ta-LK（泰米尔语 - 斯里兰卡）**
-    - ta-LK-KumarNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - ta-LK-SaranyaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - **ta-MY（泰米尔语 - 马来西亚）**
-    - ta-MY-KaniNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - ta-MY-SuryaNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **ta-SG（泰米尔语 - 新加坡）**
-    - ta-SG-AnbuNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - ta-SG-VenbaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **te-IN（泰卢固语 - 印度）**
-  - te-IN-MohanNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - te-IN-ShrutiNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **th-TH（泰语 - 泰国）**
-  - th-TH-NiwatNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - th-TH-PremwadeeNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **tr-TR（土耳其语 - 土耳其）**
-  - tr-TR-AhmetNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - tr-TR-EmelNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **uk-UA（乌克兰语 - 乌克兰）**
-  - uk-UA-OstapNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - uk-UA-PolinaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **ur（乌尔都语 - 多个地区）**
-  - **ur-IN（乌尔都语 - 印度）**
-    - ur-IN-GulNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - ur-IN-SalmanNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **ur-PK（乌尔都语 - 巴基斯坦）**
-    - ur-PK-AsadNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-    - ur-PK-UzmaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-
-- **uz-UZ（乌兹别克语 - 乌兹别克斯坦）**
-  - uz-UZ-MadinaNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - uz-UZ-SardorNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **vi-VN（越南语 - 越南）**
-  - vi-VN-HoaiMyNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - vi-VN-NamMinhNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **zh（中文 - 多个地区）**
-  - **zh-CN（中文 - 中国大陆）**
-    - zh-CN-XiaoxiaoNeural - Female, News, Novel, Warm（女性，新闻，小说，温暖）
-    - zh-CN-XiaoyiNeural - Female, Cartoon, Novel, Lively（女性，卡通，小说，活泼）
-    - zh-CN-YunjianNeural - Male, Sports, Novel, Passion（男性，体育，小说，激情）
-    - zh-CN-YunxiNeural - Male, Novel, Lively, Sunshine（男性，小说，活泼，阳光）
-    - zh-CN-YunxiaNeural - Male, Cartoon, Novel, Cute（男性，卡通，小说，可爱）
-    - zh-CN-YunyangNeural - Male, News, Professional, Reliable（男性，新闻，专业，可靠）
-  - **zh-CN-liaoning（中文 - 中国辽宁方言）**
-    - zh-CN-liaoning-XiaobeiNeural - Female, Dialect, Humorous（女性，方言，幽默）
-  - **zh-CN-shaanxi（中文 - 中国陕西方言）**
-    - zh-CN-shaanxi-XiaoniNeural - Female, Dialect, Bright（女性，方言，明亮）
-  - **zh-HK（中文 - 香港）**
-    - zh-HK-HiuGaaiNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - zh-HK-HiuMaanNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - zh-HK-WanLungNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-  - **zh-TW（中文 - 台湾）**
-    - zh-TW-HsiaoChenNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - zh-TW-HsiaoYuNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-    - zh-TW-YunJheNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-- **zu-ZA（祖鲁语 - 南非）**
-  - zu-ZA-ThandoNeural - Female, General, Friendly, Positive（女性，通用，友好，积极）
-  - zu-ZA-ThembaNeural - Male, General, Friendly, Positive（男性，通用，友好，积极）
-
-
-## 🛠️ 从源码运行 (适合开发者) 
-
-如果你熟悉 Python 并希望自行修改或运行源码，请按以下步骤操作：
-
-1.  **克隆仓库**：
 
+</details>
+
+<div align="center">
+
+### [**➡️ Download Latest Release Here / 点此下载最新版本 ⬅️**](https://github.com/msjsc001/Anki-TTS-Edge/releases)
+
+<p align="center">
+<img src="https://github.com/user-attachments/assets/f860a117-1b18-467d-9040-9cb0f78c065d" alt="Download Button Placeholder" width="200">
+</p>
+
+👆 🙋 🙋‍♂️ 🙋‍♀️ 👆
+
+</div>
+
+---
+
+## 🗨️ Supported Voices List (Apr 1, 2025) / 支持的语音列表 (2025-04-01)
+
+<details>
+<summary><strong>Click to expand/collapse the full list / 点击展开/折叠完整列表</strong>  👈🏼</summary>
+
+> **Note:** In the application's voice filter input, use the first two letters of the language code (e.g., `zh` for Chinese, `en` for English) to filter the voice lists.
+>
+> **注意:** 在应用的声音筛选框中，使用语言代码的前两位（例如 `zh` 代表中文，`en` 代表英文）来筛选语音列表。
+
+*   **af-ZA（南非荷兰语 - 南非 / Afrikaans - South Africa）** <details><summary>👈🏼 点击展开</summary>
+    *   `af-ZA-AdriNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `af-ZA-WillemNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **am-ET（阿姆哈拉语 - 埃塞俄比亚 / Amharic - Ethiopia）** <details><summary>👈🏼 点击展开</summary>
+    *   `am-ET-AmehaNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `am-ET-MekdesNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **ar（阿拉伯语 / Arabic - Multiple Regions）** <details><summary>👈🏼 点击展开</summary>
+    *   **ar-AE（阿联酋 / UAE）**: FatimaNeural (F), HamdanNeural (M)
+    *   **ar-BH（巴林 / Bahrain）**: AliNeural (M), LailaNeural (F)
+    *   **ar-DZ（阿尔及利亚 / Algeria）**: AminaNeural (F), IsmaelNeural (M)
+    *   **ar-EG（埃及 / Egypt）**: SalmaNeural (F), ShakirNeural (M)
+    *   **ar-IQ（伊拉克 / Iraq）**: BasselNeural (M), RanaNeural (F)
+    *   **ar-JO（约旦 / Jordan）**: SanaNeural (F), TaimNeural (M)
+    *   **ar-KW（科威特 / Kuwait）**: FahedNeural (M), NouraNeural (F)
+    *   **ar-LB（黎巴嫩 / Lebanon）**: LaylaNeural (F), RamiNeural (M)
+    *   **ar-LY（利比亚 / Libya）**: ImanNeural (F), OmarNeural (M)
+    *   **ar-MA（摩洛哥 / Morocco）**: JamalNeural (M), MounaNeural (F)
+    *   **ar-OM（阿曼 / Oman）**: AbdullahNeural (M), AyshaNeural (F)
+    *   **ar-QA（卡塔尔 / Qatar）**: AmalNeural (F), MoazNeural (M)
+    *   **ar-SA（沙特阿拉伯 / Saudi Arabia）**: HamedNeural (M), ZariyahNeural (F)
+    *   **ar-SY（叙利亚 / Syria）**: AmanyNeural (F), LaithNeural (M)
+    *   **ar-TN（突尼斯 / Tunisia）**: HediNeural (M), ReemNeural (F)
+    *   **ar-YE（也门 / Yemen）**: MaryamNeural (F), SalehNeural (M)
+    </details>
+
+*   **az-AZ（阿塞拜疆语 - 阿塞拜疆 / Azerbaijani - Azerbaijan）** <details><summary>👈🏼 点击展开</summary>
+    *   `az-AZ-BabekNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `az-AZ-BanuNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **bg-BG（保加利亚语 - 保加利亚 / Bulgarian - Bulgaria）** <details><summary>👈🏼 点击展开</summary>
+    *   `bg-BG-BorislavNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `bg-BG-KalinaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **bn（孟加拉语 / Bengali - Multiple Regions）** <details><summary>👈🏼 点击展开</summary>
+    *   **bn-BD（孟加拉国 / Bangladesh）**: NabanitaNeural (F), PradeepNeural (M)
+    *   **bn-IN（印度 / India）**: BashkarNeural (M), TanishaaNeural (F)
+    </details>
+
+*   **bs-BA（波斯尼亚语 - 波黑 / Bosnian - Bosnia and Herzegovina）** <details><summary>👈🏼 点击展开</summary>
+    *   `bs-BA-GoranNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `bs-BA-VesnaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **ca-ES（加泰罗尼亚语 - 西班牙 / Catalan - Spain）** <details><summary>👈🏼 点击展开</summary>
+    *   `ca-ES-EnricNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `ca-ES-JoanaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **cs-CZ（捷克语 - 捷克 / Czech - Czech Republic）** <details><summary>👈🏼 点击展开</summary>
+    *   `cs-CZ-AntoninNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `cs-CZ-VlastaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **cy-GB（威尔士语 - 英国 / Welsh - United Kingdom）** <details><summary>👈🏼 点击展开</summary>
+    *   `cy-GB-AledNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `cy-GB-NiaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **da-DK（丹麦语 - 丹麦 / Danish - Denmark）** <details><summary>👈🏼 点击展开</summary>
+    *   `da-DK-ChristelNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `da-DK-JeppeNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **de（德语 / German - Multiple Regions）** <details><summary>👈🏼 点击展开</summary>
+    *   **de-AT（奥地利 / Austria）**: IngridNeural (F), JonasNeural (M)
+    *   **de-CH（瑞士 / Switzerland）**: JanNeural (M), LeniNeural (F)
+    *   **de-DE（德国 / Germany）**: AmalaNeural (F), ConradNeural (M), FlorianMultilingualNeural (M, Multi), KatjaNeural (F), KillianNeural (M), SeraphinaMultilingualNeural (F, Multi)
+    </details>
+
+*   **el-GR（希腊语 - 希腊 / Greek - Greece）** <details><summary>👈🏼 点击展开</summary>
+    *   `el-GR-AthinaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `el-GR-NestorasNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **en（英语 / English - Multiple Regions）** <details><summary>👈🏼 点击展开</summary>
+    *   **en-AU（澳大利亚 / Australia）**: NatashaNeural (F), WilliamNeural (M)
+    *   **en-CA（加拿大 / Canada）**: ClaraNeural (F), LiamNeural (M)
+    *   **en-GB（英国 / UK）**: LibbyNeural (F), MaisieNeural (F), RyanNeural (M), SoniaNeural (F), ThomasNeural (M)
+    *   **en-HK（香港 / Hong Kong）**: SamNeural (M), YanNeural (F)
+    *   **en-IE（爱尔兰 / Ireland）**: ConnorNeural (M), EmilyNeural (F)
+    *   **en-IN（印度 / India）**: NeerjaExpressiveNeural (F, Expressive), NeerjaNeural (F), PrabhatNeural (M)
+    *   **en-KE（肯尼亚 / Kenya）**: AsiliaNeural (F), ChilembaNeural (M)
+    *   **en-NG（尼日利亚 / Nigeria）**: AbeoNeural (M), EzinneNeural (F)
+    *   **en-NZ（新西兰 / New Zealand）**: MitchellNeural (M), MollyNeural (F)
+    *   **en-PH（菲律宾 / Philippines）**: JamesNeural (M), RosaNeural (F)
+    *   **en-SG（新加坡 / Singapore）**: LunaNeural (F), WayneNeural (M)
+    *   **en-TZ（坦桑尼亚 / Tanzania）**: ElimuNeural (M), ImaniNeural (F)
+    *   **en-US（美国 / USA）**: AnaNeural (F, Cartoon/Cute), AndrewMultilingualNeural (M, Multi/Copilot), AndrewNeural (M, Copilot), AriaNeural (F, News), AvaMultilingualNeural (F, Multi/Copilot), AvaNeural (F, Copilot), BrianMultilingualNeural (M, Multi/Copilot), BrianNeural (M, Copilot), ChristopherNeural (M, News), EmmaMultilingualNeural (F, Multi/Copilot), EmmaNeural (F, Copilot), EricNeural (M, News), GuyNeural (M, News), JennyNeural (F, Friendly), MichelleNeural (F, News), RogerNeural (M, News), SteffanNeural (M, News)
+    *   **en-ZA（南非 / South Africa）**: LeahNeural (F), LukeNeural (M)
+    </details>
+
+*   **es（西班牙语 / Spanish - Multiple Regions）** <details><summary>👈🏼 点击展开</summary>
+    *   **es-AR（阿根廷 / Argentina）**: ElenaNeural (F), TomasNeural (M)
+    *   **es-BO（玻利维亚 / Bolivia）**: MarceloNeural (M), SofiaNeural (F)
+    *   **es-CL（智利 / Chile）**: CatalinaNeural (F), LorenzoNeural (M)
+    *   **es-CO（哥伦比亚 / Colombia）**: GonzaloNeural (M), SalomeNeural (F)
+    *   **es-CR（哥斯达黎加 / Costa Rica）**: JuanNeural (M), MariaNeural (F)
+    *   **es-CU（古巴 / Cuba）**: BelkysNeural (F), ManuelNeural (M)
+    *   **es-DO（多米尼加 / Dominican Rep.）**: EmilioNeural (M), RamonaNeural (F)
+    *   **es-EC（厄瓜多尔 / Ecuador）**: AndreaNeural (F), LuisNeural (M)
+    *   **es-ES（西班牙 / Spain）**: AlvaroNeural (M), ElviraNeural (F), XimenaNeural (F)
+    *   **es-GQ（赤道几内亚 / Equatorial Guinea）**: JavierNeural (M), TeresaNeural (F)
+    *   **es-GT（危地马拉 / Guatemala）**: AndresNeural (M), MartaNeural (F)
+    *   **es-HN（洪都拉斯 / Honduras）**: CarlosNeural (M), KarlaNeural (F)
+    *   **es-MX（墨西哥 / Mexico）**: DaliaNeural (F), JorgeNeural (M)
+    *   **es-NI（尼加拉瓜 / Nicaragua）**: FedericoNeural (M), YolandaNeural (F)
+    *   **es-PA（巴拿马 / Panama）**: MargaritaNeural (F), RobertoNeural (M)
+    *   **es-PE（秘鲁 / Peru）**: AlexNeural (M), CamilaNeural (F)
+    *   **es-PR（波多黎各 / Puerto Rico）**: KarinaNeural (F), VictorNeural (M)
+    *   **es-PY（巴拉圭 / Paraguay）**: MarioNeural (M), TaniaNeural (F)
+    *   **es-SV（萨尔瓦多 / El Salvador）**: LorenaNeural (F), RodrigoNeural (M)
+    *   **es-US（美国 / USA）**: AlonsoNeural (M), PalomaNeural (F)
+    *   **es-UY（乌拉圭 / Uruguay）**: MateoNeural (M), ValentinaNeural (F)
+    *   **es-VE（委内瑞拉 / Venezuela）**: PaolaNeural (F), SebastianNeural (M)
+    </details>
+
+*   **et-EE（爱沙尼亚语 - 爱沙尼亚 / Estonian - Estonia）** <details><summary>👈🏼 点击展开</summary>
+    *   `et-EE-AnuNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `et-EE-KertNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **fa-IR（波斯语 - 伊朗 / Persian - Iran）** <details><summary>👈🏼 点击展开</summary>
+    *   `fa-IR-DilaraNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `fa-IR-FaridNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **fi-FI（芬兰语 - 芬兰 / Finnish - Finland）** <details><summary>👈🏼 点击展开</summary>
+    *   `fi-FI-HarriNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `fi-FI-NooraNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **fil-PH（菲律宾语 - 菲律宾 / Filipino - Philippines）** <details><summary>👈🏼 点击展开</summary>
+    *   `fil-PH-AngeloNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `fil-PH-BlessicaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **fr（法语 / French - Multiple Regions）** <details><summary>👈🏼 点击展开</summary>
+    *   **fr-BE（比利时 / Belgium）**: CharlineNeural (F), GerardNeural (M)
+    *   **fr-CA（加拿大 / Canada）**: AntoineNeural (M), JeanNeural (M), SylvieNeural (F), ThierryNeural (M)
+    *   **fr-CH（瑞士 / Switzerland）**: ArianeNeural (F), FabriceNeural (M)
+    *   **fr-FR（法国 / France）**: DeniseNeural (F), EloiseNeural (F), HenriNeural (M), RemyMultilingualNeural (M, Multi), VivienneMultilingualNeural (F, Multi)
+    </details>
+
+*   **ga-IE（爱尔兰语 - 爱尔兰 / Irish - Ireland）** <details><summary>👈🏼 点击展开</summary>
+    *   `ga-IE-ColmNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `ga-IE-OrlaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **gl-ES（加利西亚语 - 西班牙 / Galician - Spain）** <details><summary>👈🏼 点击展开</summary>
+    *   `gl-ES-RoiNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `gl-ES-SabelaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **gu-IN（古吉拉特语 - 印度 / Gujarati - India）** <details><summary>👈🏼 点击展开</summary>
+    *   `gu-IN-DhwaniNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `gu-IN-NiranjanNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **he-IL（希伯来语 - 以色列 / Hebrew - Israel）** <details><summary>👈🏼 点击展开</summary>
+    *   `he-IL-AvriNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `he-IL-HilaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **hi-IN（印地语 - 印度 / Hindi - India）** <details><summary>👈🏼 点击展开</summary>
+    *   `hi-IN-MadhurNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `hi-IN-SwaraNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **hr-HR（克罗地亚语 - 克罗地亚 / Croatian - Croatia）** <details><summary>👈🏼 点击展开</summary>
+    *   `hr-HR-GabrijelaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `hr-HR-SreckoNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **hu-HU（匈牙利语 - 匈牙利 / Hungarian - Hungary）** <details><summary>👈🏼 点击展开</summary>
+    *   `hu-HU-NoemiNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `hu-HU-TamasNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **id-ID（印尼语 - 印尼 / Indonesian - Indonesia）** <details><summary>👈🏼 点击展开</summary>
+    *   `id-ID-ArdiNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `id-ID-GadisNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **is-IS（冰岛语 - 冰岛 / Icelandic - Iceland）** <details><summary>👈🏼 点击展开</summary>
+    *   `is-IS-GudrunNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `is-IS-GunnarNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **it-IT（意大利语 - 意大利 / Italian - Italy）** <details><summary>👈🏼 点击展开</summary>
+    *   `it-IT-DiegoNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `it-IT-ElsaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `it-IT-GiuseppeMultilingualNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极，多语言）
+    *   `it-IT-IsabellaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **iu（因纽特语 - 加拿大 / Inuktitut - Canada）** <details><summary>👈🏼 点击展开</summary>
+    *   **iu-Cans-CA（加拿大音节 / Cans）**: SiqiniqNeural (F), TaqqiqNeural (M)
+    *   **iu-Latn-CA（拉丁字母 / Latn）**: SiqiniqNeural (F), TaqqiqNeural (M)
+    </details>
+
+*   **ja-JP（日语 - 日本 / Japanese - Japan）** <details><summary>👈🏼 点击展开</summary>
+    *   `ja-JP-KeitaNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `ja-JP-NanamiNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **jv-ID（爪哇语 - 印尼 / Javanese - Indonesia）** <details><summary>👈🏼 点击展开</summary>
+    *   `jv-ID-DimasNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `jv-ID-SitiNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **ka-GE（格鲁吉亚语 - 格鲁吉亚 / Georgian - Georgia）** <details><summary>👈🏼 点击展开</summary>
+    *   `ka-GE-EkaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `ka-GE-GiorgiNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **kk-KZ（哈萨克语 - 哈萨克斯坦 / Kazakh - Kazakhstan）** <details><summary>👈🏼 点击展开</summary>
+    *   `kk-KZ-AigulNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `kk-KZ-DauletNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **km-KH（高棉语 - 柬埔寨 / Khmer - Cambodia）** <details><summary>👈🏼 点击展开</summary>
+    *   `km-KH-PisethNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `km-KH-SreymomNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **kn-IN（卡纳达语 - 印度 / Kannada - India）** <details><summary>👈🏼 点击展开</summary>
+    *   `kn-IN-GaganNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `kn-IN-SapnaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **ko-KR（韩语 - 韩国 / Korean - South Korea）** <details><summary>👈🏼 点击展开</summary>
+    *   `ko-KR-HyunsuMultilingualNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极，多语言）
+    *   `ko-KR-InJoonNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `ko-KR-SunHiNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **lo-LA（老挝语 - 老挝 / Lao - Laos）** <details><summary>👈🏼 点击展开</summary>
+    *   `lo-LA-ChanthavongNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `lo-LA-KeomanyNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **lt-LT（立陶宛语 - 立陶宛 / Lithuanian - Lithuania）** <details><summary>👈🏼 点击展开</summary>
+    *   `lt-LT-LeonasNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `lt-LT-OnaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **lv-LV（拉脱维亚语 - 拉脱维亚 / Latvian - Latvia）** <details><summary>👈🏼 点击展开</summary>
+    *   `lv-LV-EveritaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `lv-LV-NilsNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **mk-MK（马其顿语 - 北马其顿 / Macedonian - North Macedonia）** <details><summary>👈🏼 点击展开</summary>
+    *   `mk-MK-AleksandarNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `mk-MK-MarijaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **ml-IN（马拉雅拉姆语 - 印度 / Malayalam - India）** <details><summary>👈🏼 点击展开</summary>
+    *   `ml-IN-MidhunNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `ml-IN-SobhanaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **mn-MN（蒙古语 - 蒙古 / Mongolian - Mongolia）** <details><summary>👈🏼 点击展开</summary>
+    *   `mn-MN-BataaNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `mn-MN-YesuiNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **mr-IN（马拉地语 - 印度 / Marathi - India）** <details><summary>👈🏼 点击展开</summary>
+    *   `mr-IN-AarohiNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `mr-IN-ManoharNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **ms-MY（马来语 - 马来西亚 / Malay - Malaysia）** <details><summary>👈🏼 点击展开</summary>
+    *   `ms-MY-OsmanNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `ms-MY-YasminNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **mt-MT（马耳他语 - 马耳他 / Maltese - Malta）** <details><summary>👈🏼 点击展开</summary>
+    *   `mt-MT-GraceNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `mt-MT-JosephNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **my-MM（缅甸语 - 缅甸 / Burmese - Myanmar）** <details><summary>👈🏼 点击展开</summary>
+    *   `my-MM-NilarNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `my-MM-ThihaNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **nb-NO（挪威语 - 挪威 / Norwegian Bokmål - Norway）** <details><summary>👈🏼 点击展开</summary>
+    *   `nb-NO-FinnNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `nb-NO-PernilleNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **ne-NP（尼泊尔语 - 尼泊尔 / Nepali - Nepal）** <details><summary>👈🏼 点击展开</summary>
+    *   `ne-NP-HemkalaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `ne-NP-SagarNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **nl（荷兰语 / Dutch - Multiple Regions）** <details><summary>👈🏼 点击展开</summary>
+    *   **nl-BE（比利时 / Belgium）**: ArnaudNeural (M), DenaNeural (F)
+    *   **nl-NL（荷兰 / Netherlands）**: ColetteNeural (F), FennaNeural (F), MaartenNeural (M)
+    </details>
+
+*   **pl-PL（波兰语 - 波兰 / Polish - Poland）** <details><summary>👈🏼 点击展开</summary>
+    *   `pl-PL-MarekNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `pl-PL-ZofiaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **ps-AF（普什图语 - 阿富汗 / Pashto - Afghanistan）** <details><summary>👈🏼 点击展开</summary>
+    *   `ps-AF-GulNawazNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `ps-AF-LatifaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **pt（葡萄牙语 / Portuguese - Multiple Regions）** <details><summary>👈🏼 点击展开</summary>
+    *   **pt-BR（巴西 / Brazil）**: AntonioNeural (M), FranciscaNeural (F), ThalitaMultilingualNeural (F, Multi)
+    *   **pt-PT（葡萄牙 / Portugal）**: DuarteNeural (M), RaquelNeural (F)
+    </details>
+
+*   **ro-RO（罗马尼亚语 - 罗马尼亚 / Romanian - Romania）** <details><summary>👈🏼 点击展开</summary>
+    *   `ro-RO-AlinaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `ro-RO-EmilNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **ru-RU（俄语 - 俄罗斯 / Russian - Russia）** <details><summary>👈🏼 点击展开</summary>
+    *   `ru-RU-DmitryNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `ru-RU-SvetlanaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **si-LK（僧伽罗语 - 斯里兰卡 / Sinhala - Sri Lanka）** <details><summary>👈🏼 点击展开</summary>
+    *   `si-LK-SameeraNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `si-LK-ThiliniNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **sk-SK（斯洛伐克语 - 斯洛伐克 / Slovak - Slovakia）** <details><summary>👈🏼 点击展开</summary>
+    *   `sk-SK-LukasNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `sk-SK-ViktoriaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **sl-SI（斯洛文尼亚语 - 斯洛文尼亚 / Slovenian - Slovenia）** <details><summary>👈🏼 点击展开</summary>
+    *   `sl-SI-PetraNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `sl-SI-RokNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **so-SO（索马里语 - 索马里 / Somali - Somalia）** <details><summary>👈🏼 点击展开</summary>
+    *   `so-SO-MuuseNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `so-SO-UbaxNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **sq-AL（阿尔巴尼亚语 - 阿尔巴尼亚 / Albanian - Albania）** <details><summary>👈🏼 点击展开</summary>
+    *   `sq-AL-AnilaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `sq-AL-IlirNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **sr-RS（塞尔维亚语 - 塞尔维亚 / Serbian - Serbia）** <details><summary>👈🏼 点击展开</summary>
+    *   `sr-RS-NicholasNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `sr-RS-SophieNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **su-ID（巽他语 - 印尼 / Sundanese - Indonesia）** <details><summary>👈🏼 点击展开</summary>
+    *   `su-ID-JajangNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `su-ID-TutiNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **sv-SE（瑞典语 - 瑞典 / Swedish - Sweden）** <details><summary>👈🏼 点击展开</summary>
+    *   `sv-SE-MattiasNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `sv-SE-SofieNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **sw（斯瓦希里语 / Swahili - Multiple Regions）** <details><summary>👈🏼 点击展开</summary>
+    *   **sw-KE（肯尼亚 / Kenya）**: RafikiNeural (M), ZuriNeural (F)
+    *   **sw-TZ（坦桑尼亚 / Tanzania）**: DaudiNeural (M), RehemaNeural (F)
+    </details>
+
+*   **ta（泰米尔语 / Tamil - Multiple Regions）** <details><summary>👈🏼 点击展开</summary>
+    *   **ta-IN（印度 / India）**: PallaviNeural (F), ValluvarNeural (M)
+    *   **ta-LK（斯里兰卡 / Sri Lanka）**: KumarNeural (M), SaranyaNeural (F)
+    *   **ta-MY（马来西亚 / Malaysia）**: KaniNeural (F), SuryaNeural (M)
+    *   **ta-SG（新加坡 / Singapore）**: AnbuNeural (M), VenbaNeural (F)
+    </details>
+
+*   **te-IN（泰卢固语 - 印度 / Telugu - India）** <details><summary>👈🏼 点击展开</summary>
+    *   `te-IN-MohanNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `te-IN-ShrutiNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **th-TH（泰语 - 泰国 / Thai - Thailand）** <details><summary>👈🏼 点击展开</summary>
+    *   `th-TH-NiwatNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `th-TH-PremwadeeNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **tr-TR（土耳其语 - 土耳其 / Turkish - Turkey）** <details><summary>👈🏼 点击展开</summary>
+    *   `tr-TR-AhmetNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `tr-TR-EmelNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **uk-UA（乌克兰语 - 乌克兰 / Ukrainian - Ukraine）** <details><summary>👈🏼 点击展开</summary>
+    *   `uk-UA-OstapNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    *   `uk-UA-PolinaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    </details>
+
+*   **ur（乌尔都语 / Urdu - Multiple Regions）** <details><summary>👈🏼 点击展开</summary>
+    *   **ur-IN（印度 / India）**: GulNeural (F), SalmanNeural (M)
+    *   **ur-PK（巴基斯坦 / Pakistan）**: AsadNeural (M), UzmaNeural (F)
+    </details>
+
+*   **uz-UZ（乌兹别克语 - 乌兹别克斯坦 / Uzbek - Uzbekistan）** <details><summary>👈🏼 点击展开</summary>
+    *   `uz-UZ-MadinaNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `uz-UZ-SardorNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **vi-VN（越南语 - 越南 / Vietnamese - Vietnam）** <details><summary>👈🏼 点击展开</summary>
+    *   `vi-VN-HoaiMyNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `vi-VN-NamMinhNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+*   **zh（中文 / Chinese - Multiple Regions & Dialects）** <details><summary>👈🏼 点击展开</summary>
+    *   **zh-CN（中国大陆 / Mainland China）**: XiaoxiaoNeural (F, News/Warm), XiaoyiNeural (F, Cartoon/Lively), YunjianNeural (M, Sports/Passion), YunxiNeural (M, Novel/Sunshine), YunxiaNeural (M, Cartoon/Cute), YunyangNeural (M, News/Reliable)
+    *   **zh-CN-liaoning（辽宁方言 / Liaoning Dialect）**: XiaobeiNeural (F, Dialect/Humorous)
+    *   **zh-CN-shaanxi（陕西方言 / Shaanxi Dialect）**: XiaoniNeural (F, Dialect/Bright)
+    *   **zh-HK（香港 / Hong Kong）**: HiuGaaiNeural (F), HiuMaanNeural (F), WanLungNeural (M)
+    *   **zh-TW（台湾 / Taiwan）**: HsiaoChenNeural (F), HsiaoYuNeural (F), YunJheNeural (M)
+    </details>
+
+*   **zu-ZA（祖鲁语 - 南非 / Zulu - South Africa）** <details><summary>👈🏼 点击展开</summary>
+    *   `zu-ZA-ThandoNeural` - Female, General, Friendly, Positive（女性，通用，友好，积极）
+    *   `zu-ZA-ThembaNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
+    </details>
+
+</details>
+
+---
+
+## 🛠️ Running from Source (For Developers) / 从源码运行 (适合开发者)
+
+<details>
+<summary><strong>English</strong>  👈🏼 Click to expand</summary>
+
+If you're familiar with Python and want to run or modify the source code (now structured into modules):
+
+1.  **Clone the Repository**:
     ```bash
     git clone https://github.com/msjsc001/Anki-TTS-Edge.git
-    cd Anki-TTS-Edge
+    cd Anki-TTS-Edge/AnkiTTSApp_Modular 
+    ```
+    *(Make sure to navigate into the `AnkiTTSApp_Modular` subfolder!)*
+
+2.  **Create and Activate Virtual Environment** (Recommended):
+    ```bash
+    python -m venv .venv
+    # Windows
+    .\.venv\Scripts\activate
+    # macOS/Linux
+    # source .venv/bin/activate
     ```
 
-2.  **创建并激活虚拟环境** (推荐)：
+3.  **Install Dependencies**:
+    ```bash
+    pip install customtkinter edge-tts pyperclip pygame pynput pywin32
+    ```
+    *(It's recommended to create a `requirements.txt` file for easier installation later)*
 
+4.  **Run the Application**:
+    ```bash
+    python main.py
+    ```
+
+</details>
+
+<details>
+<summary><strong>中文 (Chinese)</strong>  👈🏼 点击展开</summary>
+
+如果你熟悉 Python 并希望自行修改或运行源码（现在已拆分为模块）：
+
+1.  **克隆仓库**：
+    ```bash
+    git clone https://github.com/msjsc001/Anki-TTS-Edge.git
+    cd Anki-TTS-Edge/AnkiTTSApp_Modular
+    ```
+    *（请确保进入 `AnkiTTSApp_Modular` 子文件夹！）*
+
+2.  **创建并激活虚拟环境** (推荐)：
     ```bash
     python -m venv .venv
     # Windows
@@ -614,40 +619,116 @@
     ```
 
 3.  **安装依赖**：
-
     ```bash
-    pip install -r requirements.txt
+    pip install customtkinter edge-tts pyperclip pygame pynput pywin32
     ```
+    *（建议创建一个 `requirements.txt` 文件，以便后续更方便地安装）*
 
 4.  **运行程序**：
-
     ```bash
-    python Anki-TTS-Edge.py
+    python main.py
     ```
 
-## ⚙️ 如何打包 (开发者参考) 
-
-本项目使用 PyInstaller 进行打包。如果你修改了代码并希望重新打包：
-
-1.  确保已在虚拟环境中安装 `pyinstaller` (`pip install pyinstaller`)。
-
-2.  执行打包命令：
-
-    ```bash
-    .\.venv\Scripts\activate && pyinstaller Anki-TTS-Edge.spec
-    ```
-
-3.  打包后的 `.exe` 文件位于 `dist/Anki-TTS-Edge` 目录下。
-
-## 📄 版权与依赖
-
-*   本项目基于强大的 [edge-tts](https://github.com/rany2/edge-tts) 库开发，该库使用 GPL-3.0 许可证。
-*   本项目自身也采用 GPL-3.0 许可证发布。这意味着你可以自由使用、修改和分发本项目的代码，但基于本项目修改后的代码也必须以 GPL-3.0 许可证开源。
-
-## 🤝 参与贡献
-
-欢迎通过提交 Issue 或 Pull Request 来为本项目做出贡献！
+</details>
 
 ---
 
-🌐 **项目地址**：[https://github.com/msjsc001/Anki-TTS-Edge](https://github.com/)
+## ⚙️ Packaging (For Developers) / 如何打包 (开发者参考)
+
+<details>
+<summary><strong>English</strong>  👈🏼 Click to expand</summary>
+
+This project uses PyInstaller for packaging. To repackage it after the code splitting:
+
+1.  Make sure `pyinstaller` is installed (`pip install pyinstaller`).
+2.  Navigate to the `AnkiTTSApp_Modular` directory containing `main.py`.
+3.  **Create/Use a `.spec` file (Highly Recommended)**:
+    *   **Generate:** `pyinstaller --name Anki-TTS-Edge --noconsole --onefile main.py`
+    *   **Edit `Anki-TTS-Edge.spec`**: Add `translations.json` to the `datas` list in the `Analysis` section:
+      ```python
+      a = Analysis(
+          # ...
+          datas=[('translations.json', '.')], # Add this
+          # ...
+      )
+      ```
+    *   *(Consider if `customtkinter` or `pygame` need additional data files added here too, although often PyInstaller handles them.)*
+4.  **Build using the `.spec` file**:
+    ```bash
+    pyinstaller Anki-TTS-Edge.spec
+    ```
+5.  The single `.exe` file will be in the `dist` directory.
+
+</details>
+
+<details>
+<summary><strong>中文 (Chinese)</strong>  👈🏼 点击展开</summary>
+
+本项目使用 PyInstaller 进行打包。在代码拆分后重新打包：
+
+1.  确保已安装 `pyinstaller` (`pip install pyinstaller`)。
+2.  进入包含 `main.py` 的 `AnkiTTSApp_Modular` 目录。
+3.  **创建/使用 `.spec` 文件 (强烈推荐)**：
+    *   **生成：** `pyinstaller --name Anki-TTS-Edge --noconsole --onefile main.py`
+    *   **编辑 `Anki-TTS-Edge.spec`**：在 `Analysis` 部分的 `datas` 列表中添加 `translations.json`：
+      ```python
+      a = Analysis(
+          # ...
+          datas=[('translations.json', '.')], # 添加此行
+          # ...
+      )
+      ```
+    *   *（可以考虑 `customtkinter` 或 `pygame` 是否需要在此处添加额外的数据文件，但通常 PyInstaller 能处理好。）*
+4.  **使用 `.spec` 文件构建**：
+    ```bash
+    pyinstaller Anki-TTS-Edge.spec
+    ```
+5.  最终的单个 `.exe` 文件将位于 `dist` 目录下。
+
+</details>
+
+---
+
+## 📄 License & Dependencies / 版权与依赖
+
+<details>
+<summary><strong>English</strong>  👈🏼 Click to expand</summary>
+
+*   Relies on [edge-tts](https://github.com/rany2/edge-tts) (GPL-3.0 License).
+*   This project is released under the **GPL-3.0 License**. You can freely use, modify, and distribute the code, but derivative works must also be open-sourced under GPL-3.0.
+
+</details>
+
+<details>
+<summary><strong>中文 (Chinese)</strong>  👈🏼 点击展开</summary>
+
+*   基于 [edge-tts](https://github.com/rany2/edge-tts) (GPL-3.0 许可证)。
+*   本项目采用 **GPL-3.0 许可证**。您可以自由使用、修改和分发，但衍生作品也必须使用 GPL-3.0 开源。
+
+</details>
+
+---
+
+## 🤝 Contributing / 参与贡献
+
+<details>
+<summary><strong>English</strong>  👈🏼 Click to expand</summary>
+
+Contributions via Issues or Pull Requests are welcome!
+
+</details>
+
+<details>
+<summary><strong>中文 (Chinese)</strong>  👈🏼 点击展开</summary>
+
+欢迎通过 Issue 或 Pull Request 参与贡献！
+
+</details>
+
+---
+
+<div align="center">
+
+🌐 **Project Repository / 项目地址**: [https://github.com/msjsc001/Anki-TTS-Edge](https://github.com/msjsc001/Anki-TTS-Edge)
+
+</div>
