@@ -9,9 +9,9 @@
 ---
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/2668f79b-4e89-4e45-a476-c04b9afae4bb" alt="Light Mode Screenshot" width="48%">
-    
-  <img src="https://github.com/user-attachments/assets/97cc104d-5a92-48bc-b7b8-7465b2cea18a" alt="Dark Mode Screenshot" width="48%">
+  <img src="https://github.com/user-attachments/assets/2668f79b-4e89-4e45-a476-c04b9afae4bb" alt="Light Mode Screenshot">
+
+  <img src="https://github.com/user-attachments/assets/1c6f22a7-5d29-4770-9050-de1c65129f39" alt="Dark Mode Screenshot">
 </p>
 
 <div align="center">
