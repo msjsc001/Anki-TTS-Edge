@@ -19,6 +19,9 @@ voice_settings.json
 /dist/
 /build/
 *.spec
+!Anki-TTS-Edge.spec
+AnkiTTSApp_Modular/dist/
+AnkiTTSApp_Modular/build/
 Anki-TTS-Edge copy.py
 
 # Documentation (文档)
@@ -27,3 +30,6 @@ Anki-TTS-Edge copy.py
 # IDE (集成开发环境)
 .vscode/
 .idea/
+
+# Generated spec file for the modular app
+AnkiTTSApp.spec
