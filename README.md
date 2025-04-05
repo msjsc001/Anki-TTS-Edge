@@ -2,6 +2,7 @@
 #  Anki-TTS-Edge 
 ![PixPin_2025-03-31_02-26-04](https://github.com/user-attachments/assets/2668f79b-4e89-4e45-a476-c04b9afae4bb)
 ![PixPin_2025-03-31_02-33-29](https://github.com/user-attachments/assets/97cc104d-5a92-48bc-b7b8-7465b2cea18a)
+（ctrl+c 后点击 🔵 蓝点生成音频，生成音频中会出现🟢，生成结束后变为🔴。）
 
 # GIF动图功能演示
 ![20210606180518](https://github.com/user-attachments/assets/bf232f6c-9e19-418c-a943-2dc3dfd3ea7b)
@@ -22,7 +23,7 @@
 基于 [Edge-TTS](https://github.com/rany2/edge-tts) 的 Anki 音频生成工具，免费、快速地为你的 Anki 学习卡片添加高质量的微软 Edge 语音。
 
 *   **一键生成**：快速为 Anki 卡片选中的文本生成 `.mp3` 音频文件。
-*   **快捷操作**：支持右键复制文本后，点击界面上的 🔵 蓝色按钮快速生成音频，并自动将音频文件名复制到剪贴板 (方便粘贴到 Anki 字段)。 
+*   **快捷操作**：支持右键复制文本后，点击界面上的 🔵 蓝色按钮快速生成音频，并自动将音频文件名复制到剪贴板 (方便粘贴到 Anki 字段)。 生成音频中会出现🟢，生成结束后变为🔴。
 *   **多种语音**：支持微软 Edge TTS 提供的多种语言和语音角色选择。
 *   **简洁界面**：提供易于使用的图形用户界面 (GUI)。
 *   **自动保存**：生成的音频文件自动保存到你指定的 Anki 媒体库文件夹 (`collection.media`)。
