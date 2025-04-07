@@ -5,7 +5,7 @@ a = Analysis(
     ['Anki-TTS-Edge.py'],
     pathex=[],
     binaries=[],
-    datas=[('translations.json', '.')],
+    datas=[],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
