@@ -8,7 +8,10 @@
 
 ---
 
+
 <p align="center">
+  <img src="https://github.com/user-attachments/assets/d0a3d252-7240-4739-9854-77f16cc2d257" alt="Light Mode Screenshot">
+  
   <img src="https://github.com/user-attachments/assets/2668f79b-4e89-4e45-a476-c04b9afae4bb" alt="Light Mode Screenshot">
 
   <img src="https://github.com/user-attachments/assets/1c6f22a7-5d29-4770-9050-de1c65129f39" alt="Dark Mode Screenshot">
