@@ -30,7 +30,7 @@ except ImportError as e:
 # <<<<<<< 添加: 自定义窗口标题 (从 JSON 加载) >>>>>>>>>
 # ==============================================================================
 # Default title if JSON fails
-CUSTOM_WINDOW_TITLE = "Anki-TTS-Edge (v1.6)"
+CUSTOM_WINDOW_TITLE = "Anki-TTS-Edge (v1.7)" # Updated version
 
 # ==============================================================================
 # <<<<<<< 添加: 加载外部翻译文件 >>>>>>>>>
@@ -86,6 +86,8 @@ def check_dependencies():
         "PIL": "pip install Pillow"      # 新增 (Pillow 提供 PIL 模块)
     }
     missing = []; checked_pywin32 = False
+    # 确保 pystray 和 Pillow 变量存在，即使导入失败
+    global pystray, Image
     for module, install_cmd in dependencies.items():
         try:
             if module == "edge_tts": import edge_tts.communicate
@@ -123,18 +125,7 @@ from pynput import mouse, keyboard
 import win32clipboard, win32con
 import edge_tts
 from edge_tts import VoicesManager
-# <<<<<<< 添加: 托盘图标所需库 >>>>>>>>>
-try:
-    from PIL import Image
-    import pystray
-except ImportError as e:
-    print(f"错误：缺少托盘图标所需的库: {e}。请运行 'pip install Pillow pystray'")
-    # 可以选择退出或禁用托盘功能
-    # sys.exit(1)
-    pystray = None # 标记 pystray 不可用
-    Image = None   # 标记 Pillow 不可用
-# <<<<<<< 添加: 托盘图标所需库 (Import 移到文件顶部) >>>>>>>>>
-# (Import statements moved to the top of the file)
+# 托盘图标库已在文件顶部导入
 
 # ==============================================================================
 # 全局配置变量 (无修改)
@@ -157,10 +148,10 @@ app = None; status_update_job = None; clipboard_monitor_active = False
 clipboard_polling_thread = None; previous_clipboard_poll_content = None
 mouse_listener_thread = None; mouse_listener = None
 is_dragging = False; drag_start_pos = (0, 0); drag_start_time = 0
-# <<<<<<< 添加: 托盘图标全局变量 >>>>>>>>>
+# --- 托盘图标全局变量 ---
 icon_image = None # 加载的 PIL Image 对象 (全局缓存)
 ICON_PATH = "icon.ico" # 图标文件路径 (确保此文件存在)
-tray_icon = None # pystray Icon 实例 (全局引用，用于线程)
+tray_icon_instance_global = None # pystray Icon 实例 (全局引用，用于线程控制)
 tray_thread = None # 运行 pystray 的线程
 
 # ==============================================================================
@@ -306,7 +297,9 @@ def manage_audio_files():
 # ==============================================================================
 class EdgeTTSApp:
     def __init__(self, root):
-        self.root = root; self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.root = root
+        # <<<<<<< 修改: 窗口关闭协议绑定移到后面 >>>>>>>>>
+        # self.root.protocol("WM_DELETE_WINDOW", self.on_closing) # Moved later
         global app; app = self
         # Language Setup (BEFORE UI that uses translations)
         settings = self.load_settings()
@@ -402,15 +395,32 @@ class EdgeTTSApp:
         self.settings_max_files_label_widget = ctk.CTkLabel(output_cache_frame, text=self._("settings_max_files_label")); self.settings_max_files_label_widget.grid(row=2, column=0, padx=(10, 5), pady=(5, 10), sticky="w")
         self._language_widgets['settings_max_files_label'] = self.settings_max_files_label_widget
         self.max_files_entry = ctk.CTkEntry(output_cache_frame, width=60); self.max_files_entry.insert(0, str(settings.get("max_audio_files", DEFAULT_MAX_AUDIO_FILES))); self.max_files_entry.grid(row=2, column=1, padx=5, pady=(5, 10), sticky="w")
+
+        # --- Clipboard Frame ---
         clipboard_frame = ctk.CTkFrame(settings_tab); clipboard_frame.pack(fill="x", padx=10, pady=(0, 10)); clipboard_frame.grid_columnconfigure(0, weight=1)
         self.settings_clipboard_label_widget = ctk.CTkLabel(clipboard_frame, text=self._("settings_clipboard_label"), font=ctk.CTkFont(weight="bold")); self.settings_clipboard_label_widget.grid(row=0, column=0, columnspan=2, pady=(5, 10), padx=10, sticky="w")
         self._language_widgets['settings_clipboard_label'] = self.settings_clipboard_label_widget
-        self.select_to_audio_var = ctk.BooleanVar(value=settings.get("monitor_enabled", False)); self.select_to_audio_switch = ctk.CTkSwitch(clipboard_frame, text=self._("settings_enable_ctrl_c_label"), variable=self.select_to_audio_var, command=self.toggle_select_to_audio, onvalue=True, offvalue=False); self.select_to_audio_switch.grid(row=1, column=0, columnspan=2, padx=10, pady=5, sticky="w")
-        self._language_widgets['settings_enable_ctrl_c_label'] = self.select_to_audio_switch
-        self.select_trigger_var = ctk.BooleanVar(value=settings.get("select_trigger_enabled", False)); self.select_trigger_switch = ctk.CTkSwitch(clipboard_frame, text=self._("settings_enable_selection_label"), variable=self.select_trigger_var, command=self.save_settings, onvalue=True, offvalue=False); self.select_trigger_switch.grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky="w") # Adjusted pady
-        self._language_widgets['settings_enable_selection_label'] = self.select_trigger_switch
-        # <<<<<<< 添加: 最小化到托盘开关 >>>>>>>>>
-        self.minimize_to_tray_var = ctk.BooleanVar(value=settings.get("minimize_to_tray", False)); self.minimize_to_tray_switch = ctk.CTkSwitch(clipboard_frame, text=self._("settings_minimize_to_tray_label"), variable=self.minimize_to_tray_var, command=self.save_settings, onvalue=True, offvalue=False); self.minimize_to_tray_switch.grid(row=3, column=0, columnspan=2, padx=10, pady=(5, 10), sticky="w") # Added pady
+        # Renamed variable for clarity: monitor_clipboard_var
+        self.monitor_clipboard_var = ctk.BooleanVar(value=settings.get("monitor_clipboard_enabled", False))
+        self.monitor_clipboard_switch = ctk.CTkSwitch(clipboard_frame, text=self._("settings_enable_ctrl_c_label"), variable=self.monitor_clipboard_var, command=self.toggle_clipboard_monitor, onvalue=True, offvalue=False)
+        self.monitor_clipboard_switch.grid(row=1, column=0, columnspan=2, padx=10, pady=5, sticky="w")
+        self._language_widgets['settings_enable_ctrl_c_label'] = self.monitor_clipboard_switch
+
+        # Renamed variable for clarity: monitor_selection_var
+        self.monitor_selection_var = ctk.BooleanVar(value=settings.get("monitor_selection_enabled", False))
+        self.monitor_selection_switch = ctk.CTkSwitch(clipboard_frame, text=self._("settings_enable_selection_label"), variable=self.monitor_selection_var, command=self.toggle_selection_monitor, onvalue=True, offvalue=False)
+        self.monitor_selection_switch.grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky="w")
+        self._language_widgets['settings_enable_selection_label'] = self.monitor_selection_switch
+
+        # --- Window Behavior Frame --- <<<<<<< 新增 Frame >>>>>>>>>
+        window_frame = ctk.CTkFrame(settings_tab); window_frame.pack(fill="x", padx=10, pady=(0, 10)); window_frame.grid_columnconfigure(0, weight=1)
+        self.settings_window_label_widget = ctk.CTkLabel(window_frame, text=self._("settings_window_label"), font=ctk.CTkFont(weight="bold")); self.settings_window_label_widget.grid(row=0, column=0, columnspan=2, pady=(5, 10), padx=10, sticky="w")
+        self._language_widgets['settings_window_label'] = self.settings_window_label_widget
+
+        # --- 添加: 最小化到托盘开关 (移到新 Frame) ---
+        self.minimize_to_tray_var = ctk.BooleanVar(value=settings.get("minimize_to_tray", False))
+        self.minimize_to_tray_switch = ctk.CTkSwitch(window_frame, text=self._("settings_minimize_to_tray_label"), variable=self.minimize_to_tray_var, command=self.save_settings, onvalue=True, offvalue=False)
+        self.minimize_to_tray_switch.grid(row=1, column=0, columnspan=2, padx=10, pady=(0, 10), sticky="w") # Adjusted pady
         self._language_widgets['settings_minimize_to_tray_label'] = self.minimize_to_tray_switch
 
         # --- Appearance Tab ---
@@ -449,17 +459,20 @@ class EdgeTTSApp:
 
         # --- Initial Actions ---
         self._apply_custom_color(save=False); self.refresh_voices_ui()
-        if self.select_to_audio_var.get(): self.start_clipboard_monitor()
+        # Start monitors based on initial settings
+        self._update_monitor_state()
         # Delay tray setup slightly to ensure translations are ready
-        self.root.after(100, self.setup_tray_icon) # <<<<<<< 修改: 延迟初始化托盘图标 >>>>>>>>>
-        self.root.bind("<Unmap>", self.handle_minimize) # <<<<<<< 添加: 绑定最小化事件 >>>>>>>>>
+        self.root.after(100, self.setup_tray_icon)
+        # Bind events AFTER the window is fully mapped to avoid premature triggers
+        self.root.after(200, self._bind_window_events) # <<<<<<< 修改: 统一绑定事件 >>>>>>>>>
+
 
     # --------------------------------------------------------------------------
-    # Tray Icon Methods <<<<<<< 添加: 新增/修改托盘相关方法 >>>>>>>>>
+    # Tray Icon Methods <<<<<<< 新增/修改 >>>>>>>>>
     # --------------------------------------------------------------------------
     def setup_tray_icon(self):
         """Sets up the system tray icon and its menu. Ensures it runs only once."""
-        global tray_icon, tray_thread, icon_image # Use global icon_image
+        global tray_thread, icon_image # Use global icon_image
         if self._tray_setup_complete or pystray is None or Image is None: # Check dependencies and flag
             if pystray is None or Image is None:
                 print("警告: pystray 或 Pillow 未加载，无法创建托盘图标。")
@@ -483,7 +496,8 @@ class EdgeTTSApp:
         menu = (
             # Pass translated strings directly for menu item text
             pystray.MenuItem(self._("tray_show_hide"), self.toggle_window_visibility),
-            pystray.MenuItem(self._("tray_exit"), self.quit_application)
+            # Wrap the action in a lambda function to ensure it runs in the main thread if needed
+            pystray.MenuItem(self._("tray_exit"), lambda: self.root.after(0, self.quit_application)) # 使用 quit_application
         )
 
         # Use the loaded global icon_image
@@ -491,26 +505,29 @@ class EdgeTTSApp:
         self.tray_icon_instance = pystray.Icon(
             "AnkiTTS",
             icon_image,
-            self._("window_title"),
+            self._("window_title"), # Use translated title for tooltip
             menu=menu
         )
-        # Explicitly setting default_action might be redundant but ensures clarity.
-        # self.tray_icon_instance.default_action = self.toggle_window_visibility # Already handled by menu order
 
-        tray_icon = self.tray_icon_instance # Assign to global for thread access
+        # 使用全局变量 tray_icon_instance_global 以便线程可以访问
+        global tray_icon_instance_global
+        tray_icon_instance_global = self.tray_icon_instance
 
         # Run the icon in a separate thread only if not already running
         def run_icon():
-            if tray_icon:
+            # 访问全局实例
+            global tray_icon_instance_global
+            if tray_icon_instance_global:
                 try:
                     print("启动托盘图标...")
-                    tray_icon.run()
+                    tray_icon_instance_global.run()
                     print("托盘图标已停止。")
                 except Exception as e:
                     print(f"运行托盘图标时出错: {e}")
             else:
-                print("错误：尝试运行未初始化的托盘图标。")
+                print("错误：尝试运行未初始化的托盘图标实例。")
 
+        # 使用全局线程变量 tray_thread
         if tray_thread is None or not tray_thread.is_alive():
             tray_thread = threading.Thread(target=run_icon, daemon=True)
             tray_thread.start()
@@ -521,19 +538,29 @@ class EdgeTTSApp:
 
     def toggle_window_visibility(self, icon=None, item=None): # Add icon/item args for pystray
         """Shows or hides the main window."""
-        if self.root.winfo_viewable():
-            self.hide_window()
-        else:
-            self.show_window()
+        if not self.root.winfo_exists(): return
+        # Schedule the check and action on the main thread
+        self.root.after(0, self._do_toggle_window_visibility)
+
+    def _do_toggle_window_visibility(self):
+        """Actual logic for toggling window visibility, runs in main thread."""
+        if not self.root.winfo_exists(): return
+        try:
+            if self.root.winfo_viewable():
+                self.hide_window()
+            else:
+                self.show_window()
+        except tk.TclError as e:
+            print(f"切换窗口可见性时出错: {e}")
 
     def show_window(self):
         """Shows the main window."""
         if not self.root.winfo_exists(): return
         try:
             # Use schedule tasks to ensure they run on the main thread
-            self.root.after(0, self.root.deiconify)
-            self.root.after(10, self.root.lift)
-            self.root.after(20, self.root.focus_force)
+            self.root.after(0, self.root.deiconify) # Restore from minimized/hidden
+            self.root.after(10, self.root.lift) # Bring to front
+            self.root.after(20, self.root.focus_force) # Force focus
             print("窗口已显示")
         except tk.TclError as e:
             print(f"显示窗口时出错: {e}")
@@ -549,53 +576,42 @@ class EdgeTTSApp:
 
     def handle_minimize(self, event=None):
         """Handles the window minimize event."""
-        # This event might be triggered when withdrawing, so check the actual state
-        # Need a slight delay to let the state update after clicking minimize
+        # Check if the event source is the root window itself becoming iconic (minimized)
+        # The check needs to happen *after* the state change, hence the 'after' call.
         def check_state_and_hide():
             if not self.root.winfo_exists(): return
             try:
-                # Check the setting AND if the window state is 'iconic' (minimized)
+                # Check the setting AND if the window state is 'iconic'
+                # Using root.state() is the reliable way to check for minimization
                 if self.minimize_to_tray_var.get() and self.root.state() == 'iconic':
                     print("检测到最小化事件 (iconic state)，隐藏到托盘...")
                     self.hide_window()
-                # elif not self.root.winfo_viewable(): # Optional: Handle if already hidden?
-                #    print("窗口已隐藏。")
             except tk.TclError as e:
-                 print(f"检查窗口状态时出错: {e}")
+                 # This might happen if the window is destroyed during the check
+                 print(f"检查窗口状态时出错 (可能窗口已销毁): {e}")
+            except Exception as e:
+                 # Catch any other unexpected error during state check
+                 print(f"检查窗口状态时发生未知错误: {e}")
 
-        # Schedule the check slightly after the event
+        # Schedule the check slightly after the event to allow window state to update
         self.root.after(50, check_state_and_hide)
 
 
-    def quit_application(self, icon=None, item=None): # Add icon/item args for pystray
-        """Properly exits the application."""
-        print("正在退出应用程序 (来自托盘菜单)...")
-        global tray_icon, tray_thread # Ensure globals are accessible
-        if self.tray_icon_instance:
-            try:
-                self.tray_icon_instance.stop()
-                print("托盘图标已请求停止。")
-            except Exception as e:
-                print(f"停止托盘图标时出错: {e}")
-        tray_icon = None # Clear global reference
-        # Wait briefly for the tray thread to potentially exit
-        if tray_thread and tray_thread.is_alive():
-             print("等待托盘线程退出...")
-             tray_thread.join(timeout=1.0) # Wait max 1 second
-             if tray_thread.is_alive():
-                 print("警告：托盘线程未在超时内退出。")
-        tray_thread = None
+    def quit_application(self, icon=None, item=None, from_window_close=False):
+        """Properly exits the application. Can be called from tray or window close."""
+        source = "窗口关闭按钮" if from_window_close else "托盘菜单"
+        print(f"正在退出应用程序 (来自 {source})...")
 
-        # Call the original closing logic AFTER stopping the tray icon
-        # Ensure it runs on the main thread if called from tray thread
-        if threading.current_thread() is not threading.main_thread():
-            if self.root.winfo_exists():
-                self.root.after(0, self.on_closing, True) # Pass force_quit=True
-            else:
-                 # If root doesn't exist, try direct cleanup (less ideal)
-                 self._perform_cleanup()
-        else:
-             self.on_closing(force_quit=True)
+        # Perform cleanup actions (stop threads, save settings if needed, etc.)
+        # Pass save=False because we are exiting explicitly.
+        self._perform_cleanup(save=False)
+
+        # Force exit the process after attempting cleanup
+        print("强制退出进程...")
+        # Use os._exit for a more immediate exit after cleanup attempt
+        # This is generally safe in the main thread after cleanup.
+        print("Exiting process with os._exit(0)")
+        os._exit(0) # 强制退出
 
     # --------------------------------------------------------------------------
     # Language Handling
@@ -692,6 +708,16 @@ class EdgeTTSApp:
         # Update voice list status messages if applicable (e.g., "No matching voices")
         self._populate_inline_voice_list('left')
         self._populate_inline_voice_list('right')
+
+        # Update tray icon menu if it exists
+        if self.tray_icon_instance and hasattr(self.tray_icon_instance, 'update_menu'):
+            new_menu = (
+                pystray.MenuItem(self._("tray_show_hide"), self.toggle_window_visibility),
+                pystray.MenuItem(self._("tray_exit"), lambda: self.root.after(0, self.quit_application))
+            )
+            self.tray_icon_instance.menu = new_menu
+            self.tray_icon_instance.update_menu()
+            print("托盘菜单已更新语言。")
 
 
     # --------------------------------------------------------------------------
@@ -822,17 +848,24 @@ class EdgeTTSApp:
             try: default_fg = ctk.ThemeManager.theme["CTkButton"]["fg_color"]; default_fg_mode = default_fg[ctk.get_appearance_mode()=='dark'] if isinstance(default_fg,(list,tuple)) else default_fg
             except: default_fg_mode = "#1F6AA5"
             btn_fg = self.current_custom_color or default_fg_mode; btn_hover = self._calculate_hover_color(btn_fg)
-            # Determine normal text color based on theme
+            # Determine normal text color based on theme more robustly
+            txt_normal = None
             try:
-                default_txt_colors = ctk.ThemeManager.theme["CTkLabel"]["text_color"]
-                if isinstance(default_txt_colors, (list, tuple)):
-                    # Use light text for dark mode, dark text for light mode
-                    txt_normal = default_txt_colors[1] if ctk.get_appearance_mode().lower() == 'dark' else default_txt_colors[0]
-                else:
-                    txt_normal = default_txt_colors # Single color specified
-            except:
-                # Fallback if theme fetching fails
+                # Attempt to get the correct text color for the current mode
+                label_theme = ctk.ThemeManager.theme["CTkLabel"]
+                text_colors = label_theme["text_color"]
+                current_mode_index = 1 if ctk.get_appearance_mode().lower() == 'dark' else 0
+                if isinstance(text_colors, (list, tuple)) and len(text_colors) > current_mode_index:
+                    txt_normal = text_colors[current_mode_index]
+                elif isinstance(text_colors, str): # Handle single color case
+                    txt_normal = text_colors
+            except Exception: # Catch errors during theme access
+                pass # txt_normal remains None
+
+            # Fallback if theme access failed or color wasn't determined
+            if txt_normal is None:
                 txt_normal = "#FFFFFF" if ctk.get_appearance_mode().lower() == 'dark' else "#000000"
+
 
             txt_selected = self._get_contrasting_text_color(btn_fg)
             btn = ctk.CTkButton( frame, text=display_name, anchor="w", fg_color=btn_fg if is_selected else "transparent", hover_color=btn_hover, text_color=txt_selected if is_selected else txt_normal, command=lambda fn=full_name: self._select_voice_inline(fn) )
@@ -863,14 +896,32 @@ class EdgeTTSApp:
             new_color = self.current_custom_color; save = False
         else: self.current_custom_color = new_color
         print(self._("debug_apply_color", self.current_custom_color)); hover = self._calculate_hover_color(self.current_custom_color)
-        # ... (rest of apply color logic remains same, widget references are stable) ...
-        buttons=[getattr(self,n,None) for n in ['generate_button','refresh_button','apply_color_button','pick_color_button']]
-        for b in buttons:
-             if b and hasattr(b, 'configure'): b.configure(fg_color=self.current_custom_color, hover_color=hover)
-        # Add minimize_to_tray_switch to the list of switches to theme
-        switches=[getattr(self,n,None) for n in ['copy_to_clipboard_switch','play_audio_switch','select_to_audio_switch','select_trigger_switch', 'minimize_to_tray_switch']]
-        for s in switches:
-             if s and hasattr(s, 'configure'): s.configure(progress_color=self.current_custom_color)
+        # ... (rest of apply color logic) ...
+        buttons_to_color = [
+            self.generate_button, self.refresh_button,
+            self.apply_color_button, self.pick_color_button,
+            self.language_button # Also color the language button
+        ]
+        for b in buttons_to_color:
+             if b and hasattr(b, 'configure'):
+                 try:
+                     b.configure(fg_color=self.current_custom_color, hover_color=hover)
+                 except Exception as e:
+                     print(f"Warning: Failed to configure button color for {b}: {e}")
+
+        # Add minimize_to_tray_switch and updated monitor switch names to the list
+        switches_to_color = [
+            self.copy_to_clipboard_switch, self.play_audio_switch,
+            self.monitor_clipboard_switch, self.monitor_selection_switch,
+            self.minimize_to_tray_switch
+        ]
+        for s in switches_to_color:
+             # Check if widget exists and has the 'configure' method before calling it
+             if s and hasattr(s, 'configure'):
+                 try:
+                     s.configure(progress_color=self.current_custom_color)
+                 except Exception as e:
+                     print(f"Warning: Failed to configure switch color for {s}: {e}")
         sliders=[getattr(self,n,None) for n in ['rate_slider','volume_slider']]
         for s in sliders:
              if s: s.configure(button_color=self.current_custom_color, progress_color=self.current_custom_color, button_hover_color=hover)
@@ -895,14 +946,35 @@ class EdgeTTSApp:
             except: return "#000000"
 
     # --------------------------------------------------------------------------
-    # 设置加载与保存 (添加 minimize_to_tray)
+    # 设置加载与保存 (添加 minimize_to_tray, 重命名监控设置)
     # --------------------------------------------------------------------------
     def load_settings(self):
-        # Added minimize_to_tray default
-        defaults = {"language":"zh", "copy_path_enabled": True, "autoplay_enabled": False, "monitor_enabled": False, "select_trigger_enabled": False, "minimize_to_tray": False, "max_audio_files": DEFAULT_MAX_AUDIO_FILES, "selected_voice": DEFAULT_VOICE, "rate": 0, "volume": 0, "appearance_mode": DEFAULT_APPEARANCE_MODE, "language_filter_left": "zh", "language_filter_right": "en", "custom_theme_color": DEFAULT_CUSTOM_COLOR}
+        # Added minimize_to_tray default, renamed monitor settings
+        defaults = {
+            "language": "zh",
+            "copy_path_enabled": True,
+            "autoplay_enabled": False,
+            "monitor_clipboard_enabled": False, # Renamed
+            "monitor_selection_enabled": False, # Renamed
+            "minimize_to_tray": False,          # <<<<<<< 新增默认值 >>>>>>>>>
+            "max_audio_files": DEFAULT_MAX_AUDIO_FILES,
+            "selected_voice": DEFAULT_VOICE,
+            "rate": 0,
+            "volume": 0,
+            "appearance_mode": DEFAULT_APPEARANCE_MODE,
+            "language_filter_left": "zh",
+            "language_filter_right": "en",
+            "custom_theme_color": DEFAULT_CUSTOM_COLOR
+        }
         try:
             if os.path.exists(SETTINGS_FILE):
-                with open(SETTINGS_FILE, "r", encoding="utf-8") as f: settings = json.load(f)
+                with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
+                    settings = json.load(f)
+                    # Handle potential old key names for backward compatibility
+                    if "monitor_enabled" in settings:
+                        settings["monitor_clipboard_enabled"] = settings.pop("monitor_enabled")
+                    if "select_trigger_enabled" in settings:
+                        settings["monitor_selection_enabled"] = settings.pop("select_trigger_enabled")
                 merged = defaults.copy(); merged.update(settings)
                 loaded_color = merged.get("custom_theme_color", DEFAULT_CUSTOM_COLOR)
                 # Use default language "zh" for initial validation print if app._ not ready
@@ -921,9 +993,9 @@ class EdgeTTSApp:
             "selected_voice": self.current_full_voice_name or DEFAULT_VOICE,
             "copy_path_enabled": self.copy_to_clipboard_var.get(),
             "autoplay_enabled": self.play_audio_var.get(),
-            "monitor_enabled": self.select_to_audio_var.get(),
-            "select_trigger_enabled": self.select_trigger_var.get(),
-            "minimize_to_tray": self.minimize_to_tray_var.get(), # Save tray setting
+            "monitor_clipboard_enabled": self.monitor_clipboard_var.get(), # Renamed
+            "monitor_selection_enabled": self.monitor_selection_var.get(), # Renamed
+            "minimize_to_tray": self.minimize_to_tray_var.get(), # <<<<<<< 保存托盘设置 >>>>>>>>>
             "max_audio_files": max_f,
             "rate": self.rate_slider_var.get(),
             "volume": self.volume_slider_var.get(),
@@ -976,10 +1048,18 @@ class EdgeTTSApp:
         match = re.search(r", (.*Neural)\)$", name); return match.group(1) if match else name
 
     # --------------------------------------------------------------------------
-    # 浮窗相关方法 (SyntaxError 修复 + 打印)
+    # 浮窗相关方法 (修改以处理选择触发)
     # --------------------------------------------------------------------------
-    def show_float_window(self, text):
-        """在鼠标位置显示蓝色“音”字浮窗"""
+    def show_float_window(self, text=None, triggered_by_selection=False):
+        """在鼠标位置显示蓝色“音”字浮窗.
+           - text: 文本内容 (如果由剪贴板监控触发).
+           - triggered_by_selection: 标记是否由鼠标选择触发.
+        """
+        # Store how this window was triggered
+        self._float_triggered_by_selection = triggered_by_selection
+        # Store text only if provided (i.e., from clipboard monitor)
+        self._text_for_float_trigger = text if text else None
+
         # 先销毁可能存在的旧窗口
         if self.float_window:
             try:
@@ -990,8 +1070,6 @@ class EdgeTTSApp:
 
         self.destroy_generating_window()
         self.destroy_ok_window()
-
-        self._text_for_float_trigger = text # Store text for later use
 
         # 创建新窗口
         self.float_window = tk.Toplevel(self.root)
@@ -1095,206 +1173,553 @@ class EdgeTTSApp:
             self._ok_window_close_job = None
         self._ok_window_close_job = self.ok_window.after(MOUSE_TIP_TIMEOUT * 1000, auto_close)
 
-    def trigger_generate_from_float(self):
-        text = getattr(self, '_text_for_float_trigger', None)
-        if not text: print(self._("debug_no_float_text")); self.destroy_float_window(); return
-        print(self._("debug_float_trigger_text").format(text[:50]))
+    def _process_and_generate_audio(self, text_to_generate, position):
+        """Internal helper to handle the audio generation process after text is confirmed."""
+        if not text_to_generate:
+            print(self._("debug_no_float_text"))
+            self.destroy_generating_window() # Ensure generating window is closed
+            return
+
+        print(self._("debug_float_trigger_text").format(text_to_generate[:50]))
         voice = self.current_full_voice_name
-        if not voice: self.update_status("status_no_voice_error", error=True, duration=5); self.destroy_float_window(); return
-        rate=f"{self.rate_slider_var.get():+}%"; volume=f"{self.volume_slider_var.get():+}%"; pitch="+0Hz"
-        pos = self.last_mouse_pos; self.destroy_float_window(); self.show_generating_window(pos)
+        if not voice:
+            self.update_status("status_no_voice_error", error=True, duration=5)
+            self.destroy_generating_window()
+            return
+
+        rate = f"{self.rate_slider_var.get():+}%"
+        volume = f"{self.volume_slider_var.get():+}%"
+        pitch = "+0Hz"
+
+        # Ensure generating window is shown (it might have been closed by error before)
+        if not self.generating_window or not self.generating_window.winfo_exists():
+             self.show_generating_window(position)
+
         def on_complete(path, error=None):
             self.destroy_generating_window()
-            copy=self.copy_to_clipboard_var.get(); play=self.play_audio_var.get()
+            copy_enabled = self.copy_to_clipboard_var.get()
+            play_enabled = self.play_audio_var.get()
             if path:
-                print(self._("debug_audio_complete", path)); print(self._("debug_autoplay_float", play)); print(self._("debug_autocopy_float", copy))
-                if play: self.play_audio_pygame(path)
-                if copy: copy_file_to_clipboard(path); self.show_ok_window(pos)
-            else: err = f"{self._('status_generate_error')}: {error or '??'}"; print(err); self.update_status(err, error=True)
+                print(self._("debug_audio_complete", path))
+                print(self._("debug_autoplay_float", play_enabled))
+                print(self._("debug_autocopy_float", copy_enabled))
+                if play_enabled:
+                    self.play_audio_pygame(path)
+                # Show OK window only if copy is enabled (as per original logic)
+                if copy_enabled:
+                    copy_file_to_clipboard(path) # Copy the generated file path
+                    self.show_ok_window(position) # Show OK checkmark
+            else:
+                err = f"{self._('status_generate_error')}: {error or '??'}"
+                print(err)
+                self.update_status(err, error=True)
             manage_audio_files()
-        generate_audio(text, voice, rate, volume, pitch, on_complete)
+
+        generate_audio(text_to_generate, voice, rate, volume, pitch, on_complete)
+
+    def _continue_generate_from_float_after_copy(self):
+        """Reads clipboard after copy simulation and proceeds with generation."""
+        print("[DEBUG] _continue_generate_from_float_after_copy called")
+        pos = self.last_mouse_pos # Use the stored position
+        try:
+            # Read clipboard content
+            clipboard_text = pyperclip.paste()
+            sanitized_text = sanitize_text(clipboard_text)
+            print(f"[DEBUG] Text read from clipboard after copy: '{sanitized_text[:50]}...'")
+
+            if sanitized_text:
+                # Proceed with generation using the sanitized text
+                self._process_and_generate_audio(sanitized_text, pos)
+            else:
+                print("ERROR: No valid text found in clipboard after copy simulation.")
+                self.destroy_generating_window() # Close generating indicator
+                self.update_status("status_clipboard_empty_error", error=True, duration=5)
+
+        except Exception as e:
+            print(f"Error reading clipboard or processing after copy: {e}")
+            self.destroy_generating_window() # Close generating indicator
+            self.update_status("status_clipboard_read_error", error=True, duration=5)
+
+    def trigger_generate_from_float(self):
+        """Handles the click on the float button ('音')."""
+        initial_text = getattr(self, '_text_for_float_trigger', None)
+        pos = self.last_mouse_pos # Store position before destroying float window
+
+        # Destroy the blue float window immediately
+        self.destroy_float_window()
+
+        if initial_text is None:
+            # --- Case 1: Triggered by selection (text is None) ---
+            print("[DEBUG] Float clicked (selection trigger): Simulating copy...")
+            # Show generating indicator BEFORE simulating copy
+            self.show_generating_window(pos)
+            # Simulate copy
+            self._simulate_copy_after_selection()
+            # Schedule the next step (reading clipboard and generating) after a delay
+            # This allows time for the clipboard to update after the simulated Ctrl+C
+            if self.root.winfo_exists():
+                self.root.after(150, self._continue_generate_from_float_after_copy)
+            else:
+                 print("[DEBUG] Root window destroyed before scheduling clipboard read.")
+                 self.destroy_generating_window()
+
+        else:
+            # --- Case 2: Triggered by clipboard monitor (text already exists) ---
+            print("[DEBUG] Float clicked (clipboard trigger): Processing directly...")
+            # Directly process the text that was stored when the float window was created
+            self._process_and_generate_audio(initial_text, pos)
 
     # --------------------------------------------------------------------------
-    # 剪贴板与鼠标监控方法 (使用翻译)
+    # 剪贴板与鼠标监控方法 (重构以分离控制)
     # --------------------------------------------------------------------------
-    def toggle_select_to_audio(self):
-        global clipboard_monitor_active
-        if self.select_to_audio_var.get():
-            if not clipboard_monitor_active: self.start_clipboard_monitor()
-        else: self.stop_clipboard_monitor()
+    def toggle_clipboard_monitor(self):
+        """Toggles the clipboard polling monitor."""
+        print(f"Toggle Clipboard Monitor: New state = {self.monitor_clipboard_var.get()}")
+        self._update_monitor_state()
         self.save_settings()
 
-    def start_clipboard_monitor(self):
-        global clipboard_monitor_active, clipboard_polling_thread, previous_clipboard_poll_content
+    def toggle_selection_monitor(self):
+        """Toggles the mouse selection monitor."""
+        print(f"Toggle Selection Monitor: New state = {self.monitor_selection_var.get()}")
+        self._update_monitor_state()
+        self.save_settings()
+
+    def _update_monitor_state(self):
+        """Starts or stops monitors based on current switch states."""
+        clipboard_enabled = self.monitor_clipboard_var.get()
+        selection_enabled = self.monitor_selection_var.get()
+
+        # Determine if any monitoring is needed
+        # Clipboard polling is needed if EITHER clipboard OR selection monitoring is enabled
+        should_poll_clipboard = clipboard_enabled or selection_enabled
+        should_listen_mouse = selection_enabled
+
+        global clipboard_monitor_active # This flag now indicates if *any* monitor is active
+
+        # --- Start/Stop Logic ---
+        if should_poll_clipboard or should_listen_mouse:
+            # Need to start or adjust monitors
+            if not clipboard_monitor_active:
+                # Start everything needed from scratch
+                self.start_monitors(start_clipboard=should_poll_clipboard, start_mouse=should_listen_mouse)
+            else:
+                # Monitors are already active, adjust which threads run
+                self._adjust_running_monitors(run_clipboard_poll=should_poll_clipboard, run_mouse_listen=should_listen_mouse)
+        elif clipboard_monitor_active:
+             # No monitors should be active, but they are -> stop them
+            self.stop_monitors()
+
+        # Update status bar based on final state
+        status_msg = []
+        final_clipboard_active = clipboard_polling_thread is not None and clipboard_polling_thread.is_alive()
+        final_mouse_active = mouse_listener_thread is not None and mouse_listener_thread.is_alive()
+
+        if self.monitor_clipboard_var.get() and final_clipboard_active:
+             status_msg.append(self._("settings_enable_ctrl_c_label"))
+        if self.monitor_selection_var.get() and final_mouse_active:
+             status_msg.append(self._("settings_enable_selection_label"))
+
+        if status_msg:
+            # Use a more generic key for the prefix if available, or construct it
+            prefix_key = "status_monitor_enabled_prefix"
+            prefix = self._(prefix_key) if prefix_key in TRANSLATIONS.get(self.current_language, {}) else "✅ 监控已启用"
+            self.update_status(f"{prefix}: {', '.join(status_msg)}", duration=5)
+        elif not clipboard_monitor_active: # Ensure monitors are truly stopped before showing disabled
+            self.update_status(self._("status_monitor_disabled"), duration=3)
+
+    # --- Helper methods for starting threads ---
+    def _start_clipboard_polling_thread(self):
+        """Starts the clipboard polling thread if not already running."""
+        global clipboard_polling_thread, previous_clipboard_poll_content
+        if clipboard_polling_thread is None or not clipboard_polling_thread.is_alive():
+            print("Starting clipboard polling thread...")
+            try:
+                previous_clipboard_poll_content = pyperclip.paste()
+            except Exception as e:
+                print(self._("debug_initial_paste_error", e))
+                previous_clipboard_poll_content = ""
+
+            def poll_clipboard():
+                global clipboard_monitor_active, previous_clipboard_poll_content
+                while clipboard_monitor_active:
+                    # Check if ANY monitor (clipboard or selection) requires polling
+                    if not self.monitor_clipboard_var.get() and not self.monitor_selection_var.get():
+                        time.sleep(1) # Sleep longer if thread is alive but not needed
+                        continue
+
+                    current_text = None
+                    try:
+                        current_text = pyperclip.paste()
+                        # Trigger float ONLY if clipboard monitor is enabled AND text changed
+                        if self.monitor_clipboard_var.get() and current_text is not None and current_text.strip() and current_text != previous_clipboard_poll_content:
+                            sanitized = sanitize_text(current_text)
+                            if sanitized:
+                                print(self._("debug_new_clipboard_content", sanitized[:50]))
+                                previous_clipboard_poll_content = current_text # Update only on valid change
+                                if self.root.winfo_exists(): self.root.after(0, self._trigger_float_from_poll, sanitized)
+                            else:
+                                previous_clipboard_poll_content = current_text # Update on non-text change too
+                        # Always update previous_clipboard_poll_content if it changed,
+                        # needed for selection monitor to detect the change after simulated copy.
+                        elif current_text is not None and current_text != previous_clipboard_poll_content:
+                             previous_clipboard_poll_content = current_text
+                        elif current_text is None:
+                            previous_clipboard_poll_content = None # Handle None case
+
+                        time.sleep(0.5)
+                    except pyperclip.PyperclipException as e:
+                        print(self._("debug_poll_clipboard_error", e))
+                        previous_clipboard_poll_content = current_text # Update even on error to avoid repeated triggers
+                        time.sleep(1)
+                    except Exception as e:
+                        print(self._("debug_poll_generic_error", e))
+                        previous_clipboard_poll_content = current_text # Update even on error
+                        time.sleep(1)
+                print(self._("debug_poll_thread_stop"))
+
+            clipboard_polling_thread = threading.Thread(target=poll_clipboard, daemon=True)
+            clipboard_polling_thread.start()
+        else:
+            print("Clipboard polling thread already running.")
+
+    def _start_mouse_listener_thread(self):
+        """Starts the mouse listener thread if not already running."""
         global mouse_listener_thread, mouse_listener, is_dragging, drag_start_pos, drag_start_time
-        if clipboard_monitor_active: print("Monitor already running"); return
-        clipboard_monitor_active = True
-        print(self._("debug_monitor_start"))
-        self.update_status("status_monitor_enabled", duration=5)
-        # Clipboard Polling Thread
-        try: previous_clipboard_poll_content = pyperclip.paste()
-        except Exception as e: print(self._("debug_initial_paste_error", e)); previous_clipboard_poll_content = ""
-        # print(self._("debug_initial_paste_set", previous_clipboard_poll_content[:50]))
-        def poll_clipboard():
-            global clipboard_monitor_active, previous_clipboard_poll_content
-            # print(self._("debug_poll_thread_start")) # Can be verbose
-            while clipboard_monitor_active:
-                current_text = None
+        if mouse_listener_thread is None or not mouse_listener_thread.is_alive():
+            print("Starting mouse listener thread...")
+            is_dragging = False # Reset dragging state
+
+            def on_mouse_click(x, y, button, pressed):
+                global is_dragging, drag_start_pos, drag_start_time
+                # Only process if the selection monitor switch is ON
+                if not self.monitor_selection_var.get():
+                    return
+
+                if button == mouse.Button.left:
+                    if pressed:
+                        is_dragging = True
+                        drag_start_pos = (x, y)
+                        drag_start_time = time.time()
+                    else:
+                        if is_dragging:
+                            is_dragging = False
+                            release_pos = (x, y)
+                            release_time = time.time()
+                            # Check selection trigger setting AGAIN here
+                            print(f"[DEBUG] Mouse Released. is_dragging={is_dragging}, monitor_selection_var={self.monitor_selection_var.get()}")
+                            if self.monitor_selection_var.get():
+                                try:
+                                    dist = math.sqrt((release_pos[0] - drag_start_pos[0])**2 + (release_pos[1] - drag_start_pos[1])**2)
+                                    print(f"[DEBUG] Calculated distance: {dist}, Threshold: {MOUSE_DRAG_THRESHOLD}")
+                                    if dist > MOUSE_DRAG_THRESHOLD:
+                                        print(self._("debug_selection_detected"))
+                                        # --- REMOVED simulate_copy_after_selection() here ---
+                                        # Schedule the float trigger immediately without text
+                                        if self.root.winfo_exists():
+                                            print(f"[DEBUG] Scheduling _trigger_float_from_selection with pos: {release_pos}")
+                                            # Trigger float immediately, text will be fetched on click
+                                            self.root.after(0, self._trigger_float_from_selection, release_pos)
+                                        else:
+                                            print("[DEBUG] Root window doesn't exist, cannot schedule float.")
+                                    else:
+                                        print("[DEBUG] Drag distance below threshold.")
+                                except Exception as e:
+                                    print(self._("debug_mouse_release_error", e))
+                            else:
+                                print("[DEBUG] monitor_selection_var is False in on_mouse_click.")
+
+            def listen_mouse():
+                global mouse_listener, clipboard_monitor_active # Need clipboard_monitor_active here
+                # Ensure listener is stopped before creating a new one if somehow it exists
+                if mouse_listener and mouse_listener.is_alive():
+                    try: mouse_listener.stop()
+                    except: pass
+                mouse_listener = mouse.Listener(on_click=on_mouse_click)
                 try:
-                    current_text = pyperclip.paste()
-                    if current_text is not None and current_text.strip() and current_text != previous_clipboard_poll_content:
-                        sanitized = sanitize_text(current_text)
-                        if sanitized:
-                            print(self._("debug_new_clipboard_content", sanitized[:50]))
-                            previous_clipboard_poll_content = current_text
-                            if self.root.winfo_exists(): self.root.after(0, self._trigger_float_from_poll, sanitized)
-                        else: previous_clipboard_poll_content = current_text
-                    elif current_text is not None: previous_clipboard_poll_content = current_text
-                    elif current_text is None: previous_clipboard_poll_content = None
-                    time.sleep(0.5)
-                except pyperclip.PyperclipException as e: print(self._("debug_poll_clipboard_error", e)); previous_clipboard_poll_content=current_text; time.sleep(1)
-                except Exception as e: print(self._("debug_poll_generic_error", e)); previous_clipboard_poll_content=current_text; time.sleep(1)
-            print(self._("debug_poll_thread_stop"))
-        clipboard_polling_thread = threading.Thread(target=poll_clipboard, daemon=True); clipboard_polling_thread.start()
-        # Mouse Listener Thread
-        is_dragging = False
-        def on_mouse_click(x, y, button, pressed):
-            global is_dragging, drag_start_pos, drag_start_time
-            if button == mouse.Button.left:
-                if pressed: is_dragging = True; drag_start_pos = (x, y); drag_start_time = time.time()
-                else:
-                    if is_dragging:
-                        is_dragging = False; release_pos=(x,y); release_time=time.time()
-                        if self.select_trigger_var.get():
-                            try:
-                                dist = math.sqrt((release_pos[0]-drag_start_pos[0])**2 + (release_pos[1]-drag_start_pos[1])**2)
-                                # print(self._("debug_mouse_released", dist, release_time - drag_start_time)) # Verbose
-                                if dist > MOUSE_DRAG_THRESHOLD:
-                                    print(self._("debug_selection_detected"))
-                                    threading.Thread(target=self._simulate_copy_after_selection, daemon=True).start()
-                            except Exception as e: print(self._("debug_mouse_release_error", e))
-        def listen_mouse():
-            global mouse_listener
-            mouse_listener = mouse.Listener(on_click=on_mouse_click); mouse_listener.start(); mouse_listener.join()
-            print(self._("debug_mouse_listener_thread_stop"))
-        mouse_listener_thread = threading.Thread(target=listen_mouse, daemon=True); mouse_listener_thread.start()
+                    mouse_listener.start()
+                    # Keep thread alive while listener is running AND the main monitor flag is active
+                    while clipboard_monitor_active and mouse_listener.is_alive():
+                        # Also check if the specific selection monitor is still enabled
+                        if not self.monitor_selection_var.get():
+                            print("Selection monitor disabled, stopping listener...")
+                            break # Exit loop if selection monitor turned off
+                        time.sleep(0.1)
+                except Exception as e:
+                    print(f"Error starting or running mouse listener: {e}")
+                finally:
+                    # Ensure listener stops if loop exits or start fails
+                    if mouse_listener and mouse_listener.is_alive():
+                        try: mouse_listener.stop()
+                        except: pass
+                    print(self._("debug_mouse_listener_thread_stop"))
+
+            mouse_listener_thread = threading.Thread(target=listen_mouse, daemon=True)
+            mouse_listener_thread.start()
+        else:
+            print("Mouse listener thread already running.")
+
+    def start_monitors(self, start_clipboard=True, start_mouse=True):
+        """Starts the necessary monitoring threads using helper methods."""
+        global clipboard_monitor_active
+        if clipboard_monitor_active:
+             print("Warning: start_monitors called while already active. Adjusting instead.")
+             self._adjust_running_monitors(run_clipboard_poll=start_clipboard, run_mouse_listen=start_mouse)
+             return
+
+        clipboard_monitor_active = True # Mark that *some* monitor is now active
+        print(self._("debug_monitor_start"))
+
+        if start_clipboard:
+            self._start_clipboard_polling_thread()
+        else:
+            print("Clipboard polling not required by initial start.")
+
+        if start_mouse:
+            self._start_mouse_listener_thread()
+        else:
+            print("Mouse listener not required by initial start.")
+
+    def _adjust_running_monitors(self, run_clipboard_poll, run_mouse_listen):
+        """Adjusts which monitors are active without fully stopping/starting."""
+        global mouse_listener_thread, mouse_listener, clipboard_polling_thread
+
+        print(f"Adjusting monitors: Poll Clipboard={run_clipboard_poll}, Listen Mouse={run_mouse_listen}")
+
+        # --- Mouse Listener ---
+        mouse_is_running = mouse_listener_thread is not None and mouse_listener_thread.is_alive()
+
+        if run_mouse_listen and not mouse_is_running:
+            print("Starting mouse listener (adjustment)...")
+            self._start_mouse_listener_thread() # Call helper to start
+        elif not run_mouse_listen and mouse_is_running:
+            print("Stopping mouse listener (adjustment)...")
+            # Signal the listener thread loop to exit by checking monitor_selection_var
+            # The thread itself will stop the pynput listener.
+            if mouse_listener and mouse_listener.is_alive():
+                 try:
+                     mouse_listener.stop() # Attempt direct stop
+                 except Exception as e:
+                     print(f"Error stopping mouse listener directly: {e}")
+            # No need to nullify thread here, let the thread exit gracefully.
+
+        # --- Clipboard Polling ---
+        clipboard_is_running = clipboard_polling_thread is not None and clipboard_polling_thread.is_alive()
+
+        if run_clipboard_poll and not clipboard_is_running:
+             print("Starting clipboard polling (adjustment)...")
+             self._start_clipboard_polling_thread() # Call helper to start
+        elif not run_clipboard_poll and clipboard_is_running:
+             print("Clipboard polling no longer needed, thread will idle or stop if all monitors off.")
+             # The thread's internal loop checks the vars, no direct stop needed here
+             # unless we are stopping ALL monitors (handled by stop_monitors)
+
 
     def _simulate_copy_after_selection(self):
+        """Simulates Ctrl+C keyboard shortcut."""
+        # Check AGAIN if selection trigger is enabled before simulating
+        if not self.monitor_selection_var.get():
+            print("[DEBUG] Selection trigger disabled, skipping copy simulation.")
+            return
         try:
-            time.sleep(0.05); print(self._("debug_simulate_copy"))
+            # Using a slightly longer delay to increase reliability of clipboard update
+            time.sleep(0.15)
+            print(self._("debug_simulate_copy"))
             controller = keyboard.Controller()
-            with controller.pressed(keyboard.Key.ctrl): controller.press('c'); controller.release('c')
+            # Use press/release directly for potentially better compatibility
+            controller.press(keyboard.Key.ctrl)
+            controller.press('c')
+            controller.release('c')
+            controller.release(keyboard.Key.ctrl)
             print(self._("debug_simulate_copy_complete"))
+            # After copy, the poll_clipboard function will detect the change.
+            # If monitor_clipboard_var is true, it will trigger the float window.
         except Exception as e: print(self._("debug_simulate_copy_error", e))
 
-    def _trigger_float_from_poll(self, text_to_show):
-        if not clipboard_monitor_active or not self.root.winfo_exists(): return
+    def _trigger_float_from_selection(self, mouse_pos):
+        """Shows the float window specifically for selection trigger."""
+        print(f"[DEBUG] _trigger_float_from_selection called with pos: {mouse_pos}") # DEBUG
+        print(f"[DEBUG] Checking conditions: monitor_selection={self.monitor_selection_var.get()}, monitor_active={clipboard_monitor_active}, root_exists={self.root.winfo_exists()}") # DEBUG
+        if not self.monitor_selection_var.get() or not clipboard_monitor_active or not self.root.winfo_exists():
+            print("[DEBUG] _trigger_float_from_selection: Condition not met, returning.") # DEBUG
+            return
         try:
+            print("[DEBUG] _trigger_float_from_selection: Conditions met, proceeding.")
+            self.last_mouse_pos = mouse_pos # Use the position from the mouse release event
+            print(self._("debug_selection_mouse_pos", self.last_mouse_pos))
+
+            # --- Show float window WITHOUT text ---
+            # Text will be fetched only when the button is clicked.
+            self.show_float_window(text=None) # Pass text=None explicitly
+
+        except Exception as e:
+            print(self._("debug_selection_trigger_error", e))
+            # Ensure float window is destroyed on error
+            if hasattr(self, 'float_window') and self.float_window:
+                 try: self.float_window.destroy()
+                 except: pass
+                 self.float_window = None
+
+    def _trigger_float_from_poll(self, text_to_show):
+        """Shows the float window when new clipboard content is detected AND clipboard monitor is ON."""
+        # Check if the CLIPBOARD monitor specifically is enabled.
+        if not self.monitor_clipboard_var.get() or not clipboard_monitor_active or not self.root.winfo_exists():
+             # print("Clipboard monitor off or root gone, not showing float window from poll.")
+             return
+        # Check if the text is valid before showing the window
+        if not text_to_show or not text_to_show.strip(): return
+
+        try:
+            # Get mouse position ONLY when triggering the window
             self.last_mouse_pos = (self.root.winfo_pointerx(), self.root.winfo_pointery())
             print(self._("debug_poll_mouse_pos", self.last_mouse_pos))
             self.show_float_window(text_to_show)
         except Exception as e: print(self._("debug_poll_trigger_error", e))
 
-    def stop_clipboard_monitor(self):
+    def stop_monitors(self):
+        """Stops all monitoring threads."""
         global clipboard_monitor_active, clipboard_polling_thread, mouse_listener_thread, mouse_listener
-        if not clipboard_monitor_active: print("监控未运行"); return
+        if not clipboard_monitor_active:
+            # print("Monitors already stopped.") # Less verbose
+            return
+
         print(self._("debug_monitor_stop"))
-        clipboard_monitor_active = False
-        if mouse_listener:
-            try: mouse_listener.stop()
-            except Exception as e: print(self._("debug_mouse_listener_stop_error", e))
-        mouse_listener = None; mouse_listener_thread = None
+        clipboard_monitor_active = False # Signal threads to stop
+
+        # --- Stop Mouse Listener ---
+        if mouse_listener and mouse_listener.is_alive():
+            try:
+                print("Stopping mouse listener...")
+                mouse_listener.stop()
+            except Exception as e:
+                print(self._("debug_mouse_listener_stop_error", e))
+        mouse_listener = None # Clear listener reference
+
+        # --- Wait for Threads ---
+        # Wait briefly for threads to potentially exit based on the flag
+        # No need for explicit join unless debugging specific thread issues
+        # time.sleep(0.1) # Can potentially remove this short sleep
+
+        # --- Clear Thread References ---
+        # Check if threads are still alive (optional logging) and clear references
+        if mouse_listener_thread and mouse_listener_thread.is_alive():
+            print("Warning: Mouse listener thread still alive after stop signal.")
+        mouse_listener_thread = None
+
+        if clipboard_polling_thread and clipboard_polling_thread.is_alive():
+            print("Warning: Clipboard polling thread still alive after stop signal.")
         clipboard_polling_thread = None
-        if self.root.winfo_exists():
+
+        # --- Clean up UI ---
+        if hasattr(self, 'root') and self.root.winfo_exists(): # Check root exists
             self.root.after(0, self.destroy_float_window)
             self.root.after(0, self.destroy_generating_window)
             self.root.after(0, self.destroy_ok_window)
-        self.update_status("status_monitor_disabled", duration=3)
+        # Don't update status here, _update_monitor_state will handle it
+        # self.update_status("status_monitor_disabled", duration=3)
 
     # --------------------------------------------------------------------------
-    # 窗口关闭处理 (修改以处理托盘和强制退出)
+    # 窗口关闭与清理 <<<<<<< 修改 >>>>>>>>>
     # --------------------------------------------------------------------------
-    def on_closing(self, force_quit=False):
-        """Handles window closing action. Hides to tray or quits."""
-        # If minimize to tray is enabled AND we are not force quitting, hide instead.
-        if hasattr(self, 'minimize_to_tray_var') and self.minimize_to_tray_var.get() and not force_quit:
-            print("关闭按钮点击，检查是否隐藏到托盘...")
+    def _bind_window_events(self):
+        """Bind window events after main setup."""
+        if not self.root.winfo_exists(): return
+        try:
+            self.root.bind("<Unmap>", self.handle_minimize)
+            self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+            print("窗口事件已绑定。")
+        except tk.TclError as e:
+            print(f"绑定窗口事件时出错: {e}")
+
+    def on_closing(self):
+        """Handles window closing action (WM_DELETE_WINDOW)."""
+        # 如果启用了最小化到托盘，则隐藏窗口而不是退出
+        if self.minimize_to_tray_var.get():
+            print("窗口关闭事件：隐藏到托盘...")
             self.hide_window()
-            return # Don't proceed with full shutdown if hiding
-
-        # Proceed with full shutdown if force_quit is True or minimize_to_tray is False
-        print(self._("debug_closing"))
-        self._perform_cleanup(save=not force_quit) # Perform cleanup, save settings only if not force_quit
-
-        # self.root.quit() is removed as self.root.destroy() in _perform_cleanup should handle it.
-        # If self.root doesn't exist anymore, quit() would error anyway.
-        pass # No explicit quit needed here now
+        else:
+            # 否则，执行完整的退出流程
+            print("窗口关闭事件：执行退出...")
+            self.quit_application(from_window_close=True)
 
     def _perform_cleanup(self, save=True):
         """Handles the actual cleanup tasks. Checks winfo_exists() before operations."""
         print("执行清理操作...")
-        self.stop_clipboard_monitor() # Stop monitors first
+        self.stop_monitors() # Stop monitors first
 
-        # Stop tray icon thread (if quitting completely)
-        global tray_icon, tray_thread
-        if tray_icon:
+        # Stop tray icon thread (use global instance variable)
+        global tray_icon_instance_global, tray_thread
+        if tray_icon_instance_global and hasattr(tray_icon_instance_global, 'stop'):
             print("请求停止托盘图标...")
             try:
-                tray_icon.stop()
+                tray_icon_instance_global.stop()
             except Exception as e:
                 print(f"停止托盘图标时出错: {e}")
+
         # Wait briefly for the tray thread to potentially exit
         if tray_thread and tray_thread.is_alive():
              print("等待托盘线程退出...")
-             tray_thread.join(timeout=0.5) # Shorter timeout
-             if tray_thread.is_alive():
-                 print("警告：托盘线程未在超时内退出。")
-        tray_icon = None
+             try:
+                 tray_thread.join(timeout=1.0) # Increased timeout slightly
+                 if tray_thread.is_alive():
+                     print("警告：托盘线程未在超时内退出。")
+             except Exception as e:
+                 print(f"等待托盘线程退出时出错: {e}")
+
+        # Clear global references after attempting to stop/join
+        tray_icon_instance_global = None
         tray_thread = None
 
-        # Save settings if requested
-        if save:
+        # Save settings if requested (check root exists)
+        if save and hasattr(self, 'root') and self.root.winfo_exists():
             print("正在保存设置...")
             self.save_settings()
 
-        # Stop Pygame
+        # Stop Pygame (check if initialized before quitting)
         print("正在停止 Pygame...")
         try:
-            if pygame.mixer.get_init(): print(self._("debug_pygame_stop_mixer")); pygame.mixer.music.stop(); pygame.mixer.quit()
-            if pygame.get_init(): print(self._("debug_pygame_quit")); pygame.quit()
-        except Exception as e: print(self._("debug_pygame_close_error", e))
-        try:
-            for widget in self.root.winfo_children():
-                if isinstance(widget, tk.Toplevel):
-                    try: widget.destroy()
-                    except: pass
-            self.root.destroy()
-        except tk.TclError as e: print(self._("debug_destroy_error", e))
-        # Destroy any remaining Toplevel windows (like floaters)
-        # Check if root exists before accessing children
+            if pygame.mixer.get_init():
+                print(self._("debug_pygame_stop_mixer"))
+                pygame.mixer.music.stop()
+                pygame.mixer.quit()
+            if pygame.get_init():
+                print(self._("debug_pygame_quit"))
+                pygame.quit()
+        except Exception as e:
+            print(self._("debug_pygame_close_error", e))
+
+        # Destroy Toplevel windows first (check root exists)
         if hasattr(self, 'root') and self.root.winfo_exists():
             print("销毁顶层窗口...")
             try:
-                for widget in self.root.winfo_children():
-                    if isinstance(widget, tk.Toplevel):
-                        try: widget.destroy()
-                        except: pass
+                # Iterate safely over a copy of the children list
+                for widget in list(self.root.winfo_children()):
+                    if isinstance(widget, tk.Toplevel) and widget.winfo_exists():
+                        try:
+                            widget.destroy()
+                        except Exception as inner_e:
+                            print(f"销毁顶层窗口 {widget} 时出错: {inner_e}")
             except Exception as e:
-                 print(f"销毁顶层窗口时出错: {e}")
+                 print(f"获取或销毁顶层窗口时出错: {e}")
 
-        # Destroy root window last if it exists
-        # Check again before destroying the root itself
+        # Destroy root window last (check again before destroying)
         if hasattr(self, 'root') and self.root.winfo_exists():
             print("销毁主窗口...")
             try:
                 self.root.destroy()
+                print("主窗口已销毁。")
             except tk.TclError as e:
-                print(self._("debug_destroy_error", e))
+                # This error might still occur if something else destroyed it concurrently
+                print(f"销毁主窗口时发生 TclError (可能已被销毁): {e}")
+            except Exception as e:
+                print(f"销毁主窗口时发生未知错误: {e}")
+        else:
+             print("主窗口不存在或已被销毁，跳过销毁步骤。")
+
         print("清理完成。")
 
 
 # ==============================================================================
-# 程序入口点 (修改退出逻辑)
+# 程序入口点
 # ==============================================================================
 if __name__ == "__main__":
     # Ensure only one instance is running (Optional but good practice)
