@@ -301,11 +301,15 @@ class EdgeTTSApp:
         # <<<<<<< 修改: 窗口关闭协议绑定移到后面 >>>>>>>>>
         # self.root.protocol("WM_DELETE_WINDOW", self.on_closing) # Moved later
         global app; app = self
+        self.is_pinned = False # <<<<<<< 添加: 窗口置顶状态 >>>>>>>>>
+
         # Language Setup (BEFORE UI that uses translations)
         settings = self.load_settings()
         self.current_language = settings.get("language", "zh")
         self.root.title(self._("window_title"))
-
+        # Set minimum window size to prevent initial narrowness
+        self.root.minsize(width=550, height=620)
+ 
         # <<<<<<< 添加: 设置窗口图标 >>>>>>>>>
         icon_path = os.path.join(os.path.dirname(__file__), ICON_PATH)
         try:
@@ -337,18 +341,47 @@ class EdgeTTSApp:
         # Store references to widgets needing language updates
         self._language_widgets = {}
 
+
+
         # --- Main Frame ---
-        self.main_frame = ctk.CTkFrame(self.root, fg_color="transparent"); self.main_frame.pack(fill="both", expand=True, padx=20, pady=20)
-        self.main_frame.grid_columnconfigure(0, weight=1); self.main_frame.grid_rowconfigure(1, weight=1)
+        self.main_frame = ctk.CTkFrame(self.root, fg_color="transparent"); self.main_frame.pack(fill="both", expand=True, padx=20, pady=(10, 20)) # <<<<<<< 修改: 调整 pady >>>>>>>>>
+        self.main_frame.grid_columnconfigure(0, weight=1); self.main_frame.grid_columnconfigure(1, weight=0) # <<<<<<< 修改: 添加列1配置 (按钮列不扩展) >>>>>>>>>
+        self.main_frame.grid_rowconfigure(1, weight=1) # Keep row 1 expanding (for tabs)
+
+        # --- Pin Button (Moved to text_frame) ---
+        # Note: Button is created later, after text_frame is defined.
 
         # --- Text Input Area ---
-        text_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent"); text_frame.grid(row=0, column=0, sticky="ew", pady=(0, 15)); text_frame.grid_columnconfigure(0, weight=1)
-        self.text_input_label = ctk.CTkLabel(text_frame, text=self._("input_text_label"), font=ctk.CTkFont(size=14, weight="bold")); self.text_input_label.grid(row=0, column=0, sticky="w", pady=(0, 5))
+        text_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent"); text_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(5, 15)); text_frame.grid_columnconfigure(0, weight=1); text_frame.grid_columnconfigure(1, weight=0) # <<<<<<< 修改: 重新添加 columnspan=2 >>>>>>>>>
+        self.text_input_label = ctk.CTkLabel(text_frame, text=self._("input_text_label"), font=ctk.CTkFont(size=14, weight="bold")); self.text_input_label.grid(row=0, column=0, sticky="nw", pady=(0, 0)) # <<<<<<< 修改: pady改为 (0, 0) 使其与按钮顶部对齐 >>>>>>>>>
+        # --- Create and place Pin Button inside text_frame ---
+        self.pin_button = ctk.CTkButton(
+            text_frame, # <<<<<<< 修改: 父容器改为 text_frame >>>>>>>>>
+            text="📌",
+            width=30,
+            height=30,
+            fg_color="transparent", # Initial state: not pinned
+            hover=False,
+            font=ctk.CTkFont(size=16),
+            command=self.toggle_pin_window
+        )
+        self.pin_button.configure(text_color=self._get_button_text_color("transparent"))
+        self.pin_button.grid(row=0, column=1, padx=(0, 0), pady=(0, 0), sticky="ne") # <<<<<<< 修改: pady改为 (0, 0) 移除底部边距 >>>>>>>>>
         self._language_widgets['input_text_label'] = self.text_input_label
-        self.text_input = ctk.CTkTextbox(text_frame, height=100, wrap="word", corner_radius=8, border_width=1); self.text_input.grid(row=1, column=0, sticky="nsew")
+        self.text_input = ctk.CTkTextbox(text_frame, height=100, wrap="word", corner_radius=8, border_width=1); self.text_input.grid(row=1, column=0, columnspan=2, sticky="nsew") # <<<<<<< 修改: 添加 columnspan=2 >>>>>>>>>
 
-        # --- Tab View ---
-        self.tab_view = ctk.CTkTabview(self.main_frame, corner_radius=8); self.tab_view.grid(row=1, column=0, sticky="nsew", pady=0)
+        # --- Tab View Container ---
+        # Create a container frame with fixed height and disabled propagation
+        tab_container_frame = ctk.CTkFrame(self.main_frame, height=410, fg_color="transparent") # Set fixed height
+        tab_container_frame.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=0) # <<<<<<< 修改: 重新添加 columnspan=2 >>>>>>>>>
+        tab_container_frame.grid_propagate(False) # Prevent container from resizing based on tabview content
+        tab_container_frame.grid_rowconfigure(0, weight=1)    # Allow tabview row to expand
+        tab_container_frame.grid_columnconfigure(0, weight=1) # Allow tabview column to expand
+ 
+        # --- Tab View (inside container) ---
+        # Create Tabview inside the container, remove its own height setting
+        self.tab_view = ctk.CTkTabview(tab_container_frame, corner_radius=8) # Master is tab_container_frame, removed height
+        self.tab_view.grid(row=0, column=0, sticky="nsew") # Tabview fills the container
         # Store keys for tab renaming later
         self._language_widgets['tab_voices'] = "tab_voices"
         self._language_widgets['tab_settings'] = "tab_settings"
@@ -384,8 +417,15 @@ class EdgeTTSApp:
         self.volume_value_label = ctk.CTkLabel(controls_frame, text=f"{self.volume_slider_var.get():+}%", width=45); self.volume_value_label.grid(row=2, column=2, padx=(5, 0), pady=5, sticky="w")
 
         # --- Settings Tab ---
-        settings_tab = self.tab_view.tab(self._("tab_settings")); settings_tab.grid_columnconfigure(0, weight=1)
-        output_cache_frame = ctk.CTkFrame(settings_tab); output_cache_frame.pack(fill="x", padx=10, pady=10); output_cache_frame.grid_columnconfigure(1, weight=1)
+        settings_tab = self.tab_view.tab(self._("tab_settings"))
+        settings_tab.grid_columnconfigure(0, weight=1)
+        # Configure row 3 to expand vertically
+        settings_tab.grid_rowconfigure(3, weight=1)
+ 
+        # Frame 1: Output & Cache (Using Grid)
+        output_cache_frame = ctk.CTkFrame(settings_tab)
+        output_cache_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=10) # Use grid instead of pack
+        output_cache_frame.grid_columnconfigure(1, weight=1)
         self.settings_output_cache_label_widget = ctk.CTkLabel(output_cache_frame, text=self._("settings_output_cache_label"), font=ctk.CTkFont(weight="bold")); self.settings_output_cache_label_widget.grid(row=0, column=0, columnspan=3, pady=(5, 10), padx=10, sticky="w")
         self._language_widgets['settings_output_cache_label'] = self.settings_output_cache_label_widget
         self.copy_to_clipboard_var = ctk.BooleanVar(value=settings.get("copy_path_enabled", True)); self.copy_to_clipboard_switch = ctk.CTkSwitch(output_cache_frame, text=self._("settings_copy_label"), variable=self.copy_to_clipboard_var, onvalue=True, offvalue=False); self.copy_to_clipboard_switch.grid(row=1, column=0, padx=10, pady=5, sticky="w")
@@ -396,8 +436,10 @@ class EdgeTTSApp:
         self._language_widgets['settings_max_files_label'] = self.settings_max_files_label_widget
         self.max_files_entry = ctk.CTkEntry(output_cache_frame, width=60); self.max_files_entry.insert(0, str(settings.get("max_audio_files", DEFAULT_MAX_AUDIO_FILES))); self.max_files_entry.grid(row=2, column=1, padx=5, pady=(5, 10), sticky="w")
 
-        # --- Clipboard Frame ---
-        clipboard_frame = ctk.CTkFrame(settings_tab); clipboard_frame.pack(fill="x", padx=10, pady=(0, 10)); clipboard_frame.grid_columnconfigure(0, weight=1)
+        # --- Clipboard Frame --- (Using Grid)
+        clipboard_frame = ctk.CTkFrame(settings_tab)
+        clipboard_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 10)) # Use grid instead of pack
+        clipboard_frame.grid_columnconfigure(0, weight=1)
         self.settings_clipboard_label_widget = ctk.CTkLabel(clipboard_frame, text=self._("settings_clipboard_label"), font=ctk.CTkFont(weight="bold")); self.settings_clipboard_label_widget.grid(row=0, column=0, columnspan=2, pady=(5, 10), padx=10, sticky="w")
         self._language_widgets['settings_clipboard_label'] = self.settings_clipboard_label_widget
         # Renamed variable for clarity: monitor_clipboard_var
@@ -412,8 +454,10 @@ class EdgeTTSApp:
         self.monitor_selection_switch.grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky="w")
         self._language_widgets['settings_enable_selection_label'] = self.monitor_selection_switch
 
-        # --- Window Behavior Frame --- <<<<<<< 新增 Frame >>>>>>>>>
-        window_frame = ctk.CTkFrame(settings_tab); window_frame.pack(fill="x", padx=10, pady=(0, 10)); window_frame.grid_columnconfigure(0, weight=1)
+        # --- Window Behavior Frame --- (Using Grid)
+        window_frame = ctk.CTkFrame(settings_tab)
+        window_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=(0, 10)) # Use grid instead of pack
+        window_frame.grid_columnconfigure(0, weight=1)
         self.settings_window_label_widget = ctk.CTkLabel(window_frame, text=self._("settings_window_label"), font=ctk.CTkFont(weight="bold")); self.settings_window_label_widget.grid(row=0, column=0, columnspan=2, pady=(5, 10), padx=10, sticky="w")
         self._language_widgets['settings_window_label'] = self.settings_window_label_widget
 
@@ -422,9 +466,16 @@ class EdgeTTSApp:
         self.minimize_to_tray_switch = ctk.CTkSwitch(window_frame, text=self._("settings_minimize_to_tray_label"), variable=self.minimize_to_tray_var, command=self.save_settings, onvalue=True, offvalue=False)
         self.minimize_to_tray_switch.grid(row=1, column=0, columnspan=2, padx=10, pady=(0, 10), sticky="w") # Adjusted pady
         self._language_widgets['settings_minimize_to_tray_label'] = self.minimize_to_tray_switch
-
+ 
+        # Add an empty frame in the expanding row (row 3) for settings tab
+        spacer_frame_settings = ctk.CTkFrame(settings_tab, fg_color="transparent", height=0)
+        spacer_frame_settings.grid(row=3, column=0, sticky="nsew") # Place in expanding row
+ 
         # --- Appearance Tab ---
-        appearance_tab = self.tab_view.tab(self._("tab_appearance")); appearance_tab.grid_columnconfigure(1, weight=1)
+        appearance_tab = self.tab_view.tab(self._("tab_appearance"))
+        appearance_tab.grid_columnconfigure(1, weight=1)
+        # Configure a row to expand vertically
+        appearance_tab.grid_rowconfigure(2, weight=1) # Let row 2 expand
         self.appearance_theme_label_widget = ctk.CTkLabel(appearance_tab, text=self._("appearance_theme_label")); self.appearance_theme_label_widget.grid(row=0, column=0, padx=(15, 5), pady=15, sticky="w")
         self._language_widgets['appearance_theme_label'] = self.appearance_theme_label_widget
         self.appearance_mode_segmented_button = ctk.CTkSegmentedButton( appearance_tab, values=[self._("appearance_mode_light"), self._("appearance_mode_dark")], command=self._change_appearance_mode ); self.appearance_mode_segmented_button.grid(row=0, column=1, columnspan=3, padx=5, pady=15, sticky="ew")
@@ -437,15 +488,20 @@ class EdgeTTSApp:
         self.pick_color_button = ctk.CTkButton(appearance_tab, text=self._("appearance_pick_color_button"), width=30, command=self._pick_custom_color); self.pick_color_button.grid(row=1, column=2, padx=(0, 5), pady=(5, 15), sticky="w")
         self.apply_color_button = ctk.CTkButton(appearance_tab, text=self._("appearance_apply_color_button"), command=self._apply_custom_color); self.apply_color_button.grid(row=1, column=3, padx=(0, 15), pady=(5, 15), sticky="e")
         self._language_widgets['appearance_apply_color_button'] = self.apply_color_button
-
+ 
+        # Add an empty frame in the expanding row (row 2) for appearance tab
+        spacer_frame_appearance = ctk.CTkFrame(appearance_tab, fg_color="transparent", height=0)
+        spacer_frame_appearance.grid(row=2, column=0, columnspan=4, sticky="nsew") # Place in expanding row, span columns
+ 
         # --- Bottom Frame (Button & Status) ---
         bottom_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent"); bottom_frame.grid(row=2, column=0, sticky="ew", pady=(15, 5)); bottom_frame.grid_columnconfigure(0, weight=1)
         self.generate_button = ctk.CTkButton( bottom_frame, text=self._("generate_button"), command=self.generate_audio_manual, height=40, font=ctk.CTkFont(size=16, weight="bold"), corner_radius=10 ); self.generate_button.grid(row=0, column=0, pady=(0, 15), sticky="")
         self._language_widgets['generate_button'] = self.generate_button
-        self.status_bar_frame = ctk.CTkFrame(self.main_frame, height=25, corner_radius=0); self.status_bar_frame.grid(row=3, column=0, sticky="ew"); self.status_bar_frame.grid_columnconfigure(0, weight=1); self.status_bar_frame.grid_columnconfigure(1, weight=0); self.status_bar_frame.grid_columnconfigure(2, weight=0) # Column for lang btn
-        self.status_label = ctk.CTkLabel(self.status_bar_frame, text=self._("status_ready"), anchor="w", font=ctk.CTkFont(size=12)); self.status_label.grid(row=0, column=0, sticky="ew", padx=(10, 5))
-        self.progress_bar = ctk.CTkProgressBar(self.status_bar_frame, height=10, width=100, corner_radius=5); self.progress_bar.set(0); self.progress_bar.grid_remove()
-        self.language_button = ctk.CTkButton(self.status_bar_frame, text=self._("lang_button_text"), width=50, height=20, font=ctk.CTkFont(size=10), command=self.toggle_language); self.language_button.grid(row=0, column=2, padx=(5, 10), sticky="e")
+        self.status_bar_frame = ctk.CTkFrame(self.main_frame, height=25, corner_radius=0); self.status_bar_frame.grid(row=3, column=0, columnspan=2, sticky="ew") # <<<<<<< 修改: 移除列配置, 添加 columnspan=2 >>>>>>>>>
+        # --- Status Bar Content (Using Pack) ---
+        self.language_button = ctk.CTkButton(self.status_bar_frame, text=self._("lang_button_text"), width=50, height=20, font=ctk.CTkFont(size=10), command=self.toggle_language); self.language_button.pack(side="right", padx=(5, 10), pady=2) # <<<<<<< 修改: 使用 pack >>>>>>>>>
+        self.progress_bar = ctk.CTkProgressBar(self.status_bar_frame, height=10, width=100, corner_radius=5); self.progress_bar.set(0); # Pack is handled in update_status
+        self.status_label = ctk.CTkLabel(self.status_bar_frame, text=self._("status_ready"), anchor="w", font=ctk.CTkFont(size=12)); self.status_label.pack(side="left", fill="x", expand=True, padx=(10, 5), pady=2) # <<<<<<< 修改: 使用 pack >>>>>>>>>
 
         # --- Float Window Vars ---
         self.float_window = None; self.ok_window = None; self.generating_window = None
@@ -768,14 +824,15 @@ class EdgeTTSApp:
             # Ensure progress bar exists before configuring/gridding
             if hasattr(self, 'progress_bar'):
                 if show_progress:
-                    self.progress_bar.grid(row=0, column=1, padx=(0, 10), sticky="e")
+                    # Pack progress bar to the right, before the language button
+                    self.progress_bar.pack(side="right", padx=(0, 5), pady=2) # <<<<<<< 修改: 使用 pack >>>>>>>>>
                     try: theme_color = ctk.ThemeManager.theme["CTkProgressBar"]["progress_color"]; default_color = theme_color[ctk.get_appearance_mode()=='dark'] if isinstance(theme_color, (list, tuple)) else theme_color; p_color = self.current_custom_color or default_color
                     except: p_color = self.current_custom_color or "#1F6AA5"
                     self.progress_bar.configure(mode="indeterminate", progress_color=p_color)
                     if hasattr(self.progress_bar, 'start'): self.progress_bar.start()
                 else:
                     if hasattr(self.progress_bar, 'stop'): self.progress_bar.stop()
-                    self.progress_bar.grid_remove()
+                    self.progress_bar.pack_forget() # <<<<<<< 修改: 使用 pack_forget >>>>>>>>>
 
             if not permanent and duration > 0:
                  # Ensure status label exists for scheduling the reset
@@ -932,6 +989,18 @@ class EdgeTTSApp:
         if hasattr(self, 'tab_view'): self.tab_view.configure(segmented_button_selected_color=self.current_custom_color, segmented_button_selected_hover_color=hover)
         if hasattr(self, 'appearance_mode_segmented_button'): self.appearance_mode_segmented_button.configure(selected_color=self.current_custom_color, selected_hover_color=hover)
         self._populate_inline_voice_list('left'); self._populate_inline_voice_list('right')
+
+        # Update pin button color based on current state and new theme
+        if hasattr(self, 'pin_button') and self.pin_button.winfo_exists():
+             if self.is_pinned:
+                 theme_color = self.current_custom_color or DEFAULT_CUSTOM_COLOR
+                 text_color = self._get_contrasting_text_color(theme_color)
+                 self.pin_button.configure(fg_color=theme_color, text_color=text_color)
+             else:
+                 transparent_color = "transparent"
+                 text_color = self._get_button_text_color(transparent_color)
+                 self.pin_button.configure(fg_color=transparent_color, text_color=text_color)
+
         if save: self.save_settings()
 
     def _calculate_hover_color(self, hex_color): # No change
@@ -1616,6 +1685,48 @@ class EdgeTTSApp:
             self.root.after(0, self.destroy_ok_window)
         # Don't update status here, _update_monitor_state will handle it
         # self.update_status("status_monitor_disabled", duration=3)
+
+    # --------------------------------------------------------------------------
+    # 窗口置顶方法 <<<<<<< 新增 >>>>>>>>>
+    # --------------------------------------------------------------------------
+    def toggle_pin_window(self):
+        """Toggles the window's always-on-top state."""
+        self.is_pinned = not self.is_pinned
+        self.root.attributes('-topmost', self.is_pinned)
+        print(f"Window pinned: {self.is_pinned}") # Debug print
+
+        # Update button appearance
+        if self.is_pinned:
+            # Use current theme color when pinned
+            theme_color = self.current_custom_color or DEFAULT_CUSTOM_COLOR
+            text_color = self._get_contrasting_text_color(theme_color)
+            self.pin_button.configure(fg_color=theme_color, text_color=text_color)
+        else:
+            # Use transparent background when not pinned
+            transparent_color = "transparent"
+            # Determine text color based on appearance mode for transparent background
+            text_color = self._get_button_text_color(transparent_color)
+            self.pin_button.configure(fg_color=transparent_color, text_color=text_color)
+
+    def _get_button_text_color(self, bg_color):
+         """Helper to get appropriate text color for the pin button based on background."""
+         if bg_color == "transparent":
+             # Use standard label text color for current mode when background is transparent
+             try:
+                 label_theme = ctk.ThemeManager.theme["CTkLabel"]
+                 text_colors = label_theme["text_color"]
+                 current_mode_index = 1 if ctk.get_appearance_mode().lower() == 'dark' else 0
+                 if isinstance(text_colors, (list, tuple)) and len(text_colors) > current_mode_index:
+                     return text_colors[current_mode_index]
+                 elif isinstance(text_colors, str):
+                     return text_colors
+             except Exception:
+                 pass # Fallback below
+             # Fallback if theme access fails
+             return "#FFFFFF" if ctk.get_appearance_mode().lower() == 'dark' else "#000000"
+         else:
+             # Use contrasting color for solid backgrounds
+             return self._get_contrasting_text_color(bg_color)
 
     # --------------------------------------------------------------------------
     # 窗口关闭与清理 <<<<<<< 修改 >>>>>>>>>
