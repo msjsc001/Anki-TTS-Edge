@@ -1,16 +1,28 @@
 <div align="center">
 
-# 🔊 Anki-TTS-Edge: Anki Audio Generator! Anki快捷文生音！基于微软免费！助力学习！ 
-##### Customizable Colors, Chinese/English Support  自定义色彩界面，中英支持
+# 🔊 Anki-TTS-Edge: Anki Audio Generator! 
+## 🔊 Anki快捷文生音！基于微软免费！助力学习！ 
+##### Customizable Colors, Chinese/English Support  
+##### 自定义色彩界面，中英支持
 
 </div>
 
+<div align="center">
+  
+   <img src="https://github.com/user-attachments/assets/d0a3d252-7240-4739-9854-77f16cc2d257" alt="Light Mode Screenshot">
+  
+   [![GitHub release (latest by date)](https://img.shields.io/github/v/release/msjsc001/Anki-TTS-Edge)](https://github.com/msjsc001/Anki-TTS-Edge/releases/latest) [![GitHub last commit](https://img.shields.io/github/last-commit/msjsc001/Anki-TTS-Edge)](https://github.com/msjsc001/Anki-TTS-Edge/commits/master) [![GitHub All Releases Downloads](https://img.shields.io/github/downloads/msjsc001/Anki-TTS-Edge/total?label=Downloads&color=brightgreen)](https://github.com/msjsc001/Anki-TTS-Edge/releases)
+   
+</div>
+
+<div align="center">
+
+## [**➡️ Download Latest Release Here / 点此下载最新版本 ⬅️**](https://github.com/msjsc001/Anki-TTS-Edge/releases)
 
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/d0a3d252-7240-4739-9854-77f16cc2d257" alt="Light Mode Screenshot">
+</div>
 
-  [![GitHub All Releases Downloads](https://img.shields.io/github/downloads/msjsc001/Anki-TTS-Edge/total?label=Downloads&color=brightgreen)](https://github.com/msjsc001/Anki-TTS-Edge/releases) [![GitHub release (latest by date)](https://img.shields.io/github/v/release/msjsc001/Anki-TTS-Edge)](https://github.com/msjsc001/Anki-TTS-Edge/releases/latest) [![GitHub last commit](https://img.shields.io/github/last-commit/msjsc001/Anki-TTS-Edge)](https://github.com/msjsc001/Anki-TTS-Edge/commits/master)
+</div>
 
   <img src="https://github.com/user-attachments/assets/1971ed73-c1b8-4784-b3d0-e1ad892b5004" alt="Light Mode Screenshot">
 
@@ -35,16 +47,6 @@
 <p align="center">
   <img src="https://github.com/user-attachments/assets/bf232f6c-9e19-418c-a943-2dc3dfd3ea7b" alt="GIF Demo">
 </p>
-
-
-<div align="center">
-
-## [**➡️ Download Latest Release Here / 点此下载最新版本 ⬅️**](https://github.com/msjsc001/Anki-TTS-Edge/releases)
-
-
-</div>
-
----
 
 ## ✨ Features / 功能特性
 
@@ -90,8 +92,6 @@ An Anki audio generation tool based on [Edge-TTS](https://github.com/rany2/edge-
 
 </details>
 
----
-
 ## 🚀 Quick Start (Recommended) / 快速开始 (推荐)
 
 <details>
@@ -115,9 +115,6 @@ If you prefer not to set up a Python environment, you can download the pre-packa
 3.  **解压运行**：将压缩包解压到你喜欢的任意位置，然后双击运行 `Anki-TTS-Edge.exe` 即可！ 🎉
 
 </details>
-
-
----
 
 ## 🗨️ Supported Voices List (Apr 1, 2025) / 支持的语音列表 (2025-04-01)
 
@@ -355,8 +352,6 @@ If you prefer not to set up a Python environment, you can download the pre-packa
 
 </details>
 
----
-
 ## 📄 License & Dependencies / 版权与依赖
 
 <details>
@@ -375,8 +370,6 @@ If you prefer not to set up a Python environment, you can download the pre-packa
 
 </details>
 
----
-
 ## 🤝 Contributing / 参与贡献
 
 <details>
@@ -392,8 +385,6 @@ Contributions via Issues or Pull Requests are welcome!
 欢迎通过 Issue 或 Pull Request 参与贡献！
 
 </details>
-
----
 
 <div align="center">
 
