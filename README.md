@@ -333,22 +333,6 @@ If you prefer not to set up a Python environment, you can download the pre-packa
 
 *   **ja-JP（日语 - 日本 / Japanese - Japan）** <details><summary>👈🏼 点击展开</summary>
     *   `ja-JP-KeitaNeural` - Male, General, Friendly, Positive（男性，通用，友好，积极）
-3.  **创建/使用 `.spec` 文件 (强烈推荐)**：
-    *   **生成：** `pyinstaller --name Anki-TTS-Edge --noconsole --onefile main.py`
-    *   **编辑 `Anki-TTS-Edge.spec`**：在 `Analysis` 部分的 `datas` 列表中添加 `translations.json`：
-      ```python
-      a = Analysis(
-          # ...
-          datas=[('translations.json', '.')], # 添加此行
-          # ...
-      )
-      ```
-    *   *（可以考虑 `customtkinter` 或 `pygame` 是否需要在此处添加额外的数据文件，但通常 PyInstaller 能处理好。）*
-4.  **使用 `.spec` 文件构建**：
-    ```bash
-    pyinstaller Anki-TTS-Edge.spec
-    ```
-5.  最终的单个 `.exe` 文件将位于 `dist` 目录下。
 
 </details>
 
