@@ -1,7 +1,7 @@
 <div align="center">
 
 # 🔊 Anki-TTS-Edge: Anki Audio Generator! 
-## 🔊 Anki快捷文生音！基于微软免费！助力学习！ 
+##  Anki快捷文生音！基于微软免费！助力学习！ 
 ##### Customizable Colors, Chinese/English Support  
 ##### 自定义色彩界面，中英支持
 
@@ -36,7 +36,7 @@
 
 **Select** or **Ctrl+C** text, click the 🔵 blue dot to generate audio.<br>A 🟢 green dot appears during generation, turning 🔴 red upon completion.<br>Then, use **Ctrl+V** to paste the audio file into Anki!
 
-**(划选** 或 **Ctrl+C** 文字后点击 🔵 蓝点生成音频，生成音频中会出现 🟢 绿点，<br>生成结束后变为 🔴 红点，而后可按 **Ctrl+V** 快捷粘贴文件！**)**
+**划选** 或 **Ctrl+C** 文字后点击 🔵 蓝点生成音频，生成音频中会出现 🟢 绿点，<br>生成结束后变为 🔴 红点，而后可按 **Ctrl+V** 快捷粘贴文件！
 
   <img src="https://github.com/user-attachments/assets/ff090bd3-4bb0-4bc3-91bb-49d934f1765c" alt="Dark Mode Screenshot">
 
@@ -45,7 +45,7 @@
 ## 🎬 GIF Demo / GIF 功能演示
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/bf232f6c-9e19-418c-a943-2dc3dfd3ea7b" alt="GIF Demo">
+  <img src="https://github.com/user-attachments/assets/bf232f6c-9e19-418c-a943-2dc3dfd3ea7b" alt="GIF Demo" width="600">
 </p>
 
 ## ✨ Features / 功能特性
@@ -92,7 +92,7 @@ An Anki audio generation tool based on [Edge-TTS](https://github.com/rany2/edge-
 
 </details>
 
-## 🚀 Quick Start (Recommended) / 快速开始 (推荐)
+## 🌲Quick Start (Recommended) / 快速开始 (推荐)
 
 <details>
 <summary><strong>English</strong>  👈🏼 Click to expand</summary>
@@ -116,7 +116,7 @@ If you prefer not to set up a Python environment, you can download the pre-packa
 
 </details>
 
-## 🗨️ Supported Voices List (Apr 1, 2025) / 支持的语音列表 (2025-04-01)
+## 🌲Supported Voices List (Apr 1, 2025) / 支持的语音列表 (2025-04-01)
 
 <details>
 <summary><strong>Click to expand/collapse the full list / 点击展开/折叠完整列表</strong>  👈🏼</summary>
@@ -352,7 +352,7 @@ If you prefer not to set up a Python environment, you can download the pre-packa
 
 </details>
 
-## 📄 License & Dependencies / 版权与依赖
+## 🌲License & Dependencies / 版权与依赖
 
 <details>
 <summary><strong>English</strong>  👈🏼 Click to expand</summary>
@@ -370,7 +370,7 @@ If you prefer not to set up a Python environment, you can download the pre-packa
 
 </details>
 
-## 🤝 Contributing / 参与贡献
+## 🌲Contributing / 参与贡献
 
 <details>
 <summary><strong>English</strong>  👈🏼 Click to expand</summary>
