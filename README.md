@@ -1,8 +1,7 @@
 <div align="center">
 
-# 🎵 Anki-TTS-Edge: Anki Audio Generator! 🎵
-## Anki快捷文生音！基于微软免费！助力学习！
-**(Customizable Colors, Chinese/English Support / 自定义色彩界面，中英支持)**
+# 🔊 Anki-TTS-Edge: Anki Audio Generator! Anki快捷文生音！基于微软免费！助力学习！ 
+##### Customizable Colors, Chinese/English Support  自定义色彩界面，中英支持
 
 </div>
 
@@ -28,6 +27,20 @@
 **(划选** 或 **Ctrl+C** 文字后点击 🔵 蓝点生成音频，生成音频中会出现 🟢 绿点，<br>生成结束后变为 🔴 红点，而后可按 **Ctrl+V** 快捷粘贴文件！**)**
 
   <img src="https://github.com/user-attachments/assets/ff090bd3-4bb0-4bc3-91bb-49d934f1765c" alt="Dark Mode Screenshot">
+
+</div>
+
+## 🎬 GIF Demo / GIF 功能演示
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/bf232f6c-9e19-418c-a943-2dc3dfd3ea7b" alt="GIF Demo">
+</p>
+
+
+<div align="center">
+
+## [**➡️ Download Latest Release Here / 点此下载最新版本 ⬅️**](https://github.com/msjsc001/Anki-TTS-Edge/releases)
+
 
 </div>
 
@@ -79,14 +92,6 @@ An Anki audio generation tool based on [Edge-TTS](https://github.com/rany2/edge-
 
 ---
 
-## 🎬 GIF Demo / GIF 功能演示
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/bf232f6c-9e19-418c-a943-2dc3dfd3ea7b" alt="GIF Demo">
-</p>
-
----
-
 ## 🚀 Quick Start (Recommended) / 快速开始 (推荐)
 
 <details>
@@ -111,17 +116,6 @@ If you prefer not to set up a Python environment, you can download the pre-packa
 
 </details>
 
-<div align="center">
-
-### [**➡️ Download Latest Release Here / 点此下载最新版本 ⬅️**](https://github.com/msjsc001/Anki-TTS-Edge/releases)
-
-<p align="center">
-<img src="https://github.com/user-attachments/assets/f860a117-1b18-467d-9040-9cb0f78c065d" alt="Download Button Placeholder" width="200">
-</p>
-
-👆 🙋 🙋‍♂️ 🙋‍♀️ 👆
-
-</div>
 
 ---
 
