@@ -333,7 +333,18 @@ class EdgeTTSApp:
 
         # UI Vars
         self.voice_display_to_full_map = {}; self.hierarchical_voice_data = {}
-        self.current_full_voice_name = None; self.current_custom_color = None
+        # self.current_full_voice_name = None; # <<<<<<< 移除: 不再直接使用 >>>>>>>>>
+        self.current_custom_color = None
+        # <<<<<<< 添加: 双蓝点状态变量 >>>>>>>>>
+        self.dual_blue_dot_enabled = ctk.BooleanVar(value=settings.get("dual_blue_dot_enabled", False))
+        self.selected_voice_latest = settings.get("selected_voice_latest", DEFAULT_VOICE)
+        # <<<<<<< 添加: 浮窗生成状态标志 >>>>>>>>>
+        self.is_generating_from_float = False
+        # 确保 previous 有初始值，如果加载的值为空或与 latest 相同，则设为 latest
+        loaded_previous = settings.get("selected_voice_previous", self.selected_voice_latest)
+        self.selected_voice_previous = loaded_previous if loaded_previous else self.selected_voice_latest
+        print(f"Initial voices: Latest='{self.selected_voice_latest}', Previous='{self.selected_voice_previous}'") # Debug
+
         # Appearance
         appearance = settings.get("appearance_mode", DEFAULT_APPEARANCE_MODE)
         self.current_custom_color = settings.get("custom_theme_color", DEFAULT_CUSTOM_COLOR)
@@ -454,6 +465,18 @@ class EdgeTTSApp:
         self.monitor_selection_switch.grid(row=2, column=0, columnspan=2, padx=10, pady=5, sticky="w")
         self._language_widgets['settings_enable_selection_label'] = self.monitor_selection_switch
 
+        # <<<<<<< 添加: 双蓝点模式开关 >>>>>>>>>
+        # Use the BooleanVar defined in __init__
+        self.dual_blue_dot_switch = ctk.CTkSwitch(
+            clipboard_frame, # Add to the same frame
+            text=self._("settings_dual_blue_dot_label"), # New translation key needed
+            variable=self.dual_blue_dot_enabled,
+            command=self._toggle_dual_blue_dot_mode, # New callback method needed
+            onvalue=True, offvalue=False
+        )
+        self.dual_blue_dot_switch.grid(row=3, column=0, columnspan=2, padx=10, pady=5, sticky="w") # Place below selection switch
+        self._language_widgets['settings_dual_blue_dot_label'] = self.dual_blue_dot_switch # Register for language update
+
         # --- Window Behavior Frame --- (Using Grid)
         window_frame = ctk.CTkFrame(settings_tab)
         window_frame.grid(row=2, column=0, sticky="ew", padx=10, pady=(0, 10)) # Use grid instead of pack
@@ -494,14 +517,43 @@ class EdgeTTSApp:
         spacer_frame_appearance.grid(row=2, column=0, columnspan=4, sticky="nsew") # Place in expanding row, span columns
  
         # --- Bottom Frame (Button & Status) ---
-        bottom_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent"); bottom_frame.grid(row=2, column=0, sticky="ew", pady=(15, 5)); bottom_frame.grid_columnconfigure(0, weight=1)
-        self.generate_button = ctk.CTkButton( bottom_frame, text=self._("generate_button"), command=self.generate_audio_manual, height=40, font=ctk.CTkFont(size=16, weight="bold"), corner_radius=10 ); self.generate_button.grid(row=0, column=0, pady=(0, 15), sticky="")
-        self._language_widgets['generate_button'] = self.generate_button
-        self.status_bar_frame = ctk.CTkFrame(self.main_frame, height=25, corner_radius=0); self.status_bar_frame.grid(row=3, column=0, columnspan=2, sticky="ew") # <<<<<<< 修改: 移除列配置, 添加 columnspan=2 >>>>>>>>>
+        # <<<<<<< 修改: 调整 bottom_frame 列配置以容纳两个按钮 >>>>>>>>>
+        bottom_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        bottom_frame.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(15, 5)) # Span both columns
+        # Configure columns for potential side-by-side placement, ensuring they center content
+        bottom_frame.grid_columnconfigure(0, weight=1)
+        bottom_frame.grid_columnconfigure(1, weight=1)
+
+        # <<<<<<< 修改: 创建左右两个生成按钮 >>>>>>>>>
+        self.generate_button_left = ctk.CTkButton(
+            bottom_frame,
+            text=f"{self._('generate_button_previous', '生成 (上次)')}", # 需要新翻译键
+            command=lambda: self.generate_audio_manual(voice_type='previous'),
+            height=40, font=ctk.CTkFont(size=16, weight="bold"), corner_radius=10
+        )
+        # grid placement will be handled by _update_main_generate_buttons_visibility
+
+        self.generate_button_right = ctk.CTkButton(
+            bottom_frame,
+            text=f"{self._('generate_button_latest', '生成 (最新)')}", # 需要新翻译键
+            command=lambda: self.generate_audio_manual(voice_type='latest'),
+            height=40, font=ctk.CTkFont(size=16, weight="bold"), corner_radius=10
+        )
+        # grid placement will be handled by _update_main_generate_buttons_visibility
+
+        # 注册语言更新 (使用不同的键)
+        self._language_widgets['generate_button_previous'] = self.generate_button_left
+        self._language_widgets['generate_button_latest'] = self.generate_button_right
+        # Add the generic key for single button mode text update
+        self._language_widgets['generate_button'] = self.generate_button_right # Reuse right button for single mode text
+
+        # --- Status Bar ---
+        self.status_bar_frame = ctk.CTkFrame(self.main_frame, height=25, corner_radius=0)
+        self.status_bar_frame.grid(row=3, column=0, columnspan=2, sticky="ew")
         # --- Status Bar Content (Using Pack) ---
-        self.language_button = ctk.CTkButton(self.status_bar_frame, text=self._("lang_button_text"), width=50, height=20, font=ctk.CTkFont(size=10), command=self.toggle_language); self.language_button.pack(side="right", padx=(5, 10), pady=2) # <<<<<<< 修改: 使用 pack >>>>>>>>>
+        self.language_button = ctk.CTkButton(self.status_bar_frame, text=self._("lang_button_text"), width=50, height=20, font=ctk.CTkFont(size=10), command=self.toggle_language); self.language_button.pack(side="right", padx=(5, 10), pady=2)
         self.progress_bar = ctk.CTkProgressBar(self.status_bar_frame, height=10, width=100, corner_radius=5); self.progress_bar.set(0); # Pack is handled in update_status
-        self.status_label = ctk.CTkLabel(self.status_bar_frame, text=self._("status_ready"), anchor="w", font=ctk.CTkFont(size=12)); self.status_label.pack(side="left", fill="x", expand=True, padx=(10, 5), pady=2) # <<<<<<< 修改: 使用 pack >>>>>>>>>
+        self.status_label = ctk.CTkLabel(self.status_bar_frame, text=self._("status_ready"), anchor="w", font=ctk.CTkFont(size=12)); self.status_label.pack(side="left", fill="x", expand=True, padx=(10, 5), pady=2)
 
         # --- Float Window Vars ---
         self.float_window = None; self.ok_window = None; self.generating_window = None
@@ -514,14 +566,42 @@ class EdgeTTSApp:
         self._tray_setup_complete = False # Flag to prevent multiple setups
 
         # --- Initial Actions ---
-        self._apply_custom_color(save=False); self.refresh_voices_ui()
+        self._apply_custom_color(save=False)
+        self._update_main_generate_buttons_visibility() # Initialize button visibility
+        self.refresh_voices_ui()
         # Start monitors based on initial settings
         self._update_monitor_state()
         # Delay tray setup slightly to ensure translations are ready
         self.root.after(100, self.setup_tray_icon)
         # Bind events AFTER the window is fully mapped to avoid premature triggers
-        self.root.after(200, self._bind_window_events) # <<<<<<< 修改: 统一绑定事件 >>>>>>>>>
+        self.root.after(200, self._bind_window_events)
 
+    # <<<<<<< 添加: 控制主生成按钮可见性的方法 >>>>>>>>>
+    def _update_main_generate_buttons_visibility(self):
+        """Shows/hides the correct main generate button(s) based on dual blue dot mode."""
+        # Ensure buttons exist before trying to grid/configure them
+        if not hasattr(self, 'generate_button_left') or not self.generate_button_left.winfo_exists():
+             # print("DEBUG: Left generate button not ready for visibility update.")
+             return
+        if not hasattr(self, 'generate_button_right') or not self.generate_button_right.winfo_exists():
+             # print("DEBUG: Right generate button not ready for visibility update.")
+             return
+
+        is_dual_mode = self.dual_blue_dot_enabled.get()
+
+        if is_dual_mode:
+            # Show both buttons, placed side-by-side using grid weights for centering tendency
+            self.generate_button_left.grid(row=0, column=0, padx=(10, 5), pady=(0, 15), sticky="ew")
+            self.generate_button_right.grid(row=0, column=1, padx=(5, 10), pady=(0, 15), sticky="ew")
+            # Update text for dual mode
+            self.generate_button_left.configure(text=self._('generate_button_previous', '生成 (上次)'))
+            self.generate_button_right.configure(text=self._('generate_button_latest', '生成 (最新)'))
+        else:
+            # Hide left button, show right button centered spanning both columns
+            self.generate_button_left.grid_forget()
+            self.generate_button_right.grid(row=0, column=0, columnspan=2, padx=10, pady=(0, 15), sticky="") # Use sticky="" for default centering
+            # Update text for single mode (using the generic key)
+            self.generate_button_right.configure(text=self._('generate_button', '生成音频'))
 
     # --------------------------------------------------------------------------
     # Tray Icon Methods <<<<<<< 新增/修改 >>>>>>>>>
@@ -855,15 +935,22 @@ class EdgeTTSApp:
         refresh_voices_list()
 
     def update_voice_ui(self, hierarchical_voice_data):
-        # print(self._("debug_voice_ui_updated").format(self.current_full_voice_name)) # Updated print
-        self.hierarchical_voice_data = hierarchical_voice_data; self.refresh_button.configure(state="normal")
+        self.hierarchical_voice_data = hierarchical_voice_data
+        if hasattr(self, 'refresh_button') and self.refresh_button.winfo_exists():
+             self.refresh_button.configure(state="normal") # Ensure button exists before configuring
+
         self.voice_display_to_full_map.clear()
+
         if not hierarchical_voice_data:
             print(self._("debug_voice_ui_no_data"))
-            for frame in [self.inline_voice_list_frame_left, self.inline_voice_list_frame_right]:
-                for widget in frame.winfo_children(): widget.destroy()
-                ctk.CTkLabel(frame, text=self._("debug_voice_load_failed_ui"), text_color="red").pack(pady=20)
+            for frame_attr in ['inline_voice_list_frame_left', 'inline_voice_list_frame_right']:
+                 frame = getattr(self, frame_attr, None)
+                 if frame and frame.winfo_exists():
+                     for widget in frame.winfo_children(): widget.destroy()
+                     ctk.CTkLabel(frame, text=self._("debug_voice_load_failed_ui"), text_color="red").pack(pady=20)
             self.update_status("status_generate_error", error=True); return
+
+        # --- Populate voice map ---
         pattern = re.compile(r", (.*Neural)\)$")
         for lang_data in hierarchical_voice_data.values():
             for voices in lang_data.values():
@@ -872,13 +959,56 @@ class EdgeTTSApp:
                     orig_dn = display; count = 1
                     while display in self.voice_display_to_full_map: display = f"{orig_dn}_{count}"; count += 1
                     self.voice_display_to_full_map[display] = name
-        settings = self.load_settings(); selected = settings.get("selected_voice", DEFAULT_VOICE)
-        if selected in self.voice_display_to_full_map.values(): self.current_full_voice_name = selected
-        elif DEFAULT_VOICE in self.voice_display_to_full_map.values(): self.current_full_voice_name = DEFAULT_VOICE
-        else: available = list(self.voice_display_to_full_map.values()); self.current_full_voice_name = available[0] if available else None
-        self._populate_inline_voice_list('left'); self._populate_inline_voice_list('right')
-        print(self._("debug_voice_ui_updated").format(self.current_full_voice_name)) # Print after update
+
+        # --- Validate selected voices ---
+        available_voices = list(self.voice_display_to_full_map.values())
+        if not available_voices:
+             print("错误：未能从 API 获取任何有效声音。")
+             self.selected_voice_latest = None
+             self.selected_voice_previous = None
+             # Update UI to show error in lists
+             for frame_attr in ['inline_voice_list_frame_left', 'inline_voice_list_frame_right']:
+                 frame = getattr(self, frame_attr, None)
+                 if frame and frame.winfo_exists():
+                     for widget in frame.winfo_children(): widget.destroy()
+                     ctk.CTkLabel(frame, text=self._("debug_voice_load_failed_ui"), text_color="red").pack(pady=20)
+             self.update_status("status_generate_error", error=True); return
+
+
+        # Validate latest voice
+        current_latest = self.selected_voice_latest # Get current setting
+        if current_latest not in available_voices:
+            print(f"警告：之前选择的最新声音 '{current_latest}' 不再可用。")
+            if DEFAULT_VOICE in available_voices:
+                self.selected_voice_latest = DEFAULT_VOICE
+                print(f"回退到默认声音: {DEFAULT_VOICE}")
+            else:
+                self.selected_voice_latest = available_voices[0] # Fallback to first available
+                print(f"回退到第一个可用声音: {self.selected_voice_latest}")
+        # else: latest is valid
+
+        # Validate previous voice (must exist and ideally be different from latest if possible)
+        current_previous = self.selected_voice_previous
+        if current_previous not in available_voices:
+             print(f"警告：之前选择的上一个声音 '{current_previous}' 不再可用。")
+             # Fallback: set previous to the (now validated) latest
+             self.selected_voice_previous = self.selected_voice_latest
+             print(f"将上一个声音设置为当前最新声音: {self.selected_voice_previous}")
+        # else: previous is valid
+
+        # Ensure previous is different from latest if more than one voice exists
+        # This logic might be better placed in _select_voice_inline to handle user actions
+        # For initialization, if they are the same, it's acceptable.
+
+        # --- Update UI ---
+        self._populate_inline_voice_list('left')
+        self._populate_inline_voice_list('right')
+
+        # <<<<<<< 修改: 更新调试信息和状态栏 >>>>>>>>>
+        print(f"声音列表更新完成。最新: '{self.selected_voice_latest}', 上次: '{self.selected_voice_previous}'")
         self.update_status("status_voices_updated", duration=3)
+        # Save the potentially updated/validated voices
+        self.save_settings()
 
     # --------------------------------------------------------------------------
     # 内联声音选择器方法 (使用翻译)
@@ -892,48 +1022,89 @@ class EdgeTTSApp:
         row_count = 0
         filter_codes = [c.strip().lower() for c in re.split(r'[,\s]+', filter_term) if c.strip()]
         if not self.voice_display_to_full_map:
-             # print(self._("debug_voice_map_empty"))
              ctk.CTkLabel(frame, text=self._("debug_no_matching_voices"), text_color="gray").grid(row=0, column=0, pady=20); return
         sorted_voices = sorted(self.voice_display_to_full_map.items()); found_match = False
+
+        # <<<<<<< 修复: 根据双蓝点模式决定高亮逻辑 >>>>>>>>>
+        is_dual_mode = self.dual_blue_dot_enabled.get()
+
         for display_name, full_name in sorted_voices:
             apply_filter = len(filter_codes) > 0; match_filter = False
             if apply_filter:
                 match = re.search(r'\(([a-z]{2,3})-', full_name); code = match.group(1).lower() if match else ""
                 if code in filter_codes: match_filter = True
             if apply_filter and not match_filter: continue
-            found_match = True; is_selected = (full_name == self.current_full_voice_name)
-            try: default_fg = ctk.ThemeManager.theme["CTkButton"]["fg_color"]; default_fg_mode = default_fg[ctk.get_appearance_mode()=='dark'] if isinstance(default_fg,(list,tuple)) else default_fg
-            except: default_fg_mode = "#1F6AA5"
-            btn_fg = self.current_custom_color or default_fg_mode; btn_hover = self._calculate_hover_color(btn_fg)
-            # Determine normal text color based on theme more robustly
-            txt_normal = None
-            try:
-                # Attempt to get the correct text color for the current mode
-                label_theme = ctk.ThemeManager.theme["CTkLabel"]
-                text_colors = label_theme["text_color"]
-                current_mode_index = 1 if ctk.get_appearance_mode().lower() == 'dark' else 0
-                if isinstance(text_colors, (list, tuple)) and len(text_colors) > current_mode_index:
-                    txt_normal = text_colors[current_mode_index]
-                elif isinstance(text_colors, str): # Handle single color case
-                    txt_normal = text_colors
-            except Exception: # Catch errors during theme access
-                pass # txt_normal remains None
+            found_match = True
 
-            # Fallback if theme access failed or color wasn't determined
-            if txt_normal is None:
-                txt_normal = "#FFFFFF" if ctk.get_appearance_mode().lower() == 'dark' else "#000000"
+            is_latest = (full_name == self.selected_voice_latest)
+            # Only consider previous if dual mode is on and previous is different from latest
+            is_previous = (is_dual_mode and full_name == self.selected_voice_previous and self.selected_voice_previous != self.selected_voice_latest)
 
+            # --- Determine button colors ---
+            color_latest_bg = self.current_custom_color or DEFAULT_CUSTOM_COLOR
+            color_previous_bg = self._calculate_hover_color(color_latest_bg) # Use hover color for previous
+            color_transparent = "transparent"
+            btn_fg = color_transparent
 
-            txt_selected = self._get_contrasting_text_color(btn_fg)
-            btn = ctk.CTkButton( frame, text=display_name, anchor="w", fg_color=btn_fg if is_selected else "transparent", hover_color=btn_hover, text_color=txt_selected if is_selected else txt_normal, command=lambda fn=full_name: self._select_voice_inline(fn) )
+            if is_latest:
+                btn_fg = color_latest_bg
+            elif is_previous: # This condition is only true if is_dual_mode is true
+                btn_fg = color_previous_bg
+
+            btn_hover = self._calculate_hover_color(btn_fg)
+
+            # --- Determine text colors ---
+            txt_normal = self._get_button_text_color(color_transparent)
+            txt_selected_latest = self._get_contrasting_text_color(color_latest_bg)
+            txt_selected_previous = self._get_contrasting_text_color(color_previous_bg)
+
+            btn_text_color = txt_normal
+            if is_latest:
+                btn_text_color = txt_selected_latest
+            elif is_previous: # Only true in dual mode
+                btn_text_color = txt_selected_previous
+
+            # --- Create button ---
+            btn = ctk.CTkButton(
+                frame,
+                text=display_name,
+                anchor="w",
+                fg_color=btn_fg,
+                hover_color=btn_hover,
+                text_color=btn_text_color,
+                command=lambda fn=full_name: self._select_voice_inline(fn)
+            )
             btn.grid(row=row_count, column=0, padx=5, pady=2, sticky="ew"); row_count += 1
         if not found_match: ctk.CTkLabel(frame, text=self._("debug_no_matching_voices"), text_color="gray").grid(row=0, column=0, pady=20)
 
     def _filter_voices_inline(self, side): self._populate_inline_voice_list(side); self.save_settings()
+
+    # <<<<<<< 修复: 根据双蓝点模式调整声音选择逻辑 >>>>>>>>>
     def _select_voice_inline(self, full_name):
-        if self.current_full_voice_name != full_name:
-            self.current_full_voice_name = full_name; print(self._("debug_voice_selected", full_name))
-            self._populate_inline_voice_list('left'); self._populate_inline_voice_list('right'); self.save_settings()
+        """Handles selecting a voice from the inline lists, respecting dual blue dot mode."""
+        is_dual_mode = self.dual_blue_dot_enabled.get()
+
+        if is_dual_mode:
+            # Dual Mode Logic: Rotate latest and previous
+            if full_name == self.selected_voice_latest:
+                print("Selected voice is already the latest.")
+                return # No change if selecting the same latest voice
+            self.selected_voice_previous = self.selected_voice_latest
+            self.selected_voice_latest = full_name
+            print(f"Dual Mode - Voice selected: Latest='{self.selected_voice_latest}', Previous='{self.selected_voice_previous}'")
+        else:
+            # Single Mode Logic: Update both latest and previous to the same selected voice
+            if full_name == self.selected_voice_latest:
+                 print("Selected voice is already the current voice.")
+                 return # No change if selecting the same voice
+            self.selected_voice_latest = full_name
+            self.selected_voice_previous = full_name # Keep previous same as latest
+            print(f"Single Mode - Voice selected: {self.selected_voice_latest}")
+
+        # Refresh lists and save settings regardless of mode
+        self._populate_inline_voice_list('left')
+        self._populate_inline_voice_list('right')
+        self.save_settings()
 
     # --------------------------------------------------------------------------
     # 主题与颜色切换方法 (使用翻译)
@@ -955,7 +1126,10 @@ class EdgeTTSApp:
         print(self._("debug_apply_color", self.current_custom_color)); hover = self._calculate_hover_color(self.current_custom_color)
         # ... (rest of apply color logic) ...
         buttons_to_color = [
-            self.generate_button, self.refresh_button,
+            # <<<<<<< 修改: 添加新的生成按钮到颜色列表 >>>>>>>>>
+            getattr(self, 'generate_button_left', None), # Use getattr for safety
+            getattr(self, 'generate_button_right', None),# Use getattr for safety
+            self.refresh_button,
             self.apply_color_button, self.pick_color_button,
             self.language_button # Also color the language button
         ]
@@ -970,7 +1144,9 @@ class EdgeTTSApp:
         switches_to_color = [
             self.copy_to_clipboard_switch, self.play_audio_switch,
             self.monitor_clipboard_switch, self.monitor_selection_switch,
-            self.minimize_to_tray_switch
+            self.minimize_to_tray_switch,
+            # <<<<<<< 添加: 双蓝点开关加入主题颜色应用列表 >>>>>>>>>
+            getattr(self, 'dual_blue_dot_switch', None) # Use getattr for safety
         ]
         for s in switches_to_color:
              # Check if widget exists and has the 'configure' method before calling it
@@ -1014,20 +1190,48 @@ class EdgeTTSApp:
             try: d=ctk.ThemeManager.theme["CTkLabel"]["text_color"]; return d[ctk.get_appearance_mode()=='dark'] if isinstance(d,(list,tuple)) else d
             except: return "#000000"
 
+    # <<<<<<< 修改: 完善双蓝点模式切换回调方法 >>>>>>>>>
+    def _toggle_dual_blue_dot_mode(self):
+        """Toggles the dual blue dot mode and updates relevant UI elements."""
+        is_enabled = self.dual_blue_dot_enabled.get()
+        print(f"Dual Blue Dot Mode Toggled: {is_enabled}")
+
+        # <<<<<<< 添加: 关闭双蓝点时，将 previous 设为 latest >>>>>>>>>
+        if not is_enabled:
+            print("Dual mode disabled. Setting previous voice to latest.")
+            self.selected_voice_previous = self.selected_voice_latest
+
+        # Update main generate button visibility/text
+        if hasattr(self, '_update_main_generate_buttons_visibility'):
+             self._update_main_generate_buttons_visibility()
+
+        # Refresh voice lists to show correct highlighting
+        self._populate_inline_voice_list('left')
+        self._populate_inline_voice_list('right')
+
+        # Save settings
+        self.save_settings()
+
+        # Update status bar
+        status_key = "status_dual_dot_enabled" if is_enabled else "status_dual_dot_disabled"
+        self.update_status(self._(status_key, "双蓝点已启用" if is_enabled else "双蓝点已禁用"), duration=3)
+
     # --------------------------------------------------------------------------
     # 设置加载与保存 (添加 minimize_to_tray, 重命名监控设置)
     # --------------------------------------------------------------------------
     def load_settings(self):
-        # Added minimize_to_tray default, renamed monitor settings
+        # <<<<<<< 修复: 添加新设置的默认值和向后兼容逻辑 >>>>>>>>>
         defaults = {
             "language": "zh",
             "copy_path_enabled": True,
             "autoplay_enabled": False,
-            "monitor_clipboard_enabled": False, # Renamed
-            "monitor_selection_enabled": False, # Renamed
-            "minimize_to_tray": False,          # <<<<<<< 新增默认值 >>>>>>>>>
+            "monitor_clipboard_enabled": False,
+            "monitor_selection_enabled": False,
+            "minimize_to_tray": False,
+            "dual_blue_dot_enabled": False, # 新增
             "max_audio_files": DEFAULT_MAX_AUDIO_FILES,
-            "selected_voice": DEFAULT_VOICE,
+            "selected_voice_latest": DEFAULT_VOICE, # 新增
+            "selected_voice_previous": DEFAULT_VOICE, # 新增
             "rate": 0,
             "volume": 0,
             "appearance_mode": DEFAULT_APPEARANCE_MODE,
@@ -1039,32 +1243,68 @@ class EdgeTTSApp:
             if os.path.exists(SETTINGS_FILE):
                 with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
                     settings = json.load(f)
-                    # Handle potential old key names for backward compatibility
+
+                    # --- 向后兼容性处理 ---
+                    # 1. 旧监控键名
                     if "monitor_enabled" in settings:
                         settings["monitor_clipboard_enabled"] = settings.pop("monitor_enabled")
                     if "select_trigger_enabled" in settings:
                         settings["monitor_selection_enabled"] = settings.pop("select_trigger_enabled")
-                merged = defaults.copy(); merged.update(settings)
+                    # 2. 旧声音键名
+                    if "selected_voice" in settings:
+                        old_voice = settings.pop("selected_voice")
+                        # 只有在新的键不存在时才使用旧值填充
+                        if "selected_voice_latest" not in settings:
+                            settings["selected_voice_latest"] = old_voice
+                        if "selected_voice_previous" not in settings:
+                             # 如果旧的 previous 也不存在，则用 latest (可能来自旧的 selected_voice) 填充
+                             settings["selected_voice_previous"] = settings.get("selected_voice_latest", old_voice)
+
+                # 合并默认值和加载的设置
+                merged = defaults.copy()
+                merged.update(settings)
+
+                # --- 验证加载的值 ---
                 loaded_color = merged.get("custom_theme_color", DEFAULT_CUSTOM_COLOR)
-                # Use default language "zh" for initial validation print if app._ not ready
-                if not re.match(r"^#[0-9a-fA-F]{6}$", loaded_color): print(TRANSLATIONS.get('zh',{}).get('debug_invalid_color_loaded',"Warn: Invalid color").format(loaded_color)); merged["custom_theme_color"] = DEFAULT_CUSTOM_COLOR
-                if merged.get("language") not in ["zh", "en"]: print(f"Warn: Invalid lang '{merged.get('language')}', using zh."); merged["language"] = "zh"
+                if not re.match(r"^#[0-9a-fA-F]{6}$", loaded_color):
+                    print(TRANSLATIONS.get('zh',{}).get('debug_invalid_color_loaded',"Warn: Invalid color").format(loaded_color))
+                    merged["custom_theme_color"] = DEFAULT_CUSTOM_COLOR
+                if merged.get("language") not in ["zh", "en"]:
+                    print(f"Warn: Invalid lang '{merged.get('language')}', using zh.")
+                    merged["language"] = "zh"
+
+                # 确保 previous voice 有效，如果无效或与 latest 相同，则设为 latest
+                # （这一步在 update_voice_ui 中也有，但在这里先处理一次更稳妥）
+                if not merged.get("selected_voice_previous"):
+                     merged["selected_voice_previous"] = merged.get("selected_voice_latest", DEFAULT_VOICE)
+
                 return merged
-        except Exception as e: print(f"Load settings failed: {e}") # Use basic print here
+        except Exception as e:
+            print(f"Load settings failed: {e}")
         return defaults
 
     def save_settings(self):
-        try: max_f = int(self.max_files_entry.get()); max_f = max_f if 1 <= max_f <= 50 else DEFAULT_MAX_AUDIO_FILES
-        except ValueError: max_f = DEFAULT_MAX_AUDIO_FILES
-        filter_l = getattr(self, 'language_filter_entry_left', None); filter_r = getattr(self, 'language_filter_entry_right', None)
+        # <<<<<<< 修复: 保存新的声音和双蓝点设置键 >>>>>>>>>
+        try:
+            max_f = int(self.max_files_entry.get())
+            max_f = max_f if 1 <= max_f <= 50 else DEFAULT_MAX_AUDIO_FILES
+        except ValueError:
+            max_f = DEFAULT_MAX_AUDIO_FILES
+
+        filter_l = getattr(self, 'language_filter_entry_left', None)
+        filter_r = getattr(self, 'language_filter_entry_right', None)
+
         settings = {
             "language": self.current_language,
-            "selected_voice": self.current_full_voice_name or DEFAULT_VOICE,
+            # 移除旧的 "selected_voice"
+            "selected_voice_latest": self.selected_voice_latest or DEFAULT_VOICE, # 保存 latest
+            "selected_voice_previous": self.selected_voice_previous or self.selected_voice_latest or DEFAULT_VOICE, # 保存 previous (确保有值)
             "copy_path_enabled": self.copy_to_clipboard_var.get(),
             "autoplay_enabled": self.play_audio_var.get(),
-            "monitor_clipboard_enabled": self.monitor_clipboard_var.get(), # Renamed
-            "monitor_selection_enabled": self.monitor_selection_var.get(), # Renamed
-            "minimize_to_tray": self.minimize_to_tray_var.get(), # <<<<<<< 保存托盘设置 >>>>>>>>>
+            "monitor_clipboard_enabled": self.monitor_clipboard_var.get(),
+            "monitor_selection_enabled": self.monitor_selection_var.get(),
+            "minimize_to_tray": self.minimize_to_tray_var.get(),
+            "dual_blue_dot_enabled": self.dual_blue_dot_enabled.get(), # 保存双蓝点状态
             "max_audio_files": max_f,
             "rate": self.rate_slider_var.get(),
             "volume": self.volume_slider_var.get(),
@@ -1074,30 +1314,99 @@ class EdgeTTSApp:
             "custom_theme_color": self.current_custom_color or DEFAULT_CUSTOM_COLOR
         }
         try:
-            with open(SETTINGS_FILE, "w", encoding="utf-8") as f: json.dump(settings, f, ensure_ascii=False, indent=4)
-            # print(self._("debug_settings_saved")) # Optional: only show on explicit save action?
-        except Exception as e: print(self._("debug_settings_save_failed", e)); self.update_status("status_settings_save_failed", error=True)
+            with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+                json.dump(settings, f, ensure_ascii=False, indent=4)
+            # print(self._("debug_settings_saved")) # Optional
+        except Exception as e:
+            print(self._("debug_settings_save_failed", e))
+            self.update_status("status_settings_save_failed", error=True)
 
     # --------------------------------------------------------------------------
     # 音频生成与处理方法 (使用翻译)
     # --------------------------------------------------------------------------
-    def generate_audio_manual(self):
+    # <<<<<<< 修改: generate_audio_manual 接受 voice_type 参数 >>>>>>>>>
+    def generate_audio_manual(self, voice_type='latest'): # Default to latest for single button mode
+        """Handles audio generation triggered by the main UI button(s)."""
         text = self.text_input.get("1.0", "end").strip()
-        if not text: self.update_status("status_empty_text_error", error=True, duration=5); return
-        voice = self.current_full_voice_name
-        if not voice: self.update_status("status_no_voice_error", error=True, duration=5); return
-        rate=f"{self.rate_slider_var.get():+}%"; volume=f"{self.volume_slider_var.get():+}%"; pitch="+0Hz"
+        if not text:
+            self.update_status("status_empty_text_error", error=True, duration=5)
+            return
+
+        # <<<<<<< 修改: 根据 voice_type 选择声音 >>>>>>>>>
+        if voice_type == 'latest':
+            voice = self.selected_voice_latest
+            status_voice_type_key = 'generate_button_latest'
+            status_voice_type_fallback = '最新'
+        elif voice_type == 'previous':
+            # Use previous only if it's different from latest, otherwise fallback to latest
+            voice = self.selected_voice_previous if self.selected_voice_previous and self.selected_voice_previous != self.selected_voice_latest else self.selected_voice_latest
+            status_voice_type_key = 'generate_button_previous'
+            status_voice_type_fallback = '上次'
+        else: # Fallback case (shouldn't normally be reached with current buttons)
+            voice = self.selected_voice_latest
+            status_voice_type_key = 'generate_button'
+            status_voice_type_fallback = '生成'
+
+        if not voice:
+            self.update_status("status_no_voice_error", error=True, duration=5)
+            return
+
+        rate = f"{self.rate_slider_var.get():+}%"
+        volume = f"{self.volume_slider_var.get():+}%"
+        pitch = "+0Hz"
+
+        # <<<<<<< 修改: 按钮状态管理 >>>>>>>>>
+        # Determine which buttons to disable/enable based on the current mode
+        buttons_to_manage = []
+        if self.dual_blue_dot_enabled.get():
+            # In dual mode, disable both main buttons during generation
+            if hasattr(self, 'generate_button_left') and self.generate_button_left.winfo_exists():
+                buttons_to_manage.append(self.generate_button_left)
+            if hasattr(self, 'generate_button_right') and self.generate_button_right.winfo_exists():
+                buttons_to_manage.append(self.generate_button_right)
+        else:
+            # In single mode, only disable the right (single) button
+            if hasattr(self, 'generate_button_right') and self.generate_button_right.winfo_exists():
+                buttons_to_manage.append(self.generate_button_right)
+
+        # Disable buttons
+        for btn in buttons_to_manage:
+            btn.configure(state="disabled")
+
         def on_complete(path, error=None):
-            if self.root.winfo_exists(): self.generate_button.configure(state="normal")
+            # Re-enable buttons
+            if self.root.winfo_exists():
+                for btn in buttons_to_manage:
+                     # Check again if button exists before enabling
+                     if btn and btn.winfo_exists():
+                         btn.configure(state="normal")
+
             if path:
-                base = os.path.basename(path); self.update_status(f"{self._('status_success')}: {base}", duration=10); print(self._("debug_audio_complete", path))
-                play = self.play_audio_var.get(); print(self._("debug_autoplay_manual", play))
-                if play: self.play_audio_pygame(path)
-                if self.copy_to_clipboard_var.get(): copy_file_to_clipboard(path)
-            else: err=f"{self._('status_generate_error')}: {error or '??'}"; print(err); self.update_status(err, error=True)
+                base = os.path.basename(path)
+                self.update_status(f"{self._('status_success')}: {base}", duration=10)
+                print(self._("debug_audio_complete", path))
+                play = self.play_audio_var.get()
+                print(self._("debug_autoplay_manual", play))
+                if play:
+                    self.play_audio_pygame(path)
+                if self.copy_to_clipboard_var.get():
+                    copy_file_to_clipboard(path)
+            else:
+                err = f"{self._('status_generate_error')}: {error or '??'}"
+                print(err)
+                self.update_status(err, error=True)
             manage_audio_files()
-        self.generate_button.configure(state="disabled"); name = self._get_display_voice_name(voice)
-        self.update_status(f"{self._('status_generating')} ({name})...", permanent=True, show_progress=True)
+
+        # Update status message
+        name = self._get_display_voice_name(voice)
+        status_voice_type = self._(status_voice_type_key, status_voice_type_fallback)
+        # Using a more specific translation key
+        status_msg_key = 'status_generating_specific'
+        status_msg_fallback = "正在生成 ({voice_type}: {name})..."
+        status_msg = self._(status_msg_key, status_msg_fallback).format(voice_type=status_voice_type, name=name)
+        self.update_status(status_msg, permanent=True, show_progress=True)
+
+        # Call the actual audio generation function
         generate_audio(text, voice, rate, volume, pitch, on_complete)
 
     def play_audio_pygame(self, path):
@@ -1119,75 +1428,131 @@ class EdgeTTSApp:
     # --------------------------------------------------------------------------
     # 浮窗相关方法 (修改以处理选择触发)
     # --------------------------------------------------------------------------
-    def show_float_window(self, text=None, triggered_by_selection=False):
-        """在鼠标位置显示蓝色“音”字浮窗.
-           - text: 文本内容 (如果由剪贴板监控触发).
-           - triggered_by_selection: 标记是否由鼠标选择触发.
-        """
-        # Store how this window was triggered
-        self._float_triggered_by_selection = triggered_by_selection
-        # Store text only if provided (i.e., from clipboard monitor)
-        self._text_for_float_trigger = text if text else None
-
-        # 先销毁可能存在的旧窗口
-        if self.float_window:
-            try:
-                self.float_window.destroy()
-            except Exception: # Catch any error during destroy
-                pass
-            self.float_window = None # Ensure it's reset
-
+    # <<<<<<< 新增: 浮窗显示控制器 >>>>>>>>>
+    def show_float_window_controller(self, text=None):
+        """根据双蓝点模式决定显示哪个浮窗."""
+        # 销毁任何现有的浮窗
+        self.destroy_float_window()
         self.destroy_generating_window()
         self.destroy_ok_window()
 
-        # 创建新窗口
+        # 获取鼠标位置并存储文本
+        try:
+            self.last_mouse_pos = (self.root.winfo_pointerx(), self.root.winfo_pointery())
+            print(self._("debug_mouse_pos_on_trigger", self.last_mouse_pos)) # Debug
+        except Exception as e:
+            print(f"获取鼠标位置时出错: {e}")
+            # 使用上次位置作为后备
+            if not hasattr(self, 'last_mouse_pos'):
+                 self.last_mouse_pos = (100, 100) # Fallback position
+
+        self._text_for_float_trigger = text # Store text (or None if selection trigger)
+
+        # 根据模式调用相应的显示函数
+        if self.dual_blue_dot_enabled.get():
+            print("[DEBUG] Calling _show_dual_float_window")
+            self._show_dual_float_window()
+        else:
+            print("[DEBUG] Calling _show_single_float_window")
+            self._show_single_float_window()
+
+    # <<<<<<< 新增: 显示单个蓝点浮窗 >>>>>>>>>
+    def _show_single_float_window(self):
+        """在鼠标位置显示单个蓝色“音”字浮窗."""
+        x, y = self.last_mouse_pos
+        window_width = 50
+        window_height = 50
+
         self.float_window = tk.Toplevel(self.root)
         self.float_window.overrideredirect(True)
-        x, y = self.last_mouse_pos
-        self.float_window.geometry(f"50x50+{x + 10}+{y + 10}")
+        self.float_window.geometry(f"{window_width}x{window_height}+{x + 10}+{y + 10}")
         self.float_window.attributes("-topmost", True)
 
-        # 创建按钮
         btn = ctk.CTkButton(
-            self.float_window, text="音", width=50, height=50, corner_radius=25,
+            self.float_window, text="音", width=window_width, height=window_height, corner_radius=window_width//2,
             font=ctk.CTkFont(size=20, weight="bold"), fg_color="#1E90FF",
             hover_color="#1C86EE", text_color="white",
-            command=self.trigger_generate_from_float
+            # 调用 _trigger_generate_from_float，传递 voice_type 和存储的文本
+            command=lambda: self._trigger_generate_from_float(voice_type='latest', text=self._text_for_float_trigger)
         )
         btn.pack(fill="both", expand=True)
 
-        # 取消之前的自动关闭任务
+        self._schedule_float_window_close()
+
+    # <<<<<<< 新增: 显示双蓝点浮窗 >>>>>>>>>
+    def _show_dual_float_window(self):
+        """在鼠标位置显示双蓝点浮窗 (左右两个按钮)."""
+        x, y = self.last_mouse_pos
+        # <<<<<<< 修复: 调整按钮大小和文本，确保并排显示 >>>>>>>>>
+        button_size = 40 # 稍微减小按钮大小
+        gap = 4
+        window_width = button_size * 2 + gap
+        window_height = button_size
+
+        self.float_window = tk.Toplevel(self.root)
+        self.float_window.overrideredirect(True)
+        # 使用默认背景色
+
+        self.float_window.geometry(f"{window_width}x{window_height}+{x + 10}+{y + 10}")
+        self.float_window.attributes("-topmost", True)
+
+        # Configure grid layout for the Toplevel window itself
+        self.float_window.grid_columnconfigure(0, weight=1)
+        self.float_window.grid_columnconfigure(1, weight=1)
+        self.float_window.grid_rowconfigure(0, weight=1)
+
+        # Left Button (Previous Voice) - Blue with "<"
+        btn_left = ctk.CTkButton(
+            self.float_window,
+            text="<", # 使用 < 符号
+            width=button_size, height=button_size, corner_radius=button_size//2,
+            font=ctk.CTkFont(size=18, weight="bold"), fg_color="#1E90FF", # Blue
+            hover_color="#1C86EE", text_color="white",
+            command=lambda: self._trigger_generate_from_float(voice_type='previous', text=self._text_for_float_trigger)
+        )
+        btn_left.grid(row=0, column=0, padx=(0, gap//2), pady=0, sticky="ns") # Use sticky="ns" for vertical centering
+
+        # Right Button (Latest Voice) - Blue with ">" (Corrected Color)
+        btn_right = ctk.CTkButton(
+            self.float_window,
+            text=">", # 使用 > 符号
+            width=button_size, height=button_size, corner_radius=button_size//2,
+            font=ctk.CTkFont(size=18, weight="bold"), fg_color="#1E90FF", # Blue
+            hover_color="#1C86EE", text_color="white", # Use blue hover color
+            command=lambda: self._trigger_generate_from_float(voice_type='latest', text=self._text_for_float_trigger)
+        )
+        btn_right.grid(row=0, column=1, padx=(gap//2, 0), pady=0, sticky="ns") # Use sticky="ns" for vertical centering
+
+        self._schedule_float_window_close()
+
+    # <<<<<<< 新增: 调度浮窗自动关闭 >>>>>>>>>
+    def _schedule_float_window_close(self):
+        """Schedules the automatic closing of the current float window."""
         if hasattr(self, '_float_window_close_job') and self._float_window_close_job:
             try:
                 self.root.after_cancel(self._float_window_close_job)
-            except Exception:
-                pass
+            except Exception: pass
             self._float_window_close_job = None
 
-        # 定义自动关闭函数 (内嵌)
         def auto_close():
-            # <<<<<<< CORRECTED SyntaxError >>>>>>>>>
             if self.float_window:
-                try:
-                    self.float_window.destroy()
-                except tk.TclError: # Specific tkinter error
-                    pass
-                except Exception as e: # Catch other potential errors during destroy
-                    # print(f"DEBUG: Error destroying float window in auto_close: {e}")
-                    pass
-            # Ensure these are reset even if destroy failed
+                try: self.float_window.destroy()
+                except: pass
             self.float_window = None
             self._float_window_close_job = None
 
-        # 启动新的自动关闭任务
-        self._float_window_close_job = self.float_window.after(FLOAT_WINDOW_TIMEOUT * 1000, auto_close)
+        if self.float_window: # Ensure window exists before scheduling close
+             self._float_window_close_job = self.float_window.after(FLOAT_WINDOW_TIMEOUT * 1000, auto_close)
+
 
     def show_generating_window(self, position):
-        self.destroy_float_window(); self.destroy_ok_window(); self.destroy_generating_window()
+        # self.destroy_float_window(); # Keep float window until generation starts
+        self.destroy_ok_window(); self.destroy_generating_window()
         self.generating_window = tk.Toplevel(self.root); self.generating_window.overrideredirect(True)
         x, y = position; self.generating_window.geometry(f"50x50+{x+10}+{y+10}"); self.generating_window.attributes("-topmost", True)
         self.generating_window_label = ctk.CTkButton( self.generating_window, text="/", width=50, height=50, corner_radius=25, font=ctk.CTkFont(size=20, weight="bold"), fg_color="#4CAF50", hover_color="#45a049", text_color="white", state="disabled" )
         self.generating_window_label.pack(fill="both", expand=True); self._animate_green_dot()
+
     def _animate_green_dot(self, char_index=0):
         if self.generating_window and self.generating_window.winfo_exists():
             chars=["/","-","\\","|"]; char=chars[char_index % len(chars)]
@@ -1195,7 +1560,6 @@ class EdgeTTSApp:
             self.generating_animation_job = self.root.after(150, lambda: self._animate_green_dot(char_index + 1))
         else: self.generating_animation_job = None
 
-    # Corrected Syntax
     def destroy_generating_window(self):
         if self.generating_animation_job:
             try: self.root.after_cancel(self.generating_animation_job)
@@ -1205,17 +1569,40 @@ class EdgeTTSApp:
             try: self.generating_window.destroy()
             except: pass
             self.generating_window = None; self.generating_window_label = None
-    # Corrected Syntax
+
+    # <<<<<<< 修复: 增强 destroy_float_window 的健壮性 >>>>>>>>>
     def destroy_float_window(self):
+        """Destroys the current float window (single or dual dot) safely."""
+        # Cancel pending close job first
         if hasattr(self, '_float_window_close_job') and self._float_window_close_job:
-            try: self.root.after_cancel(self._float_window_close_job)
-            except: pass
+            try:
+                # Ensure after_cancel is called from the main thread if necessary
+                # However, this method is usually called from callbacks already on the main thread.
+                self.root.after_cancel(self._float_window_close_job)
+            except Exception as e:
+                 # print(f"DEBUG: Error cancelling float window close job: {e}")
+                 pass # Ignore errors cancelling job
             self._float_window_close_job = None
-        if self.float_window:
-            try: self.float_window.destroy()
-            except: pass
-            self.float_window = None
-    # Corrected Syntax
+
+        # Destroy the window if it exists
+        window_to_destroy = getattr(self, 'float_window', None)
+        if window_to_destroy:
+            try:
+                # Check if the window still exists in the Tkinter hierarchy
+                if window_to_destroy.winfo_exists():
+                    # print("[DEBUG] Destroying existing float window.")
+                    window_to_destroy.destroy()
+                # else:
+                    # print("[DEBUG] Float window already destroyed.")
+            except tk.TclError as e:
+                # Catch specific TclError which might include "can't delete Tcl command"
+                print(f"TclError destroying float window (might be already gone): {e}")
+            except Exception as e:
+                print(f"Unexpected error destroying float window: {e}")
+            finally:
+                 # Always reset the attribute
+                 self.float_window = None
+
     def destroy_ok_window(self):
         if hasattr(self, '_ok_window_close_job') and self._ok_window_close_job:
             try: self.root.after_cancel(self._ok_window_close_job)
@@ -1225,7 +1612,7 @@ class EdgeTTSApp:
             try: self.ok_window.destroy()
             except: pass
             self.ok_window = None
-    # Corrected Syntax
+
     def show_ok_window(self, position=None):
         self.destroy_ok_window(); self.destroy_generating_window()
         self.ok_window = tk.Toplevel(self.root); self.ok_window.overrideredirect(True)
@@ -1242,101 +1629,130 @@ class EdgeTTSApp:
             self._ok_window_close_job = None
         self._ok_window_close_job = self.ok_window.after(MOUSE_TIP_TIMEOUT * 1000, auto_close)
 
-    def _process_and_generate_audio(self, text_to_generate, position):
+    def _process_and_generate_audio(self, text_to_generate, position, voice_to_use):
         """Internal helper to handle the audio generation process after text is confirmed."""
         if not text_to_generate:
             print(self._("debug_no_float_text"))
-            self.destroy_generating_window() # Ensure generating window is closed
+            self.destroy_generating_window()
             return
 
-        print(self._("debug_float_trigger_text").format(text_to_generate[:50]))
-        voice = self.current_full_voice_name
+        # Use the provided voice
+        voice = voice_to_use
         if not voice:
             self.update_status("status_no_voice_error", error=True, duration=5)
             self.destroy_generating_window()
+            print(f"Error: Invalid voice provided to _process_and_generate_audio: {voice}")
             return
+
+        print(self._("debug_float_trigger_text").format(text_to_generate[:50]))
+        print(f"Using voice: {self._get_display_voice_name(voice)}") # Debug which voice is used
 
         rate = f"{self.rate_slider_var.get():+}%"
         volume = f"{self.volume_slider_var.get():+}%"
         pitch = "+0Hz"
 
-        # Ensure generating window is shown (it might have been closed by error before)
+        # Ensure generating window is shown
         if not self.generating_window or not self.generating_window.winfo_exists():
              self.show_generating_window(position)
 
         def on_complete(path, error=None):
-            self.destroy_generating_window()
-            copy_enabled = self.copy_to_clipboard_var.get()
-            play_enabled = self.play_audio_var.get()
-            if path:
-                print(self._("debug_audio_complete", path))
-                print(self._("debug_autoplay_float", play_enabled))
-                print(self._("debug_autocopy_float", copy_enabled))
-                if play_enabled:
-                    self.play_audio_pygame(path)
-                # Show OK window only if copy is enabled (as per original logic)
-                if copy_enabled:
-                    copy_file_to_clipboard(path) # Copy the generated file path
-                    self.show_ok_window(position) # Show OK checkmark
-            else:
-                err = f"{self._('status_generate_error')}: {error or '??'}"
-                print(err)
-                self.update_status(err, error=True)
-            manage_audio_files()
+            try: # Use try...finally to ensure flag is reset
+                self.destroy_generating_window()
+                copy_enabled = self.copy_to_clipboard_var.get()
+                play_enabled = self.play_audio_var.get()
+                if path:
+                    print(self._("debug_audio_complete", path))
+                    print(self._("debug_autoplay_float", play_enabled))
+                    print(self._("debug_autocopy_float", copy_enabled))
+                    if play_enabled:
+                        self.play_audio_pygame(path)
+                    if copy_enabled:
+                        copy_file_to_clipboard(path)
+                        self.show_ok_window(position)
+                else:
+                    err = f"{self._('status_generate_error')}: {error or '??'}"
+                    print(err)
+                    self.update_status(err, error=True)
+                manage_audio_files()
+            finally:
+                 # <<<<<<< 添加: 清除生成状态标志 >>>>>>>>>
+                 # print("[DEBUG] Clearing is_generating_from_float flag.")
+                 self.is_generating_from_float = False
 
         generate_audio(text_to_generate, voice, rate, volume, pitch, on_complete)
 
-    def _continue_generate_from_float_after_copy(self):
-        """Reads clipboard after copy simulation and proceeds with generation."""
-        print("[DEBUG] _continue_generate_from_float_after_copy called")
-        pos = self.last_mouse_pos # Use the stored position
+    # <<<<<<< 修改: _continue_generate_from_float_after_copy 接受 voice_type >>>>>>>>>
+    def _continue_generate_from_float_after_copy(self, voice_type):
+        """Reads clipboard after copy simulation and proceeds with generation using the specified voice type."""
+        print(f"[DEBUG] _continue_generate_from_float_after_copy called for voice_type: {voice_type}")
+        pos = self.last_mouse_pos
+
         try:
-            # Read clipboard content
             clipboard_text = pyperclip.paste()
             sanitized_text = sanitize_text(clipboard_text)
             print(f"[DEBUG] Text read from clipboard after copy: '{sanitized_text[:50]}...'")
 
             if sanitized_text:
-                # Proceed with generation using the sanitized text
-                self._process_and_generate_audio(sanitized_text, pos)
+                # Determine the actual voice based on voice_type
+                voice_to_use = self.selected_voice_latest if voice_type == 'latest' else self.selected_voice_previous
+                # Ensure previous falls back to latest if needed
+                if voice_type == 'previous' and (not voice_to_use or voice_to_use == self.selected_voice_latest):
+                    voice_to_use = self.selected_voice_latest
+
+                if not voice_to_use:
+                     print(f"ERROR: Could not determine voice for voice_type '{voice_type}' after copy.")
+                     self.destroy_generating_window()
+                     self.update_status("status_no_voice_error", error=True, duration=5)
+                     return
+
+                self._process_and_generate_audio(sanitized_text, pos, voice_to_use)
             else:
                 print("ERROR: No valid text found in clipboard after copy simulation.")
-                self.destroy_generating_window() # Close generating indicator
+                self.destroy_generating_window()
                 self.update_status("status_clipboard_empty_error", error=True, duration=5)
 
         except Exception as e:
             print(f"Error reading clipboard or processing after copy: {e}")
-            self.destroy_generating_window() # Close generating indicator
+            self.destroy_generating_window()
             self.update_status("status_clipboard_read_error", error=True, duration=5)
 
-    def trigger_generate_from_float(self):
-        """Handles the click on the float button ('音')."""
-        initial_text = getattr(self, '_text_for_float_trigger', None)
-        pos = self.last_mouse_pos # Store position before destroying float window
+    # <<<<<<< 修改: _trigger_generate_from_float 现在只处理生成逻辑 >>>>>>>>>
+    def _trigger_generate_from_float(self, voice_type, text):
+        """Handles the click on a float button, triggering audio generation."""
+        print(f"[DEBUG] Float button clicked: voice_type='{voice_type}', text_provided={text is not None}")
+        pos = self.last_mouse_pos # Use the position stored when the window was created
+        self.destroy_float_window() # Destroy the float window (single or dual)
 
-        # Destroy the blue float window immediately
-        self.destroy_float_window()
+        # <<<<<<< 添加: 设置生成状态标志 >>>>>>>>>
+        self.is_generating_from_float = True
 
-        if initial_text is None:
+        # Determine the voice to use
+        voice_to_use = self.selected_voice_latest if voice_type == 'latest' else self.selected_voice_previous
+        # Ensure previous falls back to latest if needed (e.g., only one voice selected ever)
+        if voice_type == 'previous' and (not voice_to_use or voice_to_use == self.selected_voice_latest):
+             voice_to_use = self.selected_voice_latest
+
+        if not voice_to_use:
+             print(f"ERROR: Could not determine voice for voice_type '{voice_type}' on float click.")
+             self.update_status("status_no_voice_error", error=True, duration=5)
+             return
+
+        if text is None:
             # --- Case 1: Triggered by selection (text is None) ---
-            print("[DEBUG] Float clicked (selection trigger): Simulating copy...")
-            # Show generating indicator BEFORE simulating copy
+            print(f"[DEBUG] Selection trigger: Simulating copy for voice_type '{voice_type}'...")
             self.show_generating_window(pos)
-            # Simulate copy
             self._simulate_copy_after_selection()
-            # Schedule the next step (reading clipboard and generating) after a delay
-            # This allows time for the clipboard to update after the simulated Ctrl+C
+            # Schedule reading clipboard, passing the intended voice_type
             if self.root.winfo_exists():
-                self.root.after(150, self._continue_generate_from_float_after_copy)
+                self.root.after(150, lambda vt=voice_type: self._continue_generate_from_float_after_copy(vt))
             else:
                  print("[DEBUG] Root window destroyed before scheduling clipboard read.")
                  self.destroy_generating_window()
-
         else:
             # --- Case 2: Triggered by clipboard monitor (text already exists) ---
-            print("[DEBUG] Float clicked (clipboard trigger): Processing directly...")
-            # Directly process the text that was stored when the float window was created
-            self._process_and_generate_audio(initial_text, pos)
+            print(f"[DEBUG] Clipboard trigger: Processing directly for voice_type '{voice_type}'...")
+            self.show_generating_window(pos) # Show generating indicator
+            self._process_and_generate_audio(text, pos, voice_to_use)
 
     # --------------------------------------------------------------------------
     # 剪贴板与鼠标监控方法 (重构以分离控制)
@@ -1604,45 +2020,41 @@ class EdgeTTSApp:
             # If monitor_clipboard_var is true, it will trigger the float window.
         except Exception as e: print(self._("debug_simulate_copy_error", e))
 
+    # <<<<<<< 修改: 调用新的浮窗控制器 >>>>>>>>>
     def _trigger_float_from_selection(self, mouse_pos):
         """Shows the float window specifically for selection trigger."""
-        print(f"[DEBUG] _trigger_float_from_selection called with pos: {mouse_pos}") # DEBUG
-        print(f"[DEBUG] Checking conditions: monitor_selection={self.monitor_selection_var.get()}, monitor_active={clipboard_monitor_active}, root_exists={self.root.winfo_exists()}") # DEBUG
-        if not self.monitor_selection_var.get() or not clipboard_monitor_active or not self.root.winfo_exists():
-            print("[DEBUG] _trigger_float_from_selection: Condition not met, returning.") # DEBUG
+        # <<<<<<< 修复: 确保只在划选监控启用时触发 >>>>>>>>>
+        # Check if the SELECTION monitor switch is ON and the root window exists.
+        # clipboard_monitor_active check is removed as it's not directly relevant here.
+        if not self.monitor_selection_var.get() or not self.root.winfo_exists():
+            # print("[DEBUG] Selection monitor disabled or root gone, skipping float trigger.")
             return
         try:
-            print("[DEBUG] _trigger_float_from_selection: Conditions met, proceeding.")
-            self.last_mouse_pos = mouse_pos # Use the position from the mouse release event
-            print(self._("debug_selection_mouse_pos", self.last_mouse_pos))
-
-            # --- Show float window WITHOUT text ---
-            # Text will be fetched only when the button is clicked.
-            self.show_float_window(text=None) # Pass text=None explicitly
-
+            # Call the controller, passing text=None for selection trigger
+            self.show_float_window_controller(text=None)
         except Exception as e:
             print(self._("debug_selection_trigger_error", e))
-            # Ensure float window is destroyed on error
-            if hasattr(self, 'float_window') and self.float_window:
-                 try: self.float_window.destroy()
-                 except: pass
-                 self.float_window = None
+            self.destroy_float_window() # Ensure cleanup on error
 
     def _trigger_float_from_poll(self, text_to_show):
         """Shows the float window when new clipboard content is detected AND clipboard monitor is ON."""
-        # Check if the CLIPBOARD monitor specifically is enabled.
-        if not self.monitor_clipboard_var.get() or not clipboard_monitor_active or not self.root.winfo_exists():
-             # print("Clipboard monitor off or root gone, not showing float window from poll.")
-             return
-        # Check if the text is valid before showing the window
-        if not text_to_show or not text_to_show.strip(): return
+        # <<<<<<< 添加: 检查生成状态标志 >>>>>>>>>
+        if self.is_generating_from_float:
+            print("[DEBUG] _trigger_float_from_poll: Already generating from float, skipping.")
+            return
 
+        # Check if the CLIPBOARD monitor switch is ON and the root window exists.
+        # clipboard_monitor_active check is removed as it's not directly relevant here.
+        if not self.monitor_clipboard_var.get() or not self.root.winfo_exists():
+             # print("[DEBUG] Clipboard monitor disabled or root gone, skipping float trigger.")
+             return
+        if not text_to_show or not text_to_show.strip(): return
         try:
-            # Get mouse position ONLY when triggering the window
-            self.last_mouse_pos = (self.root.winfo_pointerx(), self.root.winfo_pointery())
-            print(self._("debug_poll_mouse_pos", self.last_mouse_pos))
-            self.show_float_window(text_to_show)
-        except Exception as e: print(self._("debug_poll_trigger_error", e))
+            # Call the controller, passing the text from the clipboard
+            self.show_float_window_controller(text=text_to_show)
+        except Exception as e:
+             print(self._("debug_poll_trigger_error", e))
+             self.destroy_float_window() # Ensure cleanup on error
 
     def stop_monitors(self):
         """Stops all monitoring threads."""
