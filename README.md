@@ -27,7 +27,7 @@
 
 **(划选** 或 **Ctrl+C** 文字后点击 🔵 蓝点生成音频，生成音频中会出现 🟢 绿点，<br>生成结束后变为 🔴 红点，而后可按 **Ctrl+V** 快捷粘贴文件！**)**
 
-  <img src="https://github.com/user-attachments/assets/80f1822d-731a-4a6f-bb0b-7a726f0d6fd0" alt="Dark Mode Screenshot">
+  <img src="https://github.com/user-attachments/assets/ff090bd3-4bb0-4bc3-91bb-49d934f1765c" alt="Dark Mode Screenshot">
 
 </div>
 
