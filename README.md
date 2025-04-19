@@ -18,8 +18,6 @@
   <img src="https://github.com/user-attachments/assets/2668f79b-4e89-4e45-a476-c04b9afae4bb" alt="Light Mode Screenshot">
 
   <img src="https://github.com/user-attachments/assets/1c6f22a7-5d29-4770-9050-de1c65129f39" alt="Dark Mode Screenshot">
-  
-  <img src="https://github.com/user-attachments/assets/63bdf460-e4c1-4b24-ba06-63dde57fa196" alt="Dark Mode Screenshot">
 
 </p>
 
@@ -28,6 +26,7 @@
 **Select** or **Ctrl+C** text, click the 🔵 blue dot to generate audio.<br>A 🟢 green dot appears during generation, turning 🔴 red upon completion.<br>Then, use **Ctrl+V** to paste the audio file into Anki!
 
 **(划选** 或 **Ctrl+C** 文字后点击 🔵 蓝点生成音频，生成音频中会出现 🟢 绿点，<br>生成结束后变为 🔴 红点，而后可按 **Ctrl+V** 快捷粘贴文件！**)**
+  <img src="https://github.com/user-attachments/assets/63bdf460-e4c1-4b24-ba06-63dde57fa196" alt="Dark Mode Screenshot">
 
 </div>
 
