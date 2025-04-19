@@ -48,7 +48,7 @@
   <img src="https://github.com/user-attachments/assets/bf232f6c-9e19-418c-a943-2dc3dfd3ea7b" alt="GIF Demo" width="600">
 </p>
 
-## ✨ Features / 功能特性
+## 🌲Features / 功能特性
 
 <details>
 <summary><strong>English</strong>  👈🏼 Click to expand</summary>
