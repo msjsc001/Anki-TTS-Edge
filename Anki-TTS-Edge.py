@@ -123,6 +123,8 @@ try: import pygame
 except ImportError: print("错误：无法导入 pygame。请确保已安装：pip install pygame"); sys.exit(1)
 from pynput import mouse, keyboard
 import win32clipboard, win32con
+import win32gui # <<<<<<< 添加: 用于设置窗口透明 >>>>>>>>>
+import win32api # <<<<<<< 添加: 用于设置窗口透明 >>>>>>>>>
 import edge_tts
 from edge_tts import VoicesManager
 # 托盘图标库已在文件顶部导入
@@ -1040,6 +1042,15 @@ class EdgeTTSApp:
             # Only consider previous if dual mode is on and previous is different from latest
             is_previous = (is_dual_mode and full_name == self.selected_voice_previous and self.selected_voice_previous != self.selected_voice_latest)
 
+            # <<<<<<< 添加: 确定按钮文本，包含 (A)/(B) 标注 >>>>>>>>>
+            button_text = display_name # 默认按钮文本
+            if self.dual_blue_dot_enabled.get() and self.selected_voice_previous != self.selected_voice_latest:
+                if is_latest:
+                    button_text = f"{display_name} (B)"
+                elif is_previous: # is_previous already checks for dual mode and difference
+                    button_text = f"{display_name} (A)"
+            # <<<<<<< 结束添加 >>>>>>>>>
+
             # --- Determine button colors ---
             color_latest_bg = self.current_custom_color or DEFAULT_CUSTOM_COLOR
             color_previous_bg = self._calculate_hover_color(color_latest_bg) # Use hover color for previous
@@ -1067,7 +1078,7 @@ class EdgeTTSApp:
             # --- Create button ---
             btn = ctk.CTkButton(
                 frame,
-                text=display_name,
+                text=button_text,   # <<<<<<< 修改: 使用新的 button_text >>>>>>>>>
                 anchor="w",
                 fg_color=btn_fg,
                 hover_color=btn_hover,
@@ -1484,10 +1495,10 @@ class EdgeTTSApp:
         """在鼠标位置显示双蓝点浮窗 (左右两个按钮)."""
         x, y = self.last_mouse_pos
         # <<<<<<< 修复: 调整按钮大小和文本，确保并排显示 >>>>>>>>>
-        button_size = 40 # 稍微减小按钮大小
+        frame_size = 50 # 使用 frame_size
         gap = 4
-        window_width = button_size * 2 + gap
-        window_height = button_size
+        window_width = frame_size * 2 + gap
+        window_height = frame_size # <<<<<<< 修改: 使用 frame_size >>>>>>>>>
 
         self.float_window = tk.Toplevel(self.root)
         self.float_window.overrideredirect(True)
@@ -1501,27 +1512,71 @@ class EdgeTTSApp:
         self.float_window.grid_columnconfigure(1, weight=1)
         self.float_window.grid_rowconfigure(0, weight=1)
 
-        # Left Button (Previous Voice) - Blue with "<"
-        btn_left = ctk.CTkButton(
-            self.float_window,
-            text="<", # 使用 < 符号
-            width=button_size, height=button_size, corner_radius=button_size//2,
-            font=ctk.CTkFont(size=18, weight="bold"), fg_color="#1E90FF", # Blue
-            hover_color="#1C86EE", text_color="white",
-            command=lambda: self._trigger_generate_from_float(voice_type='previous', text=self._text_for_float_trigger)
-        )
-        btn_left.grid(row=0, column=0, padx=(0, gap//2), pady=0, sticky="ns") # Use sticky="ns" for vertical centering
+        # <<<<<<< 修改: 移除 WinAPI 透明设置，尝试使用 CTk 透明 >>>>>>>>>
+        try:
+            # 尝试直接设置 Toplevel 背景透明
+            self.float_window.configure(fg_color="transparent")
+            print("尝试设置 CTk Toplevel 背景透明...") # Debug
+        except Exception as e:
+            print(f"设置 CTk Toplevel 背景透明失败: {e}")
+        # <<<<<<< 结束修改 >>>>>>>>>
+        self.float_window.grid_rowconfigure(0, weight=1)
 
-        # Right Button (Latest Voice) - Blue with ">" (Corrected Color)
-        btn_right = ctk.CTkButton(
+
+        # --- 使用 Frame 和 Label 模拟按钮 ---
+
+        # Left Button (A)
+        frame_left = ctk.CTkFrame(
             self.float_window,
-            text=">", # 使用 > 符号
-            width=button_size, height=button_size, corner_radius=button_size//2,
-            font=ctk.CTkFont(size=18, weight="bold"), fg_color="#1E90FF", # Blue
-            hover_color="#1C86EE", text_color="white", # Use blue hover color
-            command=lambda: self._trigger_generate_from_float(voice_type='latest', text=self._text_for_float_trigger)
+            width=frame_size,
+            height=frame_size,
+            corner_radius=frame_size // 2,
+            fg_color="#1E90FF", # Blue background
+            border_width=0 # No border
         )
-        btn_right.grid(row=0, column=1, padx=(gap//2, 0), pady=0, sticky="ns") # Use sticky="ns" for vertical centering
+        frame_left.grid(row=0, column=0, padx=(0, gap//2), pady=0, sticky="ns")
+        frame_left.grid_propagate(False) # Prevent label from resizing frame
+
+        label_a = ctk.CTkLabel(
+            frame_left,
+            text="A",
+            text_color="white",
+            font=ctk.CTkFont(size=16, weight="bold"), # 字体大小 16
+            fg_color="transparent" # Label background transparent
+        )
+        label_a.place(relx=0.49, rely=0.5, anchor="center") # <<<<<<< 修改: 微调 A 的水平位置 >>>>>>>>>
+
+        # Bind click event to both frame and label
+        cmd_a = lambda event: self._trigger_generate_from_float(voice_type='previous', text=self._text_for_float_trigger)
+        frame_left.bind("<Button-1>", cmd_a)
+        label_a.bind("<Button-1>", cmd_a)
+
+
+        # Right Button (B)
+        frame_right = ctk.CTkFrame(
+            self.float_window,
+            width=frame_size,
+            height=frame_size,
+            corner_radius=frame_size // 2,
+            fg_color="#1E90FF", # Blue background
+            border_width=0
+        )
+        frame_right.grid(row=0, column=1, padx=(gap//2, 0), pady=0, sticky="ns")
+        frame_right.grid_propagate(False)
+
+        label_b = ctk.CTkLabel(
+            frame_right,
+            text="B",
+            text_color="white",
+            font=ctk.CTkFont(size=16, weight="bold"), # 字体大小 16
+            fg_color="transparent"
+        )
+        label_b.place(relx=0.5, rely=0.5, anchor="center")
+
+        # Bind click event to both frame and label
+        cmd_b = lambda event: self._trigger_generate_from_float(voice_type='latest', text=self._text_for_float_trigger)
+        frame_right.bind("<Button-1>", cmd_b)
+        label_b.bind("<Button-1>", cmd_b)
 
         self._schedule_float_window_close()
 
