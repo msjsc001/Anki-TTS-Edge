@@ -34,3 +34,6 @@ translations copy.json
 
 # Generated spec file for the modular app
 AnkiTTSApp.spec
+
+# App Data
+Anki-TTS-PY/history.json

@@ -1,0 +1,8 @@
+customtkinter
+edge-tts
+pyperclip
+pygame
+pynput
+pywin32
+pystray
+Pillow
