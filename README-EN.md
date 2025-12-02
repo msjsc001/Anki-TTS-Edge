@@ -1,5 +1,7 @@
 # Anki-TTS-Edge
 
+**[中文文档](https://github.com/msjsc001/Anki-TTS-Edge/blob/master/README.md)**
+
 <div align="center">
 
 Anki-TTS-Edge is a free, high-quality voice generation tool based on Microsoft Edge TTS technology. Designed specifically for Anki learners, it can quickly convert text into natural, fluent audio files for insertion into ANKI. It can also be used for reading aloud in any language and generating audio files to assist with language learning.

@@ -1,5 +1,7 @@
 # Anki-TTS-Edge
 
+**[English Documentation](https://github.com/msjsc001/Anki-TTS-Edge/blob/master/README-EN.md)**
+
 <div align="center">
 
 Anki-TTS-Edge 是一个基于微软 Edge TTS 技术的免费、高质量语音生成工具。它专为 Anki 学习者设计，能够快速将文本转换为自然流畅的语音文件插入 ANKI ，也可以用于任何语言的朗读和音频文件生成，助力语言学习 。
