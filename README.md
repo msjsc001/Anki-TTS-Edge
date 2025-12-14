@@ -28,7 +28,7 @@ Anki-TTS-Edge 是一个基于微软 Edge TTS 技术的免费、高质量语音�
 ## 📸 界面展示
 
 <div align="center">
-  <img width="2248" height="1875" alt="image" src="https://github.com/user-attachments/assets/b6cef667-c01c-4b27-b00a-fcdd77e0f302" />
+  <img alt="image" src="https://github.com/user-attachments/assets/b6cef667-c01c-4b27-b00a-fcdd77e0f302" />
 </div>
 
 > *注：全新 Flet 界面，简洁直观*
