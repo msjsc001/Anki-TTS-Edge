@@ -28,8 +28,8 @@ Anki-TTS-Edge is a free, high-quality voice generation tool powered by Microsoft
 ## 📸 Screenshots
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/placeholder-home" alt="Home View" width="300" />
-  <img src="https://github.com/user-attachments/assets/placeholder-setting" alt="Settings View" width="300" />
+<img width="2067" height="1626" alt="image" src="https://github.com/user-attachments/assets/c9fade87-7a3f-4ccf-858c-07c2acb6f2e2" />
+
 </div>
 
 > *Note: New Flet interface, clean and intuitive.*
