@@ -18,7 +18,10 @@ async def generate_audio_edge_tts_async(text, voice, rate, volume, pitch, output
         print(i18n.get("debug_edge_tts_ok", output_path))
         return output_path
     except Exception as e:
-        print(i18n.get("debug_edge_tts_fail", e))
+        msg = str(e)
+        if "No audio was received" in msg:
+             msg += " (Hint: Does this voice support the text language?)"
+        print(i18n.get("debug_edge_tts_fail", msg))
         return None
 
 def generate_audio(text, voice, rate_str, volume_str, pitch_str, on_complete=None):
@@ -64,3 +67,31 @@ def generate_audio(text, voice, rate_str, volume_str, pitch_str, on_complete=Non
                 on_complete(result, error)
 
     threading.Thread(target=run_async, daemon=True).start()
+
+async def generate_audio_task(text, voice, rate, volume, pitch):
+    """
+    Pure async wrapper for Flet usage.
+    Returns (path, error).
+    """
+    text = sanitize_text(text)
+    if not text:
+        return None, i18n.get("debug_empty_text")
+
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    match = re.search(r", (.*Neural)\)$", voice)
+    part = re.sub(r'\W+', '', match.group(1)) if match else "Unknown"
+    fname = f"Anki-TTS-Edge_{part}_{ts}.mp3"
+    out_path = os.path.join(AUDIO_DIR, fname)
+    
+    print(i18n.get("debug_generating_audio", voice, rate, volume, pitch))
+    print(i18n.get("debug_output_path", out_path))
+
+    try:
+        # direct await
+        result = await generate_audio_edge_tts_async(text, voice, rate, volume, pitch, out_path)
+        if result:
+            return result, None
+        else:
+            return None, i18n.get("debug_edge_tts_internal_error")
+    except Exception as e:
+        return None, str(e)

@@ -4,106 +4,104 @@
 
 <div align="center">
 
-Anki-TTS-Edge is a free, high-quality voice generation tool based on Microsoft Edge TTS technology. Designed specifically for Anki learners, it can quickly convert text into natural, fluent audio files for insertion into ANKI. It can also be used for reading aloud in any language and generating audio files to assist with language learning.
+Anki-TTS-Edge is a free, high-quality voice generation tool powered by Microsoft Edge TTS. It **quickly generates audio from selected text**, supports dual-voice mode for generating audio with two different voices, and automatically copies the generated audio to clipboard for fast pasting into apps like Anki. It also serves as a **convenient reading tool for language learning and article reading**.
+**Completely rebuilt with Flet (Flutter) in v2.0**, featuring a modern UI, smooth animations, and enhanced functionality.
 
-<img src="https://github.com/user-attachments/assets/d0a3d252-7240-4739-9854-77f16cc2d257" alt="Header Image">
-
-   [![GitHub release (latest by date)](https://img.shields.io/github/v/release/msjsc001/Anki-TTS-Edge)](https://github.com/msjsc001/Anki-TTS-Edge/releases/latest) [![GitHub last commit](https://img.shields.io/github/last-commit/msjsc001/Anki-TTS-Edge)](https://github.com/msjsc001/Anki-TTS-Edge/commits/master) [![GitHub All Releases Downloads](https://img.shields.io/github/downloads/msjsc001/Anki-TTS-Edge/total?label=Downloads&color=brightgreen)](https://github.com/msjsc001/Anki-TTS-Edge/releases)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/msjsc001/Anki-TTS-Edge)](https://github.com/msjsc001/Anki-TTS-Edge/releases/latest) [![GitHub last commit](https://img.shields.io/github/last-commit/msjsc001/Anki-TTS-Edge)](https://github.com/msjsc001/Anki-TTS-Edge/commits/master) [![GitHub All Releases Downloads](https://img.shields.io/github/downloads/msjsc001/Anki-TTS-Edge/total?label=Downloads&color=brightgreen)](https://github.com/msjsc001/Anki-TTS-Edge/releases)
 
 </div>
 
 ## ✨ Key Features
 
-- **Microsoft Edge Neural Network Voice Support**: Utilizes the Edge TTS interface to provide a free, natural, and realistic multi-language pronunciation experience.
-- **Dual Blue Dot Mode**: Supports "Dual Blue Dot" interaction, allowing quick switching or sequential selection of two different voices (e.g., one male and one female, or different accents) for generation. (v1.7.3)
-- **Generation History**: Built-in history panel automatically saves generation records, facilitating easy backtracking and management of generated audio files at any time. (v1.8.0)
-- **Clipboard/Selection Monitoring**: Intelligently monitors the system clipboard or mouse selection actions, automatically capturing text and popping up a floating window, greatly improving card-making efficiency.
-- **Floating Window & Tray**: Provides desktop floating window and system tray functions, seamlessly integrating into your desktop workflow without occupying extra screen space.
+- **Modern UI**: Rebuilt from scratch using Flet (Flutter) for a sleek, responsive, and material design experience.
+- **Top-tier Voices**: Access 300+ free Microsoft Edge Neural voices across multiple languages and regions.
+- **Dual Voice Mode**: "Dual Blue Dot" system allows quick switching or sequential generation of two different voices (e.g., Male/Female, US/UK accents).
+- **History Management**: Automatically saves generation history. Re-listen, copy, or delete audio records easily.
+- **Smart Monitoring**: 
+  - **Clipboard Monitor**: Automatically captures copied text and pops up for instant generation.
+  - **Selection Monitor**: (Windows only) Genereate audio instantly by selecting text.
+- **System Integration**:
+  - **Tray Support**: Minimize to system tray to keep your workspace clean.
+  - **Pin to Top**: Keep the window always on top for easy access while studying.
+- **Internationalization**: Full support for English and Chinese (Simplified) interfaces with real-time switching.
 
-
-## 📸 Screenshots & Demos
-
-### Interface Overview
-
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/1971ed73-c1b8-4784-b3d0-e1ad892b5004" alt="Light Mode Screenshot 1" >
-  <img src="https://github.com/user-attachments/assets/2668f79b-4e89-4e45-a476-c04b9afae4bb" alt="Light Mode Screenshot 2" >
-</div>
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/1c6f22a7-5d29-4770-9050-de1c65129f39" alt="Dark Mode Screenshot" >
-</div>
-
-### Operation Demo
-
-**Select** or **Ctrl+C** text, then click the 🔵 blue dot to generate audio. A 🟢 green dot will appear during generation, turning into a 🔴 red dot upon completion, after which you can press **Ctrl+V** to paste the file quickly!
+## 📸 Screenshots
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/ff090bd3-4bb0-4bc3-91bb-49d934f1765c" alt="Operation Guide">
+  <img src="https://github.com/user-attachments/assets/placeholder-home" alt="Home View" width="300" />
+  <img src="https://github.com/user-attachments/assets/placeholder-setting" alt="Settings View" width="300" />
 </div>
 
-### Dynamic Feature Demo
+> *Note: New Flet interface, clean and intuitive.*
 
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/bf232f6c-9e19-418c-a943-2dc3dfd3ea7b" alt="GIF Demo" width="600">
-</div>
+## 🚀 Installation & Running
 
+### Requirements
+- Python 3.8+
+- Windows (Recommended for full feature support like Selection Monitor)
+
+### Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/msjsc001/Anki-TTS-Edge.git
+   cd Anki-TTS-Edge
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   pip install -r Anki-TTS-Flet/requirements.txt
+   ```
+   *Note: If `requirements.txt` is missing, manually install:*
+   ```bash
+   pip install flet edge-tts pygame pyperclip pystray pillow
+   ```
+
+3. **Run Application**
+   ```bash
+   python Anki-TTS-Flet/main.py
+   ```
+
+### Build EXE (Optional)
+
+To build a standalone executable:
+
+```bash
+# Install PyInstaller in virtual environment
+pip install pyinstaller
+
+# Build command
+.\.venv\Scripts\python.exe -m PyInstaller Anki-TTS-Flet/main.py --name "Anki-TTS-Edge" --icon "Anki-TTS-Flet/assets/icon.ico" --add-data "Anki-TTS-Flet/assets;assets" --collect-all edge_tts --hidden-import=pystray --hidden-import=PIL --hidden-import=pygame --noconsole --onefile --clean --noconfirm
+```
+
+The generated `Anki-TTS-Edge.exe` will be in the `dist/` directory.
 
 ## 📂 Project Structure
 
 ```text
-Anki-TTS-PY/
-├── assets/              # Resource files (icons, translation configs)
-├── config/              # Configuration files (constants, settings management)
-├── core/                # Core logic modules
-│   ├── audio_gen.py     # Audio generation logic
-│   ├── clipboard.py     # Clipboard monitoring
-│   ├── files.py         # File operations
-│   ├── history.py       # History management
-│   ├── voice_db.py      # Voice database
-│   └── voices.py        # Voice list management
-├── ui/                  # User interface modules
-│   ├── components/      # UI components
-│   ├── float_window.py  # Floating window implementation
-│   ├── main_window.py   # Main window implementation
-│   └── tray_icon.py     # Tray icon implementation
-├── utils/               # Utility functions
-│   ├── i18n.py          # Internationalization support
-│   └── text.py          # Text processing tools
-├── main.py              # Program entry point
-└── requirements.txt     # Project dependencies list
+Anki-TTS-Edge/
+├── Anki-TTS-Flet/       # Main compiled source code
+│   ├── assets/          # Icons and translation files
+│   ├── config/          # Configuration and settings
+│   ├── core/            # Business logic (TTS, Clipboard, History)
+│   ├── ui/              # Flet UI Views (Home, History, Settings)
+│   ├── utils/           # Helpers
+│   └── main.py          # Entry point
+├── .gitignore           # Git ignore rules
+└── README.md            # Documentation
 ```
 
-## 🚀 Installation & Running
+## 🛠️ Usage Guide
 
-This program is developed based on Python. Please ensure that Python 3.8 or higher is installed in your environment.
-
-1.  **Install Dependencies**
-    ```bash
-    pip install -r Anki-TTS-PY/requirements.txt
-    ```
-
-2.  **Run Program**
-    ```bash
-    python Anki-TTS-PY/main.py
-    ```
-
-## Build Guide
-
-If you wish to package the program as a standalone executable (EXE), you can follow these steps:
-
-1.  **Install Dependencies**
-    ```bash
-    pip install -r Anki-TTS-PY/requirements.txt
-    ```
-
-2.  **Build EXE**
-    ```bash
-    python Anki-TTS-PY/build_exe.py
-    ```
-
-After building, the executable file will be located in the `dist/` directory.
+1. **Select Voice**: Use the dropdown menus to filter by Language and Region.
+2. **Generate**: Type or paste text, then click the **Blue Dot** to generate audio.
+   - **Left Dot**: Uses "Language (Left)" settings.
+   - **Right Dot**: Uses "Language (Right)" settings.
+3. **Copy File**: After generation (Green -> Red dot), click the Red dot or use **Ctrl+C** to copy the audio file path (for pasting into Anki).
+4. **History**: Switch to the **History** tab to view and manage past generations.
+5. **Settings**: Customize theme (Dark/Light), behavior (Autoplay, Tray), and more in the **Settings** tab.
 
 ---
 <div align="center">
-Made with ❤️ for Anki Users
+Made with ❤️ for Language Learners
 </div>

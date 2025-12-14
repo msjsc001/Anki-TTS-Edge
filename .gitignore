@@ -1,39 +1,53 @@
-# Python (Python相关)
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
 .python-version
 
-# Virtual Environment (虚拟环境)
+# Virtual Environment
 .venv/
 venv/
+ENV/
 
-# Local Development (本地开发)
-*.swp
-*.swo
-.DS_Store
-
-# Project Specific (项目特定)
-音频/
-github-edge_tts/
-voice_settings.json
-/dist/
-/build/
-*.spec
-!Anki-TTS-Edge.spec
-AnkiTTSApp_Modular/dist/
-AnkiTTSApp_Modular/build/
-Anki-TTS-Edge copy.py
-translations copy.json
-
-# Documentation (文档)
-计划.md
-
-# IDE (集成开发环境)
+# IDE / Editor
 .vscode/
 .idea/
+.roo/
+*.swp
+*.swo
 
-# Generated spec file for the modular app
-AnkiTTSApp.spec
+# Build / Distribution
+build/
+dist/
+*.spec
+*.manifest
 
-# App Data
-Anki-TTS-PY/history.json
+# Logs
+*.log
+monitor_debug.log
+
+# OS Generated
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Project - User Data (Do not upload)
+Anki-TTS-Flet/history.json
+Anki-TTS-Flet/voice_settings.json
+history.json
+voice_settings.json
+
+# Project - Cache (Can be re-fetched)
+Anki-TTS-Flet/voices_cache.json
+voices_cache.json
+
+# Project - Generated Media / Temps
+Anki-TTS-Flet/音频/
+音频/
+*.mp3
+*.wav
+temp_*.py
+*copy.json

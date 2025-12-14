@@ -15,7 +15,7 @@ class SettingsManager:
         defaults = {
             "language": "zh",
             "copy_path_enabled": True,
-            "autoplay_enabled": False,
+            "autoplay_enabled": True,
             "monitor_clipboard_enabled": False,
             "monitor_selection_enabled": False,
             "minimize_to_tray": False,

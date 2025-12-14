@@ -35,6 +35,11 @@ ICON_PATH = os.path.join(ASSETS_DIR, "icon.ico")
 # Translations (Read-Only -> Resource Dir)
 TRANSLATIONS_FILE = os.path.join(ASSETS_DIR, "translations.json")
 
+# App Metadata
+APP_VERSION = "2.0"
+GITHUB_URL = "https://github.com/msjsc001/Anki-TTS-Edge"
+
+
 # Voice Cache (Read/Write -> Data Dir, or Resource if serving as default)
 # We treat cache as something that might be updated or created, so let's check Data first, then Resource
 # But for simplicity in this app, let's keep it in Data dir if we want to update it,
@@ -55,7 +60,7 @@ DEFAULT_MAX_AUDIO_FILES = 20
 DEFAULT_VOICE = "Microsoft Server Speech Text to Speech Voice (zh-CN, XiaoxiaoNeural)"
 DEFAULT_APPEARANCE_MODE = "light"
 DEFAULT_CUSTOM_COLOR = "#1F6AA5"
-CUSTOM_WINDOW_TITLE = "Anki-TTS-Edge (v1.8.0)"
+CUSTOM_WINDOW_TITLE = "Anki-TTS-Edge"
 
 # Timeouts & Thresholds
 FLOAT_WINDOW_TIMEOUT = 2

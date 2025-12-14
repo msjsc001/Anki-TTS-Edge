@@ -4,106 +4,104 @@
 
 <div align="center">
 
-Anki-TTS-Edge 是一个基于微软 Edge TTS 技术的免费、高质量语音生成工具。它专为 Anki 学习者设计，能够快速将文本转换为自然流畅的语音文件插入 ANKI ，也可以用于任何语言的朗读和音频文件生成，助力语言学习 。
+Anki-TTS-Edge 是一个基于微软 Edge TTS 技术的免费、高质量语音生成工具，它**能快速的通过划选后生成音频**，开启双音频（双点）模式后能选择两种不同的语音生成音频，生成音频后能自动复制到剪贴板，快速的粘贴到 Anki 之类的软件使用。也能作为**语言学习、文章阅读的便捷朗读工具**使用。
+**全新 v2.0 版本已使用 Flet (Flutter) 框架完全重构**，带来更现代化的 UI、更流畅的动画和更强大的功能体验。
 
-<img src="https://github.com/user-attachments/assets/d0a3d252-7240-4739-9854-77f16cc2d257" alt="Header Image">
-
-   [![GitHub release (latest by date)](https://img.shields.io/github/v/release/msjsc001/Anki-TTS-Edge)](https://github.com/msjsc001/Anki-TTS-Edge/releases/latest) [![GitHub last commit](https://img.shields.io/github/last-commit/msjsc001/Anki-TTS-Edge)](https://github.com/msjsc001/Anki-TTS-Edge/commits/master) [![GitHub All Releases Downloads](https://img.shields.io/github/downloads/msjsc001/Anki-TTS-Edge/total?label=Downloads&color=brightgreen)](https://github.com/msjsc001/Anki-TTS-Edge/releases)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/msjsc001/Anki-TTS-Edge)](https://github.com/msjsc001/Anki-TTS-Edge/releases/latest) [![GitHub last commit](https://img.shields.io/github/last-commit/msjsc001/Anki-TTS-Edge)](https://github.com/msjsc001/Anki-TTS-Edge/commits/master) [![GitHub All Releases Downloads](https://img.shields.io/github/downloads/msjsc001/Anki-TTS-Edge/total?label=Downloads&color=brightgreen)](https://github.com/msjsc001/Anki-TTS-Edge/releases)
 
 </div>
 
 ## ✨ 核心特性
 
-- **微软 Edge 神经网络语音支持**：利用 Edge TTS 接口，免费提供自然、逼真的多语言发音体验。
-- **双蓝点模式**：支持“双蓝点”交互，可快速切换或先后选择两种不同的声音（如一男一女，或不同口音）进行生成。（v1.7.3）
-- **生成历史记录**：内置历史记录面板，自动保存生成记录，方便随时回溯和管理已生成的音频文件。（v1.8.0）
-- **剪贴板/划词监控**：智能监控系统剪贴板或鼠标划选动作，自动捕获文本并弹出悬浮窗，极大提升制卡效率。
-- **悬浮窗与托盘**：提供桌面悬浮窗和系统托盘功能，能够无缝集成到您的桌面工作流中，不占用额外屏幕空间。
+- **全新现代化 UI**：基于 Flet (Flutter) 重构，界面美观、响应迅速，支持深色/浅色主题切换。
+- **海量语音库**：免费集成 300+ 个微软 Edge 神经网络语音，覆盖数十种语言和地区口音。
+- **双蓝点模式**：独特的双语音配置，可快速在两种不同声音（如一男一女、英音美音）间切换或生成。
+- **历史记录管理**：自动保存生成历史，支持随时回听、复制文件路径或重新生成。
+- **智能监控**：
+  - **剪贴板监控**：复制文本即自动弹出生成窗口。
+  - **划词监控**：(Windows) 选中文字即可快速生成，制卡效率倍增。
+- **贴心功能**：
+  - **系统托盘**：支持最小化到托盘，后台静默运行。
+  - **窗口置顶**：钉在桌面最上层，方便配合 Anki 或浏览器使用。
+  - **多语言界面**：原生支持中文和英文界面，实时切换。
 
-
-## 📸 截图与演示
-
-### 界面概览
-
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/1971ed73-c1b8-4784-b3d0-e1ad892b5004" alt="Light Mode Screenshot 1" >
-  <img src="https://github.com/user-attachments/assets/2668f79b-4e89-4e45-a476-c04b9afae4bb" alt="Light Mode Screenshot 2" >
-</div>
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/1c6f22a7-5d29-4770-9050-de1c65129f39" alt="Dark Mode Screenshot" >
-</div>
-
-### 操作演示
-
-**划选** 或 **Ctrl+C** 文字后点击 🔵 蓝点生成音频，生成音频中会出现 🟢 绿点，生成结束后变为 🔴 红点，而后可按 **Ctrl+V** 快捷粘贴文件！
+## 📸 界面展示
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/ff090bd3-4bb0-4bc3-91bb-49d934f1765c" alt="Operation Guide">
+  <img src="https://github.com/user-attachments/assets/placeholder-home" alt="主页预览" width="300" />
+  <img src="https://github.com/user-attachments/assets/placeholder-setting" alt="设置预览" width="300" />
 </div>
 
-### 动态功能演示
+> *注：全新 Flet 界面，简洁直观*
 
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/bf232f6c-9e19-418c-a943-2dc3dfd3ea7b" alt="GIF Demo" width="600">
-</div>
+## 🚀 安装与运行
 
+### 环境要求
+- Python 3.8 或更高版本
+- Windows 系统 (建议，以获得完整的划词监控支持)
+
+### 快速开始
+
+1. **克隆项目**
+   ```bash
+   git clone https://github.com/msjsc001/Anki-TTS-Edge.git
+   cd Anki-TTS-Edge
+   ```
+
+2. **安装依赖**
+   ```bash
+   pip install -r Anki-TTS-Flet/requirements.txt
+   ```
+   *注意：如果尚未生成 requirements.txt，可手动安装核心依赖：*
+   ```bash
+   pip install flet edge-tts pygame pyperclip pystray pillow
+   ```
+
+3. **运行程序**
+   ```bash
+   python Anki-TTS-Flet/main.py
+   ```
+
+### 构建 EXE (可选)
+
+如需构建独立的可执行文件：
+
+```bash
+# 确保在虚拟环境中安装 PyInstaller
+pip install pyinstaller
+
+# 构建命令
+.\.venv\Scripts\python.exe -m PyInstaller Anki-TTS-Flet/main.py --name "Anki-TTS-Edge" --icon "Anki-TTS-Flet/assets/icon.ico" --add-data "Anki-TTS-Flet/assets;assets" --collect-all edge_tts --hidden-import=pystray --hidden-import=PIL --hidden-import=pygame --noconsole --onefile --clean --noconfirm
+```
+
+生成的 `Anki-TTS-Edge.exe` 位于 `dist/` 目录。
 
 ## 📂 项目结构
 
 ```text
-Anki-TTS-PY/
-├── assets/              # 资源文件 (图标, 翻译配置)
-├── config/              # 配置文件 (常量, 设置管理)
-├── core/                # 核心逻辑模块
-│   ├── audio_gen.py     # 音频生成逻辑
-│   ├── clipboard.py     # 剪贴板监控
-│   ├── files.py         # 文件操作
-│   ├── history.py       # 历史记录管理
-│   ├── voice_db.py      # 声音数据库
-│   └── voices.py        # 声音列表管理
-├── ui/                  # 用户界面模块
-│   ├── components/      # UI 组件
-│   ├── float_window.py  # 悬浮窗实现
-│   ├── main_window.py   # 主窗口实现
-│   └── tray_icon.py     # 托盘图标实现
-├── utils/               # 工具函数
-│   ├── i18n.py          # 国际化支持
-│   └── text.py          # 文本处理工具
-├── main.py              # 程序启动入口
-└── requirements.txt     # 项目依赖列表
+Anki-TTS-Edge/
+├── Anki-TTS-Flet/       # 新版主程序目录
+│   ├── assets/          # 图标与翻译资源
+│   ├── config/          # 配置文件
+│   ├── core/            # 核心逻辑 (TTS, 剪贴板, 历史记录等)
+│   ├── ui/              # Flet UI 视图 (首页, 历史, 设置)
+│   ├── utils/           # 工具函数
+│   └── main.py          # 程序启动入口
+├── .gitignore           # Git 忽略配置
+└── README.md            # 项目文档
 ```
 
-## 🚀 安装与运行
+## 📑 使用指南
 
-本程序基于 Python 开发，请确保您的环境中已安装 Python 3.8 或更高版本。
-
-1.  **安装依赖**
-    ```bash
-    pip install -r Anki-TTS-PY/requirements.txt
-    ```
-
-2.  **运行程序**
-    ```bash
-    python Anki-TTS-PY/main.py
-    ```
-
-## 构建指南 (Build)
-
-如果您希望将程序打包为独立的可执行文件（EXE），可以按照以下步骤操作：
-
-1.  **安装依赖**
-    ```bash
-    pip install -r Anki-TTS-PY/requirements.txt
-    ```
-
-2.  **构建 EXE**
-    ```bash
-    python Anki-TTS-PY/build_exe.py
-    ```
-
-构建完成后，可执行文件将位于 `dist/` 目录下。
+1. **选择声音**：在首页顶部下拉框选择语言和具体发音人。
+2. **生成音频**：输入或粘贴文本，点击 **蓝色按钮** 开始生成。
+   - **左侧按钮**：使用"语言 (左)"的配置。
+   - **右侧按钮**：使用"语言 (右)"的配置。
+3. **复制文件**：生成中显示绿色，完成后变为红色。点击红点或按 **Ctrl+C** 即可复制音频文件路径（可直接粘贴到 Anki）。
+4. **查看历史**：切换到頂部 **"历史"**页签，查看过往生成记录。
+5. **偏好设置**：在 **"设置"**页签中自定义外观（深色模式）、行为（自动播放、最小化到托盘）等。
 
 ---
 <div align="center">
-Made with ❤️ for Anki Users
+Made with ❤️ for Language Learners
 </div>

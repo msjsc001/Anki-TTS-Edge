@@ -1,8 +1,9 @@
 import threading
+from PIL import Image
+import pystray
+import os
 from config.constants import ICON_PATH
 from utils.i18n import i18n
-import pystray
-from PIL import Image
 
 class TrayIconManager:
     def __init__(self, on_show_hide=None, on_exit=None):
@@ -18,20 +19,35 @@ class TrayIconManager:
             return
 
         try:
-            self.image = Image.open(ICON_PATH)
+            print(f"DEBUG: Loading tray icon from {ICON_PATH}")
+            if os.path.exists(ICON_PATH):
+                try:
+                    self.image = Image.open(ICON_PATH)
+                    # Convert to RGBA to ensure transparency works on Windows
+                    self.image = self.image.convert("RGBA")
+                except Exception as load_err:
+                    print(f"ERROR: PIL failed to open {ICON_PATH}: {load_err}")
+                    raise load_err
+            else:
+                raise FileNotFoundError(f"Icon not found at {ICON_PATH}")
         except Exception as e:
-            print(f"Error loading tray icon: {e}")
-            return
+            print(f"Error loading tray icon (General): {e}. Generating fallback.")
+            # Generate a simple blue square icon
+            self.image = Image.new('RGB', (64, 64), color=(0, 128, 255))
+        
+        # Ensure image is valid before creating Icon
+        if not self.image:
+             self.image = Image.new('RGB', (64, 64), color=(255, 0, 0)) # Red fallback
 
         menu = (
-            pystray.MenuItem(i18n.get("tray_show_hide"), self._on_show_hide_click),
-            pystray.MenuItem(i18n.get("tray_exit"), self._on_exit_click)
+            pystray.MenuItem(i18n.get("tray_show_hide", "Show/Hide"), self._on_show_hide_click, default=True),
+            pystray.MenuItem(i18n.get("tray_exit", "Exit"), self._on_exit_click)
         )
 
         self.icon_instance = pystray.Icon(
             "AnkiTTS",
             self.image,
-            i18n.get("window_title"),
+            i18n.get("window_title", "Anki-TTS"),
             menu=menu
         )
         self._setup_complete = True
@@ -57,16 +73,6 @@ class TrayIconManager:
     def stop(self):
         if self.icon_instance:
             self.icon_instance.stop()
-
-    def update_menu(self):
-        if self.icon_instance:
-            new_menu = (
-                pystray.MenuItem(i18n.get("tray_show_hide"), self._on_show_hide_click),
-                pystray.MenuItem(i18n.get("tray_exit"), self._on_exit_click)
-            )
-            self.icon_instance.menu = new_menu
-            self.icon_instance.update_menu()
-            print("托盘菜单已更新语言。")
 
     def _on_show_hide_click(self, icon, item):
         if self.on_show_hide:

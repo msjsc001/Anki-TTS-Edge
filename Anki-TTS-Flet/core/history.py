@@ -44,16 +44,36 @@ class HistoryManager:
         self.records.insert(0, record)
         
         # Enforce limit
-        max_files = settings_manager.get("max_audio_files", 20)
+        try:
+             max_files = int(settings_manager.get("max_audio_files", 20))
+        except:
+             max_files = 20
+             
         if len(self.records) > max_files:
             self.records = self.records[:max_files]
             
         self.save_records()
 
+    def remove_record(self, record):
+        if record in self.records:
+            self.records.remove(record)
+            self.save_records()
+
     def get_records(self):
         return self.records
 
     def clear_records(self):
+        print(f"DEBUG: Clearing {len(self.records)} records...")
+        count = 0
+        for record in self.records:
+            path = record.get("path")
+            if path and os.path.exists(path):
+                try:
+                    os.remove(path)
+                    count += 1
+                except Exception as e:
+                    print(f"Error removing file {path}: {e}")
+        print(f"DEBUG: Cleared {count} files.")
         self.records = []
         self.save_records()
 
