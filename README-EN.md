@@ -109,3 +109,18 @@ Anki-TTS-Edge/
 <div align="center">
 Made with ❤️ for Language Learners
 </div>
+
+---
+
+## ⚠️ Disclaimer
+
+This project (Anki-TTS-Edge) is for personal learning, research, and academic exchange purposes only.
+
+1.  **Non-Commercial Use**: This software is not an official Microsoft product and is based on open-source community code. Any audio files generated using this software are for personal use only and are strictly prohibited for any commercial use or public distribution.
+2.  **No Liability**:
+    *   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    *   **IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.**
+    *   Users assume all risks associated with downloading, installing, and using this software.
+3.  **Compliance**: Users must comply with local laws and regulations and Microsoft's relevant terms of service when using this software. Any legal liability arising from violation of laws or terms of service shall be borne solely by the user.
+
+**By downloading or using this software, you agree to all the terms above. If you do not agree, please stop using and delete this software immediately.**
