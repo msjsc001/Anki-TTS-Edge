@@ -10,15 +10,55 @@ class HomeView(ft.Container):
         
         # --- UI Components ---
         
-        # 1. Text Input
+        # 0. Status Bar (shown at top of text input area)
+        self.status_bar = ft.Container(
+            content=ft.Row([
+                ft.Icon(ft.Icons.INFO_OUTLINE, size=14),
+                ft.Text("", size=12),
+            ], spacing=5),
+            visible=False,
+            bgcolor=ft.Colors.BLUE_50,
+            border_radius=5,
+            padding=ft.padding.symmetric(horizontal=10, vertical=3),
+            margin=ft.margin.only(bottom=5),
+        )
+        
+        # 1. Text Input with edit detection
+        self._last_generated_text = ""  # Track last generated text to detect edits
         self.text_input = ft.TextField(
             hint_text="",
             multiline=True,
             min_lines=3,
             max_lines=5,
-            expand=False,
+            expand=True, # Expand to fill Stack
             border_color=ft.Colors.OUTLINE,
             focused_border_color=ft.Colors.INDIGO,
+            on_change=self._on_text_input_change,
+        )
+        
+        # 1.5 Highlighted Text Overlay (same size as text_input, shown during playback)
+        self._word_timings = []  # Store word timings for highlighting
+        self._current_word_index = -1
+        self.highlighted_text_column = ft.Column(
+            controls=[],
+            scroll=ft.ScrollMode.AUTO,
+            spacing=0,
+        )
+        # Fixed height to match text_input min_lines=3 (approximately 72px for 3 lines)
+        # Fixed height to match text_input min_lines=3 (approximately 72px for 3 lines)
+        self.highlighted_text_overlay = ft.Container(
+            content=self.highlighted_text_column,
+            visible=False,
+            bgcolor=ft.Colors.WHITE,
+            border=ft.border.all(1, ft.Colors.TRANSPARENT), # Invisible border to match input
+            # Use margin/padding to match TextField's internal content area
+            # TextField has internal padding (~12px). 
+            padding=12, 
+            expand=True, # Expand to fill Stack
+            clip_behavior=ft.ClipBehavior.HARD_EDGE,  # Clip overflow content
+            alignment=ft.alignment.top_left,
+            # CRITICAL FIX: Ensure it has a minimum height to prevent stack collapse
+            height=None, # Let it expand, but...
         )
         
         # 2. Parameters (Sliders)
@@ -105,49 +145,139 @@ class HomeView(ft.Container):
             height=50,
         )
 
-        # 4.5 Audio Control Buttons (Replay, Stop)
-        # 4.5 Audio Control Buttons (Replay, Stop)
+        # 4.5 Audio Control Buttons (Replay, Play/Pause, Stop)
         self.btn_replay = ft.IconButton(
             icon=ft.Icons.REPLAY,
-            tooltip=i18n.get("control_replay", "Replay"),
-            icon_size=24,
+            tooltip=i18n.get("control_replay", "重播"),
+            icon_size=20,
         )
         self.btn_play_pause = ft.IconButton(
-            icon=ft.Icons.PLAY_CIRCLE_OUTLINE, # Default state
-            selected_icon=ft.Icons.PAUSE_CIRCLE_OUTLINE, # Playing state
-            tooltip=i18n.get("control_play_pause", "Play/Pause"),
-            icon_size=24,
+            icon=ft.Icons.PLAY_CIRCLE_OUTLINE,
+            selected_icon=ft.Icons.PAUSE_CIRCLE_OUTLINE,
+            tooltip=i18n.get("control_play_pause", "播放/暂停"),
+            icon_size=20,
         )
         self.btn_stop = ft.IconButton(
             icon=ft.Icons.STOP_CIRCLE_OUTLINED,
-            tooltip=i18n.get("control_stop", "Stop"),
+            tooltip=i18n.get("control_stop", "停止"),
             icon_color=ft.Colors.RED,
-            icon_size=24,
+            icon_size=20,
+        )
+        
+        # 4.6 Sentence Navigation Buttons
+        self.btn_prev_sentence = ft.IconButton(
+            icon=ft.Icons.SKIP_PREVIOUS,
+            tooltip=i18n.get("control_prev_sentence", "上一句"),
+            icon_size=20,
+        )
+        self.btn_next_sentence = ft.IconButton(
+            icon=ft.Icons.SKIP_NEXT,
+            tooltip=i18n.get("control_next_sentence", "下一句"),
+            icon_size=20,
         )
         
         # 5. Pin Button
         self.btn_pin = ft.IconButton(
              icon=ft.Icons.PUSH_PIN_OUTLINED,
              selected_icon=ft.Icons.PUSH_PIN,
-             tooltip=i18n.get("window_pin", "Pin Window"),
+             tooltip=i18n.get("window_pin", "置顶窗口"),
+             icon_size=20,
              on_click=self._toggle_pin
+        )
+        
+        # 6. Expand/Collapse Button for text input
+        self._text_expanded = False
+        self.btn_expand_collapse = ft.IconButton(
+            icon=ft.Icons.EXPAND_MORE,
+            tooltip=i18n.get("expand_text_input", "展开"),
+            icon_size=16,
+            on_click=self._toggle_expand_collapse,
         )
 
         # --- Layout Assembly ---
-        # Header Row
+        # Playback controls row (small buttons)
+        playback_controls = ft.Row(
+            [
+                self.btn_replay,
+                self.btn_play_pause,
+                self.btn_stop,
+                ft.VerticalDivider(width=5),
+                self.btn_prev_sentence,
+                self.btn_next_sentence,
+            ],
+            spacing=0,
+        )
+        
+        # Header Row - with text label and playback controls next to it
         header_row = ft.Row(
             [
                 ft.Text(i18n.get("input_text_label"), weight="bold", size=16),
+                ft.Container(width=10), # Spacer
+                playback_controls,
+                ft.Container(expand=True), # Spacer to push pin to right
                 self.btn_pin
             ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+            alignment=ft.MainAxisAlignment.START,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
         )
+        
+        # Expand/Collapse button container (centered at bottom of text input)
+        # We put it in a separate container below the stack, but with negative margin to overlap border?
+        # Simpler: Just put it in the column below. 
+        expand_button_container = ft.Container(
+            content=self.btn_expand_collapse,
+            alignment=ft.alignment.center,
+            height=20,
+        )
+        
+        # Text input container with Stack overlay for highlighting
+        self.text_input_stack = ft.Stack([
+            self.text_input,
+            self.highlighted_text_overlay,  # Overlay for word highlighting
+        ])
+        
+        # Wrap Stack in a Container to enforce minimum height stability
+        # Using fixed height to match max_lines=5 (approx 140px)
+        # We will manually toggle this height in _toggle_expand_collapse
+        self.text_input_wrapper = ft.Container(
+            content=self.text_input_stack,
+            height=140, 
+        )
+        
+        self.text_input_container = ft.Container(
+            content=ft.Column(
+                [
+                    self.status_bar,  # Status bar at top
+                    self.text_input_wrapper, # Use the wrapper instead of direct stack
+                    expand_button_container,
+                ],
+                spacing=0,
+            ),
+        )
+        
+        # Parameters row (will be hidden when text is expanded)
+        self.params_row = ft.Container(
+            content=ft.Row(
+                [
+                    ft.Column([ft.Text(i18n.get("rate_label")), self.rate_slider], expand=True),
+                    ft.Column([ft.Text(i18n.get("volume_label")), self.volume_slider], expand=True),
+                ],
+                spacing=20
+            ),
+            visible=True,
+            animate_opacity=300,
+        )
+        
+        # Store references for expand/collapse
+        self.list_container_left = list_container_left
+        self.list_container_right = list_container_right
+        
         self.content = ft.Column(
             expand=True,
             alignment=ft.MainAxisAlignment.START,
             controls=[
                 header_row,
-                self.text_input,
+                self.text_input_container,
                 ft.Divider(height=10, color="transparent"),
                 
                 # Filters
@@ -164,25 +294,15 @@ class HomeView(ft.Container):
                 ft.Divider(height=10, color="transparent"),
                 
                 # Parameters Row
-                ft.Row(
-                    [
-                        ft.Column([ft.Text(i18n.get("rate_label")), self.rate_slider], expand=True),
-                        ft.Column([ft.Text(i18n.get("volume_label")), self.volume_slider], expand=True),
-                    ],
-                    spacing=20
-                ),
+                self.params_row,
                 
                 ft.Divider(height=10, color="transparent"),
                 
-                # Buttons Row
+                # Buttons Row (only generate buttons, playback controls moved to header)
                 ft.Row(
                     [
                         self.btn_gen_a, 
                         self.btn_gen_b,
-                        ft.VerticalDivider(width=10),
-                        self.btn_replay,
-                        self.btn_play_pause,
-                        self.btn_stop
                     ],
                     spacing=10,
                 )
@@ -194,6 +314,93 @@ class HomeView(ft.Container):
         e.control.update()
         if hasattr(self, 'on_pin_toggle'):
             self.on_pin_toggle(e.control.selected)
+    
+    def _toggle_expand_collapse(self, e):
+        """Toggle text input expansion to cover parameters area
+        
+        动态高度实现：展开时隐藏中间区域（Filters和Voice Selection），
+        让text_input_wrapper使用expand=True填充可用空间到params_row顶部
+        """
+        self._text_expanded = not self._text_expanded
+        
+        # 获取主内容Column的controls引用
+        main_content = self.content
+        
+        if self._text_expanded:
+            # 展开：隐藏中间区域，让文本框扩展填充
+            self.text_input.max_lines = 30  # 允许更多行
+            self.text_input.min_lines = 15
+            
+            # 隐藏Filters和Voice Selection（索引2-5的控件）
+            # 索引: 0=header_row, 1=text_input_container, 2=Divider, 3=Filters, 4=Divider, 5=VoiceSelection, 6=Divider, 7=params_row, 8=Divider, 9=Buttons
+            for i in [2, 3, 4, 5, 6]:  # 隐藏Divider, Filters, Divider, VoiceSelection, Divider
+                if i < len(main_content.controls):
+                    main_content.controls[i].visible = False
+            
+            # 让text_input_wrapper扩展填充空间
+            self.text_input_wrapper.expand = True
+            self.text_input_wrapper.height = None  # 移除固定高度
+            self.text_input_container.expand = True  # 容器也需要扩展
+            
+            self.btn_expand_collapse.icon = ft.Icons.EXPAND_LESS
+            self.btn_expand_collapse.tooltip = i18n.get("collapse_text_input", "收纳")
+        else:
+            # 收缩：恢复中间区域显示
+            self.text_input.max_lines = 5
+            self.text_input.min_lines = 3
+            
+            # 恢复显示Filters和Voice Selection
+            for i in [2, 3, 4, 5, 6]:
+                if i < len(main_content.controls):
+                    main_content.controls[i].visible = True
+            
+            # 恢复固定高度
+            self.text_input_wrapper.expand = False
+            self.text_input_wrapper.height = 140
+            self.text_input_container.expand = False
+            
+            self.btn_expand_collapse.icon = ft.Icons.EXPAND_MORE
+            self.btn_expand_collapse.tooltip = i18n.get("expand_text_input", "展开")
+        
+        # 关键修复：如果正在播放（覆盖层可见），同步更新覆盖层并重新应用高亮
+        if self.highlighted_text_overlay.visible:
+            if self._text_expanded:
+                # 展开时覆盖层也使用expand
+                self.highlighted_text_overlay.expand = True
+                self.highlighted_text_overlay.height = None
+                self.highlighted_text_column.expand = True
+                self.highlighted_text_column.height = None
+            else:
+                # 收缩时恢复固定高度
+                self.highlighted_text_overlay.expand = False
+                self.highlighted_text_overlay.height = 140
+                self.highlighted_text_column.expand = False
+                overlay_content_height = 140 - 24
+                self.highlighted_text_column.height = overlay_content_height
+            
+            # 强制重新应用当前高亮状态，避免展开后高亮丢失
+            current_idx = self._current_word_index
+            if current_idx >= 0 and hasattr(self, '_word_containers') and self._word_containers:
+                HIGHLIGHT_COLOR = ft.Colors.AMBER_300
+                for i, container in enumerate(self._word_containers):
+                    if i == current_idx:
+                        container.bgcolor = HIGHLIGHT_COLOR
+                    else:
+                        container.bgcolor = None
+            
+            self.highlighted_text_column.update()
+            self.highlighted_text_overlay.update()
+        
+        # 同步更新Stack的expand属性
+        self.text_input_stack.expand = self._text_expanded
+        
+        self.text_input.update()
+        self.text_input_stack.update()
+        self.text_input_wrapper.update()
+        self.text_input_container.update()
+        self.btn_expand_collapse.update()
+        main_content.update()
+        self.update()
 
     def _build_slider(self, label, value, min_v, max_v):
         return ft.Slider(
@@ -402,14 +609,206 @@ class HomeView(ft.Container):
         self.selected_voice_name = e.control.data
         if hasattr(self, 'on_voice_selected'):
             self.on_voice_selected(e)
+    
+    def _on_text_input_change(self, e):
+        """Called when user edits text input - marks text as dirty"""
+        current_text = self.text_input.value or ""
+        if current_text != self._last_generated_text:
+            if hasattr(self, 'on_text_edited'):
+                self.on_text_edited(True)  # Notify that text was edited
 
     # --- Getters ---
     def get_input_text(self):
         return self.text_input.value
 
-    def set_input_text(self, text):
+    def set_input_text(self, text, mark_as_generated=False):
+        """Set text input value. If mark_as_generated=True, this is from a generation."""
         self.text_input.value = text
+        if mark_as_generated:
+            self._last_generated_text = text
         self.text_input.update()
+    
+    def clean_text_input(self):
+        """Remove HTML tags from text input"""
+        if not self.text_input.value:
+            return
+        
+        import re
+        import html
+        # Remove HTML tags using regex
+        cleaned = re.sub(r'<[^>]+>', '', self.text_input.value)
+        # Also unescape HTML entities to ensure WYSIWYG
+        cleaned = html.unescape(cleaned)
+        
+        if cleaned != self.text_input.value:
+            self.text_input.value = cleaned
+            self.text_input.update()
+    
+    def is_text_dirty(self):
+        """Check if user has edited text since last generation"""
+        current_text = self.text_input.value or ""
+        return current_text != self._last_generated_text
+    
+    def show_highlighted_text(self, original_text, word_timings):
+        """
+        Build highlighted text overlay using precise alignment data.
+        """
+        self._word_timings = word_timings
+        self._original_text = original_text
+        self._current_word_index = -1
+        
+        # Lock overlay height to match wrapper
+        self._saved_wrapper_height = self.text_input_wrapper.height
+        
+        # Build overlay content
+        self.highlighted_text_column.controls.clear()
+        
+        FONT_SIZE = 14
+        word_row = ft.Row(controls=[], wrap=True, spacing=0, run_spacing=0)
+        
+        self._word_containers = []
+        
+        # With AlignmentEngine, word_timings now contains "text", "start_char", "end_char"
+        # that exact map to original_text substrings.
+        # We just need to iterate and fill gaps.
+        
+        current_char_idx = 0
+        
+        for i, word_info in enumerate(word_timings):
+            start_char = word_info.get("start_char", 0)
+            end_char = word_info.get("end_char", 0)
+            
+            # 1. Fill gap before this word (punctuation, spaces)
+            if start_char > current_char_idx:
+                between_text = original_text[current_char_idx:start_char]
+                if between_text:
+                    word_row.controls.append(ft.Text(between_text, size=FONT_SIZE))
+            
+            # 2. Add the word itself
+            # We use the text from original_text to ensure visual fidelity
+            actual_text = original_text[start_char:end_char]
+            
+            # Safety fallback if indices are weird (shouldn't happen with new engine)
+            if not actual_text and word_info.get("text"):
+                 actual_text = word_info.get("text")
+
+            word_container = ft.Container(
+                content=ft.Text(actual_text, size=FONT_SIZE),
+                padding=0,
+                border_radius=3,
+                bgcolor=None,
+                data=i, # Store index for reference
+                on_click=lambda e, idx=i: self._handle_word_click(idx),
+                ink=True, # Visual feedback on hover/click
+            )
+            
+            word_row.controls.append(word_container)
+            self._word_containers.append(word_container)
+            
+            current_char_idx = end_char
+        
+        # 3. Add trailing text
+        if current_char_idx < len(original_text):
+            remaining = original_text[current_char_idx:]
+            if remaining:
+                word_row.controls.append(ft.Text(remaining, size=FONT_SIZE))
+        
+        self.highlighted_text_column.controls.append(word_row)
+        
+        # Overlay Layout Logic (Same as before)
+        if self._text_expanded:
+            self.highlighted_text_overlay.expand = True
+            self.highlighted_text_overlay.height = None
+            self.highlighted_text_column.expand = True
+            self.highlighted_text_column.height = None
+        else:
+            overlay_content_height = self._saved_wrapper_height - 24 if self._saved_wrapper_height else None
+            self.highlighted_text_column.height = overlay_content_height
+            self.highlighted_text_overlay.height = self._saved_wrapper_height
+            self.highlighted_text_overlay.expand = False
+            self.highlighted_text_column.expand = False
+        
+        self.text_input.opacity = 0
+        self.text_input.read_only = True
+        self.highlighted_text_overlay.visible = True
+        self.text_input.update()
+        self.highlighted_text_overlay.update()
+
+    def _handle_word_click(self, word_index):
+        """Internal handler to propagate word click event"""
+        if hasattr(self, 'on_word_click') and self.on_word_click:
+            self.on_word_click(word_index)
+    
+    def update_highlight_position(self, current_word_index):
+        """Update overlay highlighting"""
+        if current_word_index == self._current_word_index:
+            return
+        
+        HIGHLIGHT_COLOR = ft.Colors.AMBER_300
+        
+        if hasattr(self, '_word_containers') and self._word_containers:
+            # Clear previous
+            if 0 <= self._current_word_index < len(self._word_containers):
+                self._word_containers[self._current_word_index].bgcolor = None
+            
+            # Set new
+            if 0 <= current_word_index < len(self._word_containers):
+                container = self._word_containers[current_word_index]
+                if container and isinstance(container, ft.Container):
+                     container.bgcolor = HIGHLIGHT_COLOR
+        
+        self._current_word_index = current_word_index
+        self.highlighted_text_overlay.update()
+        
+        # Update status bar
+        if 0 <= current_word_index < len(self._word_timings):
+            word = self._word_timings[current_word_index]["text"]
+            self.set_status(f"播放中: {word}", ft.Icons.GRAPHIC_EQ, ft.Colors.GREEN_100)
+
+    def hide_highlighted_text(self):
+        """Hide overlay and restore text input
+        
+        关键修复：恢复时重置覆盖层高度，避免残留固定高度影响下次使用
+        """
+        self.highlighted_text_overlay.visible = False
+        self.text_input.opacity = 1
+        self.text_input.read_only = False
+        self._word_timings = []
+        self._current_word_index = -1
+        
+        # 关键修复：重置覆盖层高度，恢复动态布局能力
+        self.highlighted_text_overlay.height = None
+        self.highlighted_text_column.height = None
+        
+        self.text_input.update()
+        self.highlighted_text_overlay.update()
+    
+    def set_status(self, message, icon=None, color=None):
+        """
+        Set status bar message. Pass empty message to hide.
+        icon: ft.Icons constant (optional)
+        color: background color (optional)
+        """
+        if not message:
+            self.status_bar.visible = False
+            self.status_bar.update()
+            return
+        
+        # Update icon and text
+        if self.status_bar.content and isinstance(self.status_bar.content, ft.Row):
+            icon_control = self.status_bar.content.controls[0]
+            text_control = self.status_bar.content.controls[1]
+            
+            if icon and isinstance(icon_control, ft.Icon):
+                icon_control.name = icon
+            if isinstance(text_control, ft.Text):
+                text_control.value = message
+        
+        if color:
+            self.status_bar.bgcolor = color
+        
+        self.status_bar.visible = True
+        self.status_bar.update()
 
     def get_params(self):
         rate = f"{int(self.rate_slider.value):+d}%"

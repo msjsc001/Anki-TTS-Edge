@@ -13,6 +13,10 @@ Anki-TTS-Edge is a free, high-quality voice generation tool powered by Microsoft
 
 ## ✨ Key Features
 
+- **Enhanced Reading Experience (v2.1)**:
+  - **Real-time Highlight**: Words are highlighted in sync with audio playback, handling complex text mappings (e.g. "1" -> "one") perfectly.
+  - **Click-to-Play**: Click on any word during playback to instantly jump to the start of that sentence.
+  - **Smart Navigation**: "Previous/Next Sentence" controls allow for easy sentence-by-sentence review and navigation.
 - **Modern UI**: Rebuilt from scratch using Flet (Flutter) for a sleek, responsive, and material design experience.
 - **Top-tier Voices**: Access 300+ free Microsoft Edge Neural voices across multiple languages and regions.
 - **Dual Voice Mode**: "Dual Blue Dot" system allows quick switching or sequential generation of two different voices (e.g., Male/Female, US/UK accents).
@@ -83,7 +87,7 @@ Anki-TTS-Edge/
 ├── Anki-TTS-Flet/       # Main compiled source code
 │   ├── assets/          # Icons and translation files
 │   ├── config/          # Configuration and settings
-│   ├── core/            # Business logic (TTS, Clipboard, History)
+│   ├── core/            # Business logic (TTS, Alignment, Clipboard, History)
 │   ├── ui/              # Flet UI Views (Home, History, Settings)
 │   ├── utils/           # Helpers
 │   └── main.py          # Entry point

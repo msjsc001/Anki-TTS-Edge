@@ -8,7 +8,7 @@ from ui.home_view import HomeView
 from core.voices import get_available_voices_async
 from ui.history_view import HistoryView
 from ui.settings_view import SettingsView
-from core.audio_gen import generate_audio_task
+from core.audio_gen import generate_audio_task, load_timestamps
 from core.history import history_manager
 from config.settings import settings_manager
 from datetime import datetime
@@ -233,6 +233,9 @@ async def main(page: ft.Page):
         if not text: return
         print(f"Main: Received ACTION for '{text[:10]}', mode='{mode}'")
         
+        # Update input text field with the text being generated
+        home_view.set_input_text(text, mark_as_generated=True)
+        
         voice_key = "selected_voice_latest" if mode == "B" else "selected_voice_previous"
         voice = settings_manager.get(voice_key)
         
@@ -259,17 +262,23 @@ async def main(page: ft.Page):
              monitor_manager.sat_input_q.put(("STATE", "generating"))
         except: pass
 
-        def on_done(path, error):
+        def on_done(path, error, timestamps=None):
             print(f"DEBUG: on_done called. Path={path}, Error={error}")
             if path:
                 try:
                      monitor_manager.sat_input_q.put(("STATE", "success"))
                 except: pass
                 
+                # Update playback state
+                current_audio_state["path"] = path
+                current_audio_state["timestamps"] = timestamps
+                current_audio_state["text"] = text
+                current_audio_state["text_dirty"] = False
+                
                 enabled = settings_manager.get("autoplay_enabled", True)
                 print(f"DEBUG: Autoplay Check (Satellite): {enabled}")
                 if enabled:
-                    handle_play_audio({"path":path})
+                    handle_play_audio({"path": path, "timestamps": timestamps})
                 if settings_manager.get("copy_path_enabled", True):
                      try:
                         copy_file_to_clipboard(path)
@@ -282,11 +291,13 @@ async def main(page: ft.Page):
                 try:
                      monitor_manager.sat_input_q.put(("STATE", "error"))
                 except: pass
+                home_view.set_status(f"生成失败: {error}", ft.Icons.ERROR_OUTLINE, ft.Colors.RED_100)
                 show_message(f"Error: {error}", True)
 
         print(f"DEBUG: Calling generate_audio_task with text='{text[:10]}...', voice='{voice}'")
+        timestamps = None
         try:
-            path, error = await asyncio.wait_for(
+            path, error, timestamps = await asyncio.wait_for(
                 generate_audio_task(text, voice, 
                     f"{int(home_view.rate_slider.value):+d}%", 
                     f"{int(home_view.volume_slider.value):+d}%",
@@ -301,7 +312,7 @@ async def main(page: ft.Page):
             path = None
             error = str(e)
             
-        on_done(path, error)
+        on_done(path, error, timestamps)
 
     async def satellite_loop():
         # print("DEBUG: Satellite Loop Started")
@@ -332,23 +343,56 @@ async def main(page: ft.Page):
     page.run_task(satellite_loop)
 
     # 7. Interaction Handlers
+    # Playback state management
+    current_audio_state = {
+        "path": None,
+        "timestamps": None,
+        "text": None,
+        "is_playing": False,
+        "is_paused": False,  # Distinguish between pause and stop
+        "current_sentence_index": 0,
+        "current_word_index": 0,
+        "text_dirty": False,  # True if user edited text after last generation
+        "current_playback_start_ms": 0, # Offset to add to pygame.get_pos()
+        "stop_playback_at_ms": None # If set, stop when this pos is reached
+    }
+
     async def handle_generate(e, voice):
+        # Auto-clean HTML tags before processing
+        home_view.clean_text_input()
+        
         text = home_view.get_input_text()
         if not text:
              show_message(i18n.get("status_no_text_error"), True)
+             home_view.set_status("请输入文本", ft.Icons.WARNING_AMBER, ft.Colors.ORANGE_100)
              return
+        
+        # Show generating status
+        home_view.set_status("正在生成音频...", ft.Icons.HOURGLASS_EMPTY, ft.Colors.BLUE_100)
+        
+        # Mark text as generated (for edit detection)
+        home_view.set_input_text(text, mark_as_generated=True)
 
-        path, error = await generate_audio_task(text, voice, 
+        path, error, timestamps = await generate_audio_task(text, voice, 
             f"{int(home_view.rate_slider.value):+d}%", 
             f"{int(home_view.volume_slider.value):+d}%",
             "+0Hz"
         )
         
         if path:
+            home_view.set_status("音频生成成功", ft.Icons.CHECK_CIRCLE_OUTLINE, ft.Colors.GREEN_100)
+            
+            # Update playback state
+            current_audio_state["path"] = path
+            current_audio_state["timestamps"] = timestamps
+            current_audio_state["text"] = text
+            current_audio_state["text_dirty"] = False
+            current_audio_state["current_sentence_index"] = 0
+            
             enabled = settings_manager.get("autoplay_enabled", True)
             print(f"DEBUG: Autoplay Check (Button): {enabled}")
             if enabled:
-                handle_play_audio({"path":path})
+                handle_play_audio({"path": path, "timestamps": timestamps})
             if settings_manager.get("copy_path_enabled", True):
                  try:
                     copy_file_to_clipboard(path)
@@ -358,6 +402,7 @@ async def main(page: ft.Page):
             history_manager.add_record(text, voice, path)
             history_view.populate_history(history_manager.get_records())
         else:
+            home_view.set_status(f"生成失败: {error}", ft.Icons.ERROR_OUTLINE, ft.Colors.RED_100)
             show_message(f"Error: {error}", True)
 
     async def handle_generate_b(e):
@@ -384,28 +429,409 @@ async def main(page: ft.Page):
     # Audio Handlers
     def handle_play_audio(e):
         path = None
+        timestamps = None
         if isinstance(e, dict):
              path = e.get("path")
+             timestamps = e.get("timestamps")
         
         if path and os.path.exists(path):
             print(f"DEBUG: Playing Audio: {path}")
             try:
+                # Update status
+                home_view.set_status("正在播放...", ft.Icons.PLAY_CIRCLE_OUTLINE, ft.Colors.GREEN_100)
+                
+                # Update state
+                current_audio_state["path"] = path
+                current_audio_state["is_playing"] = True
+                current_audio_state["is_paused"] = False
+                current_audio_state["current_word_index"] = 0
+                current_audio_state["current_playback_start_ms"] = 0 # Reset offset
+                current_audio_state["stop_playback_at_ms"] = None # Reset stop constraint
+                
+                if timestamps:
+                    current_audio_state["timestamps"] = timestamps
+                elif not current_audio_state["timestamps"]:
+                    # Try to load timestamps from file
+                    current_audio_state["timestamps"] = load_timestamps(path)
+                
+                # Set text input to read-only during playback
+                home_view.text_input.read_only = True
+                
+                # Show highlighted text if we have word timings
+                ts = current_audio_state["timestamps"]
+                if ts and ts.get("words"):
+                    home_view.show_highlighted_text(
+                        current_audio_state.get("text", ""),
+                        ts["words"]
+                    )
+                
+                home_view.text_input.update()
+                
                 pygame.mixer.music.load(path)
                 pygame.mixer.music.play()
                 home_view.btn_play_pause.selected = True
                 home_view.btn_play_pause.update()
+                
+                # Start playback monitoring
+                page.run_task(playback_monitor_loop)
             except Exception as ex:
                 print(f"Error playing: {ex}")
+                home_view.set_status(f"播放失败: {ex}", ft.Icons.ERROR_OUTLINE, ft.Colors.RED_100)
+                current_audio_state["is_playing"] = False
     
     def handle_stop_audio(e):
         pygame.mixer.music.stop()
+        current_audio_state["is_playing"] = False
+        current_audio_state["is_paused"] = False
+        current_audio_state["current_sentence_index"] = 0
+        current_audio_state["current_word_index"] = 0
         home_view.btn_play_pause.selected = False
+        home_view.text_input.read_only = False
+        home_view.hide_highlighted_text()  # Hide highlighting
+        home_view.set_status("已停止", ft.Icons.STOP_CIRCLE_OUTLINED, ft.Colors.GREY_200)
         home_view.btn_play_pause.update()
+        home_view.text_input.update()
+    
+    async def handle_pause_resume(e):
+        """Toggle play/pause state, or generate if no audio exists"""
+        # Case 1: Currently playing -> pause
+        if pygame.mixer.music.get_busy():
+            pygame.mixer.music.pause()
+            current_audio_state["is_paused"] = True
+            home_view.btn_play_pause.selected = False
+            home_view.set_status("已暂停", ft.Icons.PAUSE_CIRCLE_OUTLINE, ft.Colors.AMBER_100)
+            home_view.btn_play_pause.update()
+            return
+        
+        # Case 2: Paused -> resume
+        if current_audio_state["is_paused"]:
+            pygame.mixer.music.unpause()
+            current_audio_state["is_paused"] = False
+            current_audio_state["is_playing"] = True
+            # Resume means continue to end, so clear any existing stop constraint
+            current_audio_state["stop_playback_at_ms"] = None
+            
+            home_view.btn_play_pause.selected = True
+            home_view.set_status("正在播放...", ft.Icons.PLAY_CIRCLE_OUTLINE, ft.Colors.GREEN_100)
+            # Restart monitoring loop if it stopped
+            page.run_task(playback_monitor_loop)
+            home_view.btn_play_pause.update()
+            return
+        
+        # Case 3: No audio or text changed -> need to generate first
+        text = home_view.get_input_text()
+        if not text:
+            home_view.set_status("请输入文本", ft.Icons.WARNING_AMBER, ft.Colors.ORANGE_100)
+            return
+        
+        # Check if we have valid cached audio
+        has_valid_cache = (
+            current_audio_state["path"] and 
+            os.path.exists(current_audio_state["path"]) and
+            not home_view.is_text_dirty()
+        )
+        
+        if has_valid_cache:
+            # Play from cache
+            home_view.set_status("从缓存播放...", ft.Icons.PLAY_CIRCLE_OUTLINE, ft.Colors.GREEN_100)
+            handle_play_audio({
+                "path": current_audio_state["path"], 
+                "timestamps": current_audio_state["timestamps"]
+            })
+        else:
+            # Need to generate first
+            home_view.set_status("正在生成音频...", ft.Icons.HOURGLASS_EMPTY, ft.Colors.BLUE_100)
+            
+            # Get voice
+            voice = settings_manager.get("selected_voice_latest")
+            if not voice:
+                from config.constants import DEFAULT_VOICE
+                voice = DEFAULT_VOICE
+            
+            if not voice:
+                home_view.set_status("请选择声音", ft.Icons.WARNING_AMBER, ft.Colors.ORANGE_100)
+                return
+            
+            # Generate audio
+            path, error, timestamps = await generate_audio_task(
+                text, voice, 
+                f"{int(home_view.rate_slider.value):+d}%", 
+                f"{int(home_view.volume_slider.value):+d}%",
+                "+0Hz"
+            )
+            
+            if path:
+                home_view.set_input_text(text, mark_as_generated=True)
+                current_audio_state["path"] = path
+                current_audio_state["timestamps"] = timestamps
+                current_audio_state["text"] = text
+                current_audio_state["text_dirty"] = False
+                
+                home_view.set_status("正在播放...", ft.Icons.PLAY_CIRCLE_OUTLINE, ft.Colors.GREEN_100)
+                handle_play_audio({"path": path, "timestamps": timestamps})
+                
+                # Add to history
+                history_manager.add_record(text, voice, path)
+                history_view.populate_history(history_manager.get_records())
+            else:
+                home_view.set_status(f"生成失败: {error}", ft.Icons.ERROR_OUTLINE, ft.Colors.RED_100)
+    
+    def handle_replay(e):
+        """Replay from beginning"""
+        if current_audio_state["path"] and os.path.exists(current_audio_state["path"]):
+            current_audio_state["current_sentence_index"] = 0
+            handle_play_audio({"path": current_audio_state["path"], "timestamps": current_audio_state["timestamps"]})
+    
+    async def ensure_audio_ready(e):
+        """Helper to generate audio if missing before navigation"""
+        if not current_audio_state.get("timestamps"):
+             # Need to generate
+             v = settings_manager.get("selected_voice_latest")
+             if not v:
+                 home_view.set_status("请选择声音", ft.Icons.WARNING_AMBER, ft.Colors.ORANGE_100)
+                 return False
+                 
+             await handle_generate(e, v)
+             
+             # After generation, handle_generate starts playback from 0. 
+             # We might intercept or just let it be, but we need timestamps now.
+             if not current_audio_state.get("timestamps"):
+                 return False
+        return True
+
+    async def handle_prev_sentence(e):
+        """Jump to previous sentence"""
+        if not await ensure_audio_ready(e): return
+
+        timestamps = current_audio_state.get("timestamps")
+        if not timestamps or not timestamps.get("sentences"):
+            return
+        
+        sentences = timestamps["sentences"]
+        current_idx = current_audio_state["current_sentence_index"]
+        
+        # User constraint: "只播放上一句" (Only play this sentence)
+        target_idx = max(0, current_idx - 1)
+        sent = sentences[target_idx]
+        target_ms = sent["start_ms"]
+        stop_ms = sent["end_ms"]
+        
+        current_audio_state["current_sentence_index"] = target_idx
+        current_audio_state["current_playback_start_ms"] = target_ms 
+        current_audio_state["stop_playback_at_ms"] = stop_ms 
+            
+        try:
+            # FIX: Always use play(start=) to reset get_pos() for consistent timing offset
+            pygame.mixer.music.play(start=target_ms / 1000.0)
+            
+            home_view.btn_play_pause.selected = True
+            home_view.btn_play_pause.update()
+            
+            # FIX: Immediate Highlight Update
+            first_word_idx = -1
+            if timestamps.get("words"):
+                 for i, w in enumerate(timestamps["words"]):
+                     if w["start_ms"] >= target_ms:
+                         first_word_idx = i
+                         break
+            if first_word_idx != -1:
+                current_audio_state["current_word_index"] = first_word_idx
+                home_view.update_highlight_position(first_word_idx)
+            
+            # Ensure loop running
+            if not current_audio_state["is_playing"]:
+                current_audio_state["is_playing"] = True
+                page.run_task(playback_monitor_loop)
+                
+        except Exception as ex:
+            print(f"DEBUG: prev failed: {ex}")
+    
+    async def handle_next_sentence(e):
+        """Jump to next sentence"""
+        if not await ensure_audio_ready(e): return
+        
+        timestamps = current_audio_state.get("timestamps")
+        if not timestamps or not timestamps.get("sentences"):
+            return
+        
+        sentences = timestamps["sentences"]
+        current_idx = current_audio_state["current_sentence_index"]
+        
+        if current_idx < len(sentences) - 1:
+            target_idx = current_idx + 1
+            sent = sentences[target_idx]
+            
+            target_ms = sent["start_ms"]
+            stop_ms = sent["end_ms"]
+            
+            current_audio_state["current_sentence_index"] = target_idx
+            current_audio_state["current_playback_start_ms"] = target_ms
+            current_audio_state["stop_playback_at_ms"] = stop_ms 
+            
+            try:
+                # FIX: Always use play(start=) to reset get_pos()
+                pygame.mixer.music.play(start=target_ms / 1000.0)
+
+                home_view.btn_play_pause.selected = True
+                home_view.btn_play_pause.update()
+                
+                # FIX: Immediate Highlight Update
+                first_word_idx = -1
+                if timestamps.get("words"):
+                     for i, w in enumerate(timestamps["words"]):
+                         if w["start_ms"] >= target_ms:
+                             first_word_idx = i
+                             break
+                if first_word_idx != -1:
+                    current_audio_state["current_word_index"] = first_word_idx
+                    home_view.update_highlight_position(first_word_idx)
+                
+                if not current_audio_state["is_playing"]:
+                    current_audio_state["is_playing"] = True
+                    page.run_task(playback_monitor_loop)
+
+            except Exception as ex:
+                print(f"DEBUG: next failed: {ex}")
+
+    def handle_word_jump(word_index):
+        """Click to Play: Jump to sentence containing this word"""
+        timestamps = current_audio_state.get("timestamps")
+        if not timestamps or not timestamps.get("words"): return
+        
+        # Get word start time
+        if word_index < 0 or word_index >= len(timestamps["words"]): return
+        target_word = timestamps["words"][word_index]
+        word_ms = target_word["start_ms"]
+        
+        # Find sentence containing this word
+        sentences = timestamps.get("sentences", [])
+        target_sent_idx = 0
+        target_sent_start_ms = 0
+        
+        found = False
+        for i, sent in enumerate(sentences):
+            if sent["start_ms"] <= word_ms < sent["end_ms"]:
+                target_sent_idx = i
+                target_sent_start_ms = sent["start_ms"]
+                found = True
+                break
+        
+        if not found:
+            # Fallback to word start
+            target_sent_start_ms = word_ms
+        
+        # Update state (Continuous playback logic as requested)
+        current_audio_state["current_sentence_index"] = target_sent_idx
+        current_audio_state["current_playback_start_ms"] = target_sent_start_ms
+        current_audio_state["stop_playback_at_ms"] = None # Continuous play
+        
+        try:
+            # FIX: Always use play(start=)
+            pygame.mixer.music.play(start=target_sent_start_ms / 1000.0)
+            
+            # If paused, unpause state
+            current_audio_state["is_paused"] = False
+            home_view.btn_play_pause.selected = True
+            home_view.btn_play_pause.update()
+            
+            # FIX: Immediate Highlight (First word of Sentence, NOT clicked word)
+            first_word_idx = word_index # Default fallback
+            # Try to find exactly first word of sentence
+            if found:
+                 for i, w in enumerate(timestamps["words"]):
+                     if w["start_ms"] >= target_sent_start_ms:
+                         first_word_idx = i
+                         break
+            
+            current_audio_state["current_word_index"] = first_word_idx
+            home_view.update_highlight_position(first_word_idx)
+            
+            if not current_audio_state["is_playing"]:
+                current_audio_state["is_playing"] = True
+                page.run_task(playback_monitor_loop)
+                
+        except Exception as ex:
+            print(f"DEBUG: jump failed: {ex}")
+
+    home_view.on_word_click = handle_word_jump
+    
+    async def playback_monitor_loop():
+        """Monitor playback progress and update highlighting"""
+        last_word_idx = -1
+        
+        while True:
+            try:
+                # Check if we should exit the loop
+                if not current_audio_state["is_playing"] and not current_audio_state["is_paused"]:
+                    break
+                
+                # If paused, just wait
+                if current_audio_state["is_paused"]:
+                    await asyncio.sleep(0.1)
+                    continue
+                
+                # Check if playback finished (not busy and not paused)
+                if not pygame.mixer.music.get_busy() and not current_audio_state["is_paused"]:
+                    # Playback finished
+                    current_audio_state["is_playing"] = False
+                    home_view.btn_play_pause.selected = False
+                    home_view.text_input.read_only = False
+                    home_view.hide_highlighted_text()  # Hide highlighting when done
+                    home_view.set_status("播放完成", ft.Icons.CHECK_CIRCLE_OUTLINE, ft.Colors.GREEN_100)
+                    home_view.btn_play_pause.update()
+                    home_view.text_input.update()
+                    break
+                
+                # Get current position in ms
+                # FIX: Add Start Offset because get_pos() returns time since play() started
+                rel_ms = pygame.mixer.music.get_pos()
+                if rel_ms == -1: rel_ms = 0
+                pos_ms = current_audio_state.get("current_playback_start_ms", 0) + rel_ms
+                
+                # Check for Sentence Stop Condition
+                stop_at = current_audio_state.get("stop_playback_at_ms")
+                if stop_at and pos_ms >= stop_at:
+                    # Pause playback as if user clicked pause
+                    pygame.mixer.music.pause()
+                    current_audio_state["is_paused"] = True
+                    current_audio_state["stop_playback_at_ms"] = None # Clear constraint so Resume works
+                    home_view.btn_play_pause.selected = False
+                    home_view.set_status("已暂停 (句末)", ft.Icons.PAUSE_CIRCLE_OUTLINE, ft.Colors.AMBER_100)
+                    home_view.btn_play_pause.update()
+                    continue
+                
+                timestamps = current_audio_state.get("timestamps")
+                if timestamps:
+                    # Update current word index for highlighting
+                    if timestamps.get("words"):
+                        for i, word in enumerate(timestamps["words"]):
+                            if word["start_ms"] <= pos_ms < word["end_ms"]:
+                                if i != last_word_idx:
+                                    current_audio_state["current_word_index"] = i
+                                    home_view.update_highlight_position(i)
+                                    last_word_idx = i
+                                break
+                    
+                    # Update current sentence index
+                    if timestamps.get("sentences"):
+                        for i, sent in enumerate(timestamps["sentences"]):
+                            if sent["start_ms"] <= pos_ms < sent["end_ms"]:
+                                current_audio_state["current_sentence_index"] = i
+                                break
+                
+            except Exception as ex:
+                print(f"DEBUG: Playback monitor error: {ex}")
+            
+            await asyncio.sleep(0.05)  # 50ms update interval
 
     # Bindings
     home_view.btn_gen_a.on_click = handle_generate_a
     home_view.btn_gen_b.on_click = handle_generate_b
     home_view.btn_stop.on_click = handle_stop_audio
+    home_view.btn_replay.on_click = handle_replay
+    home_view.btn_play_pause.on_click = handle_pause_resume
+    home_view.btn_prev_sentence.on_click = handle_prev_sentence
+    home_view.btn_next_sentence.on_click = handle_next_sentence
     
     # Voice Selection Handler
     # Voice Selection Handler

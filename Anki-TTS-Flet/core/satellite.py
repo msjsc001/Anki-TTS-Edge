@@ -155,6 +155,11 @@ class SatelliteWindow:
                     
                 elif cmd == "HIDE":
                     self.root.withdraw()
+                
+                elif cmd == "UPDATE_TEXT":
+                    # Update current_text without changing position/visibility
+                    if args:
+                        self.current_text = args[0]
                     
                 elif cmd == "STATE":
                     state_type = args[0]

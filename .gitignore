@@ -51,3 +51,4 @@ Anki-TTS-Flet/音频/
 *.wav
 temp_*.py
 *copy.json
+*.bak

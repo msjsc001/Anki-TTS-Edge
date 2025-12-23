@@ -42,7 +42,14 @@
     "copy_audio_to_clipboard": "复制音频文件到剪贴板",
     "language_label": "界面语言 / Language",
     "tray_show_hide": "显示/隐藏",
-    "tray_exit": "退出"
+    "tray_exit": "退出",
+    "control_replay": "重播",
+    "control_play_pause": "播放/暂停",
+    "control_stop": "停止",
+    "control_prev_sentence": "上一句",
+    "control_next_sentence": "下一句",
+    "expand_text_input": "展开",
+    "collapse_text_input": "收纳"
   },
   "en": {
     "window_title": "Anki-TTS-Edge v2.0",
@@ -87,6 +94,13 @@
     "copy_audio_to_clipboard": "Copy Audio File to Clipboard",
     "language_label": "Interface Language / 界面语言",
     "tray_show_hide": "Show/Hide",
-    "tray_exit": "Exit"
+    "tray_exit": "Exit",
+    "control_replay": "Replay",
+    "control_play_pause": "Play/Pause",
+    "control_stop": "Stop",
+    "control_prev_sentence": "Previous",
+    "control_next_sentence": "Next",
+    "expand_text_input": "Expand",
+    "collapse_text_input": "Collapse"
   }
 }

@@ -25,7 +25,10 @@ class MonitorManager:
         self.mouse_listener_thread = None
         self.mouse_listener = None
         self.previous_clipboard_content = None
-        self._skip_initial_clipboard = True  # Skip first clipboard content on startup
+        self._startup_time = time.time()
+        self._ignore_until_time = self._startup_time + 4.0  # Strict ignore period during startup
+        self._skip_initial_clipboard = True  # Logic flag to skip first poll
+        self._selection_triggered = False  # Flag to track if clipboard change was from selection
         
         # Satellite State
         self.sat_input_q = multiprocessing.Queue()
@@ -126,84 +129,64 @@ class MonitorManager:
 
                 try:
                     current_text = pyperclip.paste()
-                    # logging.debug(f"Poll: {current_text[:20]}...") # Verbose
+                    now = time.time()
                     
-                    # Skip the very first clipboard content on startup
+                    # 1. Startup Protection
+                    if now < self._ignore_until_time:
+                         # Still in startup "warmup" period
+                         self.previous_clipboard_content = current_text
+                         time.sleep(0.5)
+                         continue
+
+                    # 2. Logic Skip (First valid poll)
                     if self._skip_initial_clipboard:
-                        self._skip_initial_clipboard = False
-                        self.previous_clipboard_content = current_text
-                        time.sleep(0.5)
-                        continue
+                        if not self._selection_triggered:
+                            self._skip_initial_clipboard = False
+                            self.previous_clipboard_content = current_text
+                            time.sleep(0.5)
+                            continue
+                        else:
+                            # Selection triggered! Cancel skip and process this text.
+                            # Even if it's the very first poll, if USER clicked blue dot, we respect it.
+                            logging.debug("Initial skip cancel: Selection Triggered!")
+                            self._skip_initial_clipboard = False
                     
-                    # Trigger logic for Clipboard Monitor
-                    if clipboard_enabled and current_text and current_text.strip() and current_text != self.previous_clipboard_content:
+                    # 3. Handle Changes
+                    
+                    # Priority: Handle selection-triggered clipboard changes FIRST
+                    # This ensures blue dot selection works even if clipboard monitor is disabled
+                    if self._selection_triggered:
+                        # Logic: If triggered, we process whatever is in clipboard (if sanitized)
+                        # We don't care if it equals previous content (user might want to re-process same text)
+                        self._selection_triggered = False  # Reset flag
                         sanitized = sanitize_text(current_text)
+                        
+                        if sanitized:
+                             logging.debug(f"Selection-triggered Clipboard: {sanitized[:50]}")
+                             self.previous_clipboard_content = current_text
+                             if self.on_clipboard_change:
+                                 self.on_clipboard_change(sanitized)
+                        else:
+                             # Empty or invalid selection
+                             logging.debug("Selection Triggered but text empty/invalid.")
+                    
+                    # Normal Clipboard Monitor logic (only if clipboard_enabled is ON)
+                    elif clipboard_enabled and current_text and current_text != self.previous_clipboard_content:
+                        sanitized = sanitize_text(current_text)
+                        
+                        # Only trigger if text is valid AND changed
                         if sanitized:
                             logging.debug(f"New Clipboard Content: {sanitized[:50]}")
                             self.previous_clipboard_content = current_text
                             if self.on_clipboard_change:
                                 self.on_clipboard_change(sanitized)
                         else:
+                            # Just update reference if invalid
                             self.previous_clipboard_content = current_text
                     
-                    # Update content for Selection Monitor (to detect copy after selection)
+                    # Update previous content if changed (but ignored above)
                     elif current_text != self.previous_clipboard_content:
-                        # Even if clipboard monitoring disabled, we must update previous content
-                        # IF selection monitor just triggered a copy, we want to detect it?
-                        # Wait. If selection enabled (but clipboard disabled), we still Simulate Copy.
-                        # Then current_text changes.
-                        # We MUST trigger on_clipboard_change IF it came from Selection?
-                        # But `on_clipboard_change` handler in main.py does BOTH.
-                        # The original logic: "Update content for Selection Monitor" just updated `previous`.
-                        # It assumed `on_clipboard_change` ONLY fires if `clipboard_enabled`.
-                        
-                        # CRITICAL BUG:
-                        # If `monitor_clipboard_enabled` is OFF (User wants only Blue Dot),
-                        # then lines 99-108 are SKIPPED.
-                        # The block below (elif) just updates `previous` WITHOUT calling `on_clipboard_change`.
-                        # So `simulate_copy` works -> content changes -> `elif` branch hit -> `previous` updated -> NO CALLBACK.
-                        # -> NO BLUE DOT.
-                        
-                        # I must FIX this logic.
-                        # If Selection triggered it, we want to call callback.
-                        # But how to distinguish "Simulated Copy" from "User manually pressed Ctrl-C when we didn't want it"?
-                        # We can't easily.
-                        # BUT, looking at `Anki-TTS-PY` original code:
-                        
-                        # Line 99: `if clipboard_enabled ...`
-                        # Line 109: `elif current_text != self.previous_clipboard_content: self.previous_clipboard_content = current_text`
-                        
-                        # So in original code, if Clipboard Monitor was OFF, Selection Monitor would NOT trigger `on_clipboard_change`?
-                        # Then how did Selection work?
-                        # Maybe Selection Trigger did something else?
-                        # `on_selection_trigger` -> `simulate_copy`.
-                        # There must be a path.
-                        
-                        # Wait. In original `main_window.py`:
-                        # `monitor_manager = MonitorManager(on_clipboard_change=..., on_selection_trigger=...)`
-                        # If `on_clipboard_change` is not called, float window doesn't show.
-                        
-                        # Did Original Code force `clipboard_enabled` if `selection_enabled`?
-                        # In `_adjust_running_monitors`:
-                        # `clipboard_needed = settings_manager.get("monitor_clipboard_enabled") or settings_manager.get("monitor_selection_enabled")`
-                        # It starts the thread.
-                        
-                        # But inside `poll()`:
-                        # `clipboard_enabled = settings_manager.get("monitor_clipboard_enabled")`
-                        # If this is False, `on_clipboard_change` is NOT called!
-                        
-                        logging.debug(f"Clipboard Changed (Selection Logic): {current_text[:50]}")
-                        if selection_enabled: 
-                             # If selection enabled, we treat ANY clipboard change as valid trigger?
-                             # Or we assume it came from our valid simulation?
-                             # We'll trigger it.
-                             sanitized = sanitize_text(current_text)
-                             if sanitized:
-                                 self.previous_clipboard_content = current_text
-                                 if self.on_clipboard_change:
-                                     self.on_clipboard_change(sanitized)
-                        else:
-                             self.previous_clipboard_content = current_text
+                         self.previous_clipboard_content = current_text
 
                     time.sleep(0.5)
                 except Exception as e:
@@ -264,6 +247,9 @@ class MonitorManager:
             logging.debug("Simulate Copy called but Monitor Disabled.")
             return
         try:
+            # Set flag to indicate this is a selection-triggered copy
+            self._selection_triggered = True
+            
             time.sleep(0.1) # Reduced from 0.3s for responsiveness
             logging.debug("Executing Simulate Copy (ctypes)...")
             
@@ -292,6 +278,14 @@ class MonitorManager:
                 inp = INPUT(type=INPUT_KEYBOARD, ki=KEYBDINPUT(wVk=vk, wScan=0, dwFlags=flags, time=0, dwExtraInfo=0))
                 user32.SendInput(1, ctypes.byref(inp), ctypes.sizeof(inp))
 
+            # 0. CLEAR Clipboard to define "Success" as "Non-Empty"
+            # This handles the race condition: if we read old data, it fails.
+            try:
+                pyperclip.copy("") 
+            except: pass
+            
+            time.sleep(0.05)
+            
             # 1. Press Ctrl
             _send_key(VK_CONTROL, 0)
             time.sleep(0.02) # Safer delay
@@ -308,36 +302,32 @@ class MonitorManager:
             time.sleep(0.05)
             
             # Retry loop for robust clipboard fetching
-            # STRATEGY: Wait for content CHANGE first.
+            # STRATEGY: Wait for content to become NON-EMPTY.
+            # Since we cleared it, any content implies a successful new copy.
             current = ""
             sanitized = ""
             found_new = False
             
-            for i in range(10): # 10 * 0.05 = 0.5s max wait for new text
+            for i in range(15): # 15 * 0.05 = 0.75s max wait
                 try:
                     current = pyperclip.paste()
                     if current:
-                         # If we see NEW content, grab it immediately
-                         if current != self.previous_clipboard_content:
-                             sanitized = sanitize_text(current)
-                             if sanitized:
-                                 found_new = True
-                                 break
-                         
-                         # If we see OLD content, keep waiting unless it's the last attempt
-                         # But what if user selected same text? 
-                         # We'll fallback to it at the end if no new text found.
+                         # Found content!
+                         sanitized = sanitize_text(current)
+                         if sanitized:
+                             found_new = True
+                             break
                 except Exception as ex:
                      print(f"DEBUG: Paste Exception: {ex}")
                 time.sleep(0.05)
                 
             if not found_new and current:
-                 # Fallback: Just use whatever we have (even if same as previous)
+                 # Fallback: Just use whatever we have (maybe whitespace?)
                  sanitized = sanitize_text(current)
 
             # Fallback for Terminal/Stubborn Apps
             if not sanitized:
-                print("DEBUG: Primary Copy Failed. Trying Pynput Fallback...")
+                print("DEBUG: Primary Copy Failed (Clipboard Empty). Trying Pynput Fallback...")
                 try:
                     controller = keyboard.Controller()
                     with controller.pressed(keyboard.Key.ctrl):
@@ -359,17 +349,11 @@ class MonitorManager:
                     if mouse_pos:
                         x, y = mouse_pos
                         is_dual = settings_manager.get("dual_blue_dot_enabled", False)
-                        # Offset slightly
-                        # print(f"DEBUG: Sending SHOW to Satellite at {x},{y}, Dual={is_dual}")
                         self.sat_input_q.put(("SHOW", sanitized, x + 10, y - 40, is_dual)) 
                         logging.info(f"Sent SHOW to Satellite: {sanitized[:10]} at {x},{y}, Dual={is_dual}")
                     
-                    if self.on_clipboard_change:
-                        # logging.debug("Forcing Callback from Simulate Copy")
-                        print("DEBUG: Forcing Callback from Simulate Copy (clipboard.py)")
-                        self.on_clipboard_change(sanitized)
-                        # Update previous to avoid double trigger from poll loop
-                        self.previous_clipboard_content = current
+                    # Store as previous so Monitor loop doesn't re-trigger
+                    self.previous_clipboard_content = current
 
         except Exception as e:
             print(i18n.get("debug_simulate_copy_error", e))

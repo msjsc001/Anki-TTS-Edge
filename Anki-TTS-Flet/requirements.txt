@@ -1,0 +1,6 @@
+flet>=0.21.0
+edge-tts>=6.1.9
+pygame>=2.5.0
+pyperclip>=1.8.2
+pystray>=0.19.5
+Pillow>=10.0.0
