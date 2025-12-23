@@ -13,6 +13,9 @@ Anki-TTS-Edge is a free, high-quality voice generation tool powered by Microsoft
 
 ## ✨ Key Features
 
+- **Deep History Cleanup (v2.2)**:
+  - **Smart Garbage Collection**: The "Clear All" function in History now performs a deep scan of the audio directory.
+  - **Complete Storage Release**: Automatically identifies and removes all orphaned audio files (.mp3) and metadata (.json) to reclaim disk space.
 - **Enhanced Reading Experience (v2.1)**:
   - **Real-time Highlight**: Words are highlighted in sync with audio playback, handling complex text mappings (e.g. "1" -> "one") perfectly.
   - **Click-to-Play**: Click on any word during playback to instantly jump to the start of that sentence.

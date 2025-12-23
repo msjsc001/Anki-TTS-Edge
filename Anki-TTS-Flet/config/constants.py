@@ -36,7 +36,7 @@ ICON_PATH = os.path.join(ASSETS_DIR, "icon.ico")
 TRANSLATIONS_FILE = os.path.join(ASSETS_DIR, "translations.json")
 
 # App Metadata
-APP_VERSION = "2.1"
+APP_VERSION = "2.2"
 GITHUB_URL = "https://github.com/msjsc001/Anki-TTS-Edge"
 
 
