@@ -69,34 +69,55 @@ Anki-TTS-Edge is a free, high-quality voice generation tool powered by Microsoft
    python Anki-TTS-Flet/main.py
    ```
 
-### Build EXE (Optional)
+## 👨‍💻 Developer Guide
 
-To build a standalone executable:
+Welcome developers to contribute and customize Anki-TTS-Edge! Below are the core architecture details and guidelines for the project.
 
-```bash
-# Install PyInstaller in virtual environment
-pip install pyinstaller
+### Technology Stack
+* **UI Framework**: Flet (Python UI framework based on Flutter), providing responsive design and fluid animations.
+* **Core TTS Engine**: `edge-tts` (Unofficial implementation of Microsoft Edge neural voice API).
+* **Audio & Media**: `pygame` (Provides stable, low-latency multi-threaded audio playback capabilities).
+* **System Integration**: `pyperclip` (Clipboard monitoring), `pystray` / `pillow` (System tray integration).
+* **Asynchronous Concurrency**: Heavy usage of Python's `asyncio` for non-blocking I/O operations, ensuring the UI thread remains smooth during network requests or playback.
 
-# Build command
-.\.venv\Scripts\python.exe -m PyInstaller Anki-TTS-Flet/main.py --name "Anki-TTS-Edge" --icon "Anki-TTS-Flet/assets/icon.ico" --add-data "Anki-TTS-Flet/assets;assets" --collect-all edge_tts --hidden-import=pystray --hidden-import=PIL --hidden-import=pygame --noconsole --onefile --clean --noconfirm
-```
+### Core Technical Highlights
+1. **Subtitle-Level Alignment (Text-to-Speech Alignment)**
+   Leverages `edge-tts` word boundaries and timestamps to dynamically update Flet's `TextSpan` and `TextStyle` within the audio playback callback, achieving "Karaoke-style" exact word synchronization.
+2. **Global Input & Clipboard Monitor**
+   A dedicated background thread continuously polls the system clipboard (or detects selected text). Upon detecting a change, it immediately brings the application window to the forefront (Bring to Front), eliminating cumbersome manual copy-paste steps during flashcard creation.
+3. **Audio State & Garbage Collection**
+   Implemented an aggressive cleanup mechanism in the history management module. It uses hashing and path tracking for audio and metadata (`.json`), and automatically iterates through local file lists during deletion to confidently discard "orphaned" files.
+4. **Componentization & State Management**
+   The UI is divided into independent routed views (Home, History, Settings) that communicate with low coupling via a global state manager or dependency injection.
 
-The generated `Anki-TTS-Edge.exe` will be in the `dist/` directory.
-
-## 📂 Project Structure
+### 📂 Project Structure
 
 ```text
 Anki-TTS-Edge/
 ├── Anki-TTS-Flet/       # Main compiled source code
-│   ├── assets/          # Icons and translation files
-│   ├── config/          # Configuration and settings
-│   ├── core/            # Business logic (TTS, Alignment, Clipboard, History)
-│   ├── ui/              # Flet UI Views (Home, History, Settings)
-│   ├── utils/           # Helpers
-│   └── main.py          # Entry point
+│   ├── assets/          # Static resources like icons and localization files
+│   ├── config/          # Default configurations and settings I/O
+│   ├── core/            # Business logic brain (TTS engine, Alignment, Monitors, History IO)
+│   ├── ui/              # Flet UI Views (Modular pages and custom UI components)
+│   ├── utils/           # General helper functions (File ops, text formatting, etc.)
+│   └── main.py          # Application entry point and initialization
 ├── .gitignore           # Git ignore rules
 └── README.md            # Documentation
 ```
+
+### 🔨 Building an Executable (EXE)
+
+To bundle the application into a standalone Windows executable (`.exe`), we use PyInstaller with specific arguments to prevent resource path loss:
+
+```bash
+# Ensure PyInstaller is installed in your virtual environment
+pip install pyinstaller
+
+# Run the build command from the project root
+.\.venv\Scripts\python.exe -m PyInstaller Anki-TTS-Flet/main.py --name "Anki-TTS-Edge" --icon "Anki-TTS-Flet/assets/icon.ico" --add-data "Anki-TTS-Flet/assets;assets" --collect-all edge_tts --hidden-import=pystray --hidden-import=PIL --hidden-import=pygame --noconsole --onefile --clean --noconfirm
+```
+
+Upon successful build, the standalone `Anki-TTS-Edge.exe` will be located in the `dist/` directory.
 
 ## 🛠️ Usage Guide
 
