@@ -1,5 +1,19 @@
 # 更新日志 / Changelog
 
+## v2.4 (2026-03-01)
+
+### ✨ 新功能 / Features
+
+- **即点即读精确定位**：点击文段中任意单词/字符时，直接从该位置开始播放，不再跳转到句首，定位更精确。
+  **Precise click-to-play**: Clicking any word/character in the text now starts playback from that exact position instead of jumping to the sentence start, providing more precise control.
+
+### 📦 构建 / Build
+
+- **构建方式切换为 onedir 模式**：从 PyInstaller 单文件 (onefile) 切换为文件夹 (onedir) 模式，大幅提升 Windows 下的启动速度（消除杀毒软件扫描导致的延迟）。
+  **Switch to onedir build**: Changed from PyInstaller single-file (onefile) to folder (onedir) mode, significantly improving Windows startup speed by eliminating antivirus scan delays.
+
+---
+
 ## v2.3 (2026-03-01)
 
 ### 🔧 修复 / Fixes

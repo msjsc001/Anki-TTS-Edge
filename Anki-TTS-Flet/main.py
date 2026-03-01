@@ -700,57 +700,35 @@ async def main(page: ft.Page):
                 print(f"DEBUG: next failed: {ex}")
 
     def handle_word_jump(word_index):
-        """Click to Play: Jump to sentence containing this word"""
+        """Click to Play: Jump to the exact clicked word position"""
         timestamps = current_audio_state.get("timestamps")
         if not timestamps or not timestamps.get("words"): return
         
-        # Get word start time
         if word_index < 0 or word_index >= len(timestamps["words"]): return
         target_word = timestamps["words"][word_index]
         word_ms = target_word["start_ms"]
         
-        # Find sentence containing this word
+        # Track sentence index for prev/next navigation
         sentences = timestamps.get("sentences", [])
-        target_sent_idx = 0
-        target_sent_start_ms = 0
-        
-        found = False
         for i, sent in enumerate(sentences):
             if sent["start_ms"] <= word_ms < sent["end_ms"]:
-                target_sent_idx = i
-                target_sent_start_ms = sent["start_ms"]
-                found = True
+                current_audio_state["current_sentence_index"] = i
                 break
         
-        if not found:
-            # Fallback to word start
-            target_sent_start_ms = word_ms
-        
-        # Update state (Continuous playback logic as requested)
-        current_audio_state["current_sentence_index"] = target_sent_idx
-        current_audio_state["current_playback_start_ms"] = target_sent_start_ms
-        current_audio_state["stop_playback_at_ms"] = None # Continuous play
+        # Play from exact word position (not sentence start)
+        current_audio_state["current_playback_start_ms"] = word_ms
+        current_audio_state["stop_playback_at_ms"] = None
         
         try:
-            # FIX: Always use play(start=)
-            pygame.mixer.music.play(start=target_sent_start_ms / 1000.0)
+            pygame.mixer.music.play(start=word_ms / 1000.0)
             
-            # If paused, unpause state
             current_audio_state["is_paused"] = False
             home_view.btn_play_pause.selected = True
             home_view.btn_play_pause.update()
             
-            # FIX: Immediate Highlight (First word of Sentence, NOT clicked word)
-            first_word_idx = word_index # Default fallback
-            # Try to find exactly first word of sentence
-            if found:
-                 for i, w in enumerate(timestamps["words"]):
-                     if w["start_ms"] >= target_sent_start_ms:
-                         first_word_idx = i
-                         break
-            
-            current_audio_state["current_word_index"] = first_word_idx
-            home_view.update_highlight_position(first_word_idx)
+            # Highlight the clicked word immediately
+            current_audio_state["current_word_index"] = word_index
+            home_view.update_highlight_position(word_index)
             
             if not current_audio_state["is_playing"]:
                 current_audio_state["is_playing"] = True

@@ -13,6 +13,7 @@ Anki-TTS-Edge is a free, high-quality voice generation tool powered by Microsoft
 
 ## ✨ Key Features
 
+- **Precise Click-to-Play (v2.4)**: Click any word/character in the text to start playback from that exact position, providing more precise control.
 - **Code Quality Fixes & edge-tts Compatibility (v2.3)**:
   - **Fix TTS generation completely broken**: Upgraded `edge-tts` to 7.2.7, resolving 403 errors from expired Microsoft API tokens.
   - **Fix word highlight sync broken**: Adapted to API changes, restoring word-level timestamps and real-time highlighting.
@@ -22,7 +23,7 @@ Anki-TTS-Edge is a free, high-quality voice generation tool powered by Microsoft
   - **Complete Storage Release**: Automatically identifies and removes all orphaned audio files (.mp3) and metadata (.json) to reclaim disk space.
 - **Enhanced Reading Experience (v2.1)**:
   - **Real-time Highlight**: Words are highlighted in sync with audio playback, handling complex text mappings (e.g. "1" -> "one") perfectly.
-  - **Click-to-Play**: Click on any word during playback to instantly jump to the start of that sentence.
+  - **Click-to-Play**: Click on any word/character during playback to instantly start playing from that exact position.
   - **Smart Navigation**: "Previous/Next Sentence" controls allow for easy sentence-by-sentence review and navigation.
 - **Modern UI**: Rebuilt from scratch using Flet (Flutter) for a sleek, responsive, and material design experience.
 - **Top-tier Voices**: Access 300+ free Microsoft Edge Neural voices across multiple languages and regions.
@@ -111,17 +112,19 @@ Anki-TTS-Edge/
 
 ### 🔨 Building an Executable (EXE)
 
-To bundle the application into a standalone Windows executable (`.exe`), we use PyInstaller with specific arguments to prevent resource path loss:
+To bundle the application into a standalone Windows executable, we use PyInstaller in **folder (onedir) mode**:
+
+> ⚠️ **Important**: Do NOT use `--onefile` mode. Single-file mode causes extremely slow startup on Windows (the entire application must be extracted to a temp directory on every launch, and frequently triggers antivirus scans).
 
 ```bash
 # Ensure PyInstaller is installed in your virtual environment
 pip install pyinstaller
 
-# Run the build command from the project root
-.\.venv\Scripts\python.exe -m PyInstaller Anki-TTS-Flet/main.py --name "Anki-TTS-Edge" --icon "Anki-TTS-Flet/assets/icon.ico" --add-data "Anki-TTS-Flet/assets;assets" --collect-all edge_tts --hidden-import=pystray --hidden-import=PIL --hidden-import=pygame --noconsole --onefile --clean --noconfirm
+# Run the build command from the project root (folder mode)
+.\.venv\Scripts\python.exe -m PyInstaller Anki-TTS-Flet/main.py --name "Anki-TTS-Edge" --icon "Anki-TTS-Flet/assets/icon.ico" --add-data "Anki-TTS-Flet/assets;assets" --collect-all edge_tts --hidden-import=pystray --hidden-import=PIL --hidden-import=pygame --noconsole --clean --noconfirm
 ```
 
-Upon successful build, the standalone `Anki-TTS-Edge.exe` will be located in the `dist/` directory.
+Upon successful build, the `dist/Anki-TTS-Edge/` directory contains the complete distributable application, with `Anki-TTS-Edge.exe` as the entry point.
 
 ## 🛠️ Usage Guide
 
