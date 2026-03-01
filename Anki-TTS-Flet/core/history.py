@@ -46,7 +46,7 @@ class HistoryManager:
         # Enforce limit
         try:
              max_files = int(settings_manager.get("max_audio_files", 20))
-        except:
+        except (ValueError, TypeError):
              max_files = 20
              
         if len(self.records) > max_files:

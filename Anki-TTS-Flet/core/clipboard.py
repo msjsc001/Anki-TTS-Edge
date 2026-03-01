@@ -10,13 +10,13 @@ from utils.text import sanitize_text
 from utils.i18n import i18n
 from core.satellite import run_satellite
 import logging
+from logging.handlers import RotatingFileHandler
 
-logging.basicConfig(
-    filename='monitor_debug.log', 
-    level=logging.DEBUG, 
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    filemode='w'
+_clipboard_handler = RotatingFileHandler(
+    'monitor_debug.log', maxBytes=1*1024*1024, backupCount=1, encoding='utf-8'
 )
+_clipboard_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+logging.basicConfig(level=logging.DEBUG, handlers=[_clipboard_handler])
 
 class MonitorManager:
     def __init__(self, on_clipboard_change=None, on_selection_trigger=None):
@@ -85,9 +85,13 @@ class MonitorManager:
         if self.sat_process:
             try:
                 self.sat_input_q.put(("EXIT",))
-                # self.sat_process.join(timeout=1) # Don't block too long
                 self.sat_process = None
-            except: pass
+            except Exception:
+                pass
+
+    def stop(self):
+        """Alias for stop_monitors() — used by handle_app_restart."""
+        self.stop_monitors()
 
     def _adjust_running_monitors(self):
         """Adjusts monitors without full restart."""
@@ -106,7 +110,7 @@ class MonitorManager:
         elif not mouse_needed and is_mouse_running:
              if self.mouse_listener:
                  try: self.mouse_listener.stop() 
-                 except: pass
+                 except Exception: pass
 
     def _start_clipboard_polling_thread(self):
         if self.clipboard_polling_thread and self.clipboard_polling_thread.is_alive():
@@ -282,7 +286,7 @@ class MonitorManager:
             # This handles the race condition: if we read old data, it fails.
             try:
                 pyperclip.copy("") 
-            except: pass
+            except Exception: pass
             
             time.sleep(0.05)
             
@@ -363,6 +367,6 @@ class MonitorManager:
                 with controller.pressed(keyboard.Key.ctrl):
                     controller.press('c')
                     controller.release('c')
-            except: pass
+            except Exception: pass
 
 # Global instance could be created here, or instantiated in main_window

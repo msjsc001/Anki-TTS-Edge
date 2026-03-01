@@ -1,5 +1,5 @@
 flet>=0.21.0
-edge-tts>=6.1.9
+edge-tts>=7.2.7
 pygame>=2.5.0
 pyperclip>=1.8.2
 pystray>=0.19.5

@@ -67,7 +67,6 @@ async def main(page: ft.Page):
         color = ft.Colors.RED if is_error else ft.Colors.GREEN
         page.snack_bar = ft.SnackBar(ft.Text(msg), bgcolor=color)
         page.snack_bar.open = True
-        page.snack_bar.open = True
         page.update()
 
     # Helper functions removed
@@ -160,16 +159,25 @@ async def main(page: ft.Page):
     
     settings_view.on_app_restart = handle_app_restart
     
-    # Window resize handler - bidirectional sync with settings UI
+    # Window resize handler - debounced to avoid per-frame disk writes during drag
+    _resize_timer = {"task": None}
+    
     def handle_resize(e):
         new_width = int(page.window.width) if page.window.width else 750
         new_height = int(page.window.height) if page.window.height else 850
-        print(f"DEBUG: Window resized to {new_width}x{new_height}")
-        settings_manager.set("window_width", new_width)
-        settings_manager.set("window_height", new_height)
-        settings_manager.save_settings()
-        # Sync settings UI display
+        # Sync UI display immediately (cheap)
         settings_view.update_window_size_display(new_width, new_height)
+        
+        # Debounce disk write: cancel previous timer, start new 300ms delay
+        async def _save_after_delay():
+            await asyncio.sleep(0.3)
+            settings_manager.set("window_width", new_width)
+            settings_manager.set("window_height", new_height)
+            settings_manager.save_settings()
+        
+        if _resize_timer["task"]:
+            _resize_timer["task"].cancel()
+        _resize_timer["task"] = page.run_task(_save_after_delay)
         
     page.on_resized = handle_resize
     
@@ -260,14 +268,16 @@ async def main(page: ft.Page):
         # Send Generating State
         try:
              monitor_manager.sat_input_q.put(("STATE", "generating"))
-        except: pass
+        except Exception:
+            pass
 
         def on_done(path, error, timestamps=None):
             print(f"DEBUG: on_done called. Path={path}, Error={error}")
             if path:
                 try:
                      monitor_manager.sat_input_q.put(("STATE", "success"))
-                except: pass
+                except Exception:
+                    pass
                 
                 # Update playback state
                 current_audio_state["path"] = path
@@ -282,7 +292,8 @@ async def main(page: ft.Page):
                 if settings_manager.get("copy_path_enabled", True):
                      try:
                         copy_file_to_clipboard(path)
-                     except: pass
+                     except Exception:
+                        pass
                 
                 # Add to history
                 history_manager.add_record(text, voice, path)
@@ -290,7 +301,8 @@ async def main(page: ft.Page):
             else:
                 try:
                      monitor_manager.sat_input_q.put(("STATE", "error"))
-                except: pass
+                except Exception:
+                    pass
                 home_view.set_status(f"生成失败: {error}", ft.Icons.ERROR_OUTLINE, ft.Colors.RED_100)
                 show_message(f"Error: {error}", True)
 
@@ -318,9 +330,7 @@ async def main(page: ft.Page):
         # print("DEBUG: Satellite Loop Started")
         while True:
             try:
-                # We need access to monitor_manager which is defined later.
-                # But this loop runs as async task, it will be running when variable is available
-                if 'monitor_manager' in locals() and monitor_manager.sat_output_q:
+                if hasattr(monitor_manager, 'sat_output_q') and monitor_manager.sat_output_q:
                     try:
                         cmd, *args = monitor_manager.sat_output_q.get_nowait()
                         if cmd == "ACTION":
@@ -396,7 +406,8 @@ async def main(page: ft.Page):
             if settings_manager.get("copy_path_enabled", True):
                  try:
                     copy_file_to_clipboard(path)
-                 except: pass
+                 except Exception:
+                    pass
             
             # Add to history
             history_manager.add_record(text, voice, path)
@@ -413,11 +424,6 @@ async def main(page: ft.Page):
             return
         await handle_generate(e, v)
 
-    async def handle_generate_a(e):
-        # Previous Voice (A)
-        v = settings_manager.get("selected_voice_previous")
-        if not v:
-             show_message(i18n.get("status_no_voice_error"), True)
     async def handle_generate_a(e):
         # Previous Voice (A)
         v = settings_manager.get("selected_voice_previous")
@@ -902,7 +908,7 @@ async def main(page: ft.Page):
         # Unload audio to release file lock (Windows specific)
         try:
              pygame.mixer.music.unload() 
-        except: 
+        except Exception:
              pygame.mixer.music.stop()
              
         history_manager.remove_record(record)
@@ -913,9 +919,9 @@ async def main(page: ft.Page):
         try:
              # Stop playback first
              try: pygame.mixer.music.unload()
-             except: pass
+             except Exception: pass
              try: pygame.mixer.music.stop()
-             except: pass
+             except Exception: pass
              
              history_manager.clear_records() # Deletes files and clears list
              print("DEBUG: Manager cleared.")
@@ -995,8 +1001,6 @@ async def main(page: ft.Page):
     settings_view.on_save_settings = handle_save_settings
 
     page.update()
-
-    page.on_window_event = window_event
 
     # Load Initial History
     history_view.populate_history(history_manager.get_records())

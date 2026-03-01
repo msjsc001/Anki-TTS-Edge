@@ -13,6 +13,10 @@ Anki-TTS-Edge is a free, high-quality voice generation tool powered by Microsoft
 
 ## ✨ Key Features
 
+- **Code Quality Fixes & edge-tts Compatibility (v2.3)**:
+  - **Fix TTS generation completely broken**: Upgraded `edge-tts` to 7.2.7, resolving 403 errors from expired Microsoft API tokens.
+  - **Fix word highlight sync broken**: Adapted to API changes, restoring word-level timestamps and real-time highlighting.
+  - **Window resize debounce**, **log rotation**, **bare except elimination** and more code quality improvements.
 - **Deep History Cleanup (v2.2)**:
   - **Smart Garbage Collection**: The "Clear All" function in History now performs a deep scan of the audio directory.
   - **Complete Storage Release**: Automatically identifies and removes all orphaned audio files (.mp3) and metadata (.json) to reclaim disk space.
@@ -133,6 +137,12 @@ Upon successful build, the standalone `Anki-TTS-Edge.exe` will be located in the
 <div align="center">
 Made with ❤️ for Language Learners
 </div>
+
+---
+
+## 📋 Changelog
+
+See [CHANGELOG.md](CHANGELOG.md)
 
 ---
 

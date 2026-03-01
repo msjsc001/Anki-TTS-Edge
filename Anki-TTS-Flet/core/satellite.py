@@ -8,7 +8,7 @@ import ctypes
 # Fix High DPI on Windows
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
-except:
+except Exception:
     pass
 
 class SatelliteWindow:
