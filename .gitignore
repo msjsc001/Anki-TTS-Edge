@@ -21,7 +21,9 @@ ENV/
 
 # Build / Distribution
 build/
+build2/
 dist/
+dist2/
 *.manifest
 
 # Logs
