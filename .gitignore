@@ -17,16 +17,15 @@ ENV/
 .roo/
 *.swp
 *.swo
+.gemini/
 
 # Build / Distribution
 build/
 dist/
-*.spec
 *.manifest
 
 # Logs
 *.log
-monitor_debug.log
 
 # OS Generated
 .DS_Store
@@ -34,21 +33,32 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-# Project - User Data (Do not upload)
-Anki-TTS-Flet/history.json
-Anki-TTS-Flet/voice_settings.json
-history.json
+# --- Project: User Data (never upload) ---
+# Settings & History
 voice_settings.json
+history.json
+Anki-TTS-Flet/voice_settings.json
+Anki-TTS-Flet/history.json
 
-# Project - Cache (Can be re-fetched)
-Anki-TTS-Flet/voices_cache.json
+# Voice Cache (can be re-fetched from network)
 voices_cache.json
+Anki-TTS-Flet/voices_cache.json
 
-# Project - Generated Media / Temps
-Anki-TTS-Flet/音频/
+# Generated Audio & Metadata
 音频/
+audio/
+Anki-TTS-Flet/音频/
+Anki-TTS-Flet/audio/
 *.mp3
 *.wav
+*.timestamps.json
+
+# Logs directory
+logs/
+Anki-TTS-Flet/logs/
+
+# Temp / Backup files
 temp_*.py
 *copy.json
 *.bak
+_test_*.mp3
