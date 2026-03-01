@@ -1,5 +1,14 @@
 # 更新日志 / Changelog
 
+## v2.7 (2026-03-01)
+
+### ✨ 新功能 / Features
+
+- **快捷打开数据目录**：在设置界面新增“打开数据目录”按钮（存储了音频、历史记录、配置文件等），方便高级管理。
+  **Quick access to data directory**: Added a new "Open Data Directory" button in Settings to easily access audio files, history, and config files.
+
+---
+
 ## v2.6 (2026-03-01)
 
 ### ✨ 改进 / Improvements

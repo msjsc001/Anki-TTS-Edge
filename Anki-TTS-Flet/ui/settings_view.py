@@ -1,7 +1,8 @@
 import flet as ft
 from utils.i18n import i18n
-from config.constants import APP_VERSION, GITHUB_URL
+from config.constants import APP_VERSION, GITHUB_URL, DATA_DIR
 import webbrowser
+import os
 
 class SettingsView(ft.Container):
     def __init__(self, page: ft.Page):
@@ -102,6 +103,12 @@ class SettingsView(ft.Container):
             on_blur=self._save_settings
         )
         
+        self.open_data_dir_button = ft.OutlinedButton(
+            text=i18n.get("open_data_dir", "Open Data Directory"),
+            icon=ft.Icons.FOLDER_OPEN,
+            on_click=lambda _: os.startfile(DATA_DIR) if os.name == 'nt' else None
+        )
+        
         # Section headers as instance variables for dynamic language update
         self.section_appearance_text = ft.Text(i18n.get("section_appearance"), weight="bold", size=16)
         self.language_label_text = ft.Text(i18n.get("language_label"), size=14)
@@ -160,7 +167,10 @@ class SettingsView(ft.Container):
                 ft.Divider(height=10, color="transparent"),
                 
                 self.section_storage_text,
-                self.max_files_input,
+                ft.Row([
+                    self.max_files_input,
+                    self.open_data_dir_button
+                ], spacing=10, vertical_alignment=ft.CrossAxisAlignment.CENTER),
                 
                 ft.Divider(),
                 self.check_updates_button,

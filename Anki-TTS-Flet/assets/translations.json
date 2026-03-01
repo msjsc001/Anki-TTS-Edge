@@ -49,7 +49,8 @@
     "control_prev_sentence": "上一句",
     "control_next_sentence": "下一句",
     "expand_text_input": "展开",
-    "collapse_text_input": "收纳"
+    "collapse_text_input": "收纳",
+    "open_data_dir": "打开数据目录"
   },
   "en": {
     "window_title": "Anki-TTS-Edge v2.0",
@@ -101,6 +102,7 @@
     "control_prev_sentence": "Previous",
     "control_next_sentence": "Next",
     "expand_text_input": "Expand",
-    "collapse_text_input": "Collapse"
+    "collapse_text_input": "Collapse",
+    "open_data_dir": "Open Data Directory"
   }
 }
