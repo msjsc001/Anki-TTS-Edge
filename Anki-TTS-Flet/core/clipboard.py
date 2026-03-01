@@ -11,9 +11,10 @@ from utils.i18n import i18n
 from core.satellite import run_satellite
 import logging
 from logging.handlers import RotatingFileHandler
+from config.constants import LOG_FILE
 
 _clipboard_handler = RotatingFileHandler(
-    'monitor_debug.log', maxBytes=1*1024*1024, backupCount=1, encoding='utf-8'
+    LOG_FILE, maxBytes=1*1024*1024, backupCount=1, encoding='utf-8'
 )
 _clipboard_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 logging.basicConfig(level=logging.DEBUG, handlers=[_clipboard_handler])

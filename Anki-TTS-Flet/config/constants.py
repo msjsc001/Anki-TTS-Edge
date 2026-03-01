@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 
 def get_base_paths():
     """
@@ -9,51 +10,95 @@ def get_base_paths():
     if getattr(sys, 'frozen', False):
         # PyInstaller: Temporary folder for resources, Executable folder for data
         resource_dir = sys._MEIPASS
-        data_dir = os.path.dirname(sys.executable)
+        exe_dir = os.path.dirname(sys.executable)
     else:
         # Development: Project root for both
         resource_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        data_dir = resource_dir
+        exe_dir = resource_dir
         
-    return resource_dir, data_dir
+    return resource_dir, exe_dir
 
-RESOURCE_DIR, DATA_DIR = get_base_paths()
+RESOURCE_DIR, EXE_DIR = get_base_paths()
 
-# Base directory of the project (parent of config/)
-# Keeping BASE_DIR for backward compatibility, pointing to DATA_DIR where appropriate
+# --- User Data Directory ---
+# Centralize ALL user-generated files under %APPDATA%/Anki-TTS-Edge/
+# Falls back to exe directory if APPDATA is not available (e.g. portable mode)
+_appdata = os.environ.get("APPDATA")
+if _appdata:
+    DATA_DIR = os.path.join(_appdata, "Anki-TTS-Edge")
+else:
+    DATA_DIR = EXE_DIR
+
+os.makedirs(DATA_DIR, exist_ok=True)
+
+# Sub-directories (English names for universal compatibility)
+AUDIO_DIR = os.path.join(DATA_DIR, "audio")
+LOGS_DIR = os.path.join(DATA_DIR, "logs")
+os.makedirs(AUDIO_DIR, exist_ok=True)
+os.makedirs(LOGS_DIR, exist_ok=True)
+
+# Backward compatibility: keep BASE_DIR pointing to DATA_DIR
 BASE_DIR = DATA_DIR
 
-# Audio Directory (Read/Write -> Data Dir)
-AUDIO_DIR = os.path.join(DATA_DIR, "音频")
-os.makedirs(AUDIO_DIR, exist_ok=True)
+# --- Migration from old paths ---
+def _migrate_old_data():
+    """One-time migration from old CWD-based paths to APPDATA."""
+    old_audio = os.path.join(EXE_DIR, "音频")
+    old_settings = os.path.join(EXE_DIR, "voice_settings.json")
+    old_history = os.path.join(EXE_DIR, "history.json")
+    old_voice_cache = os.path.join(EXE_DIR, "voices_cache.json")
+    old_log = os.path.join(EXE_DIR, "monitor_debug.log")
+    
+    # Only migrate if old data exists AND we're using a different DATA_DIR
+    if os.path.normpath(EXE_DIR) == os.path.normpath(DATA_DIR):
+        return
+    
+    # Migrate audio directory
+    if os.path.isdir(old_audio):
+        for f in os.listdir(old_audio):
+            src = os.path.join(old_audio, f)
+            dst = os.path.join(AUDIO_DIR, f)
+            if not os.path.exists(dst):
+                try:
+                    shutil.move(src, dst)
+                except Exception:
+                    pass
+        # Remove empty old dir
+        try:
+            if not os.listdir(old_audio):
+                os.rmdir(old_audio)
+        except Exception:
+            pass
+    
+    # Migrate individual files
+    for old_file, new_file in [
+        (old_settings, os.path.join(DATA_DIR, "voice_settings.json")),
+        (old_history, os.path.join(DATA_DIR, "history.json")),
+        (old_voice_cache, os.path.join(DATA_DIR, "voices_cache.json")),
+        (old_log, os.path.join(LOGS_DIR, "monitor_debug.log")),
+    ]:
+        if os.path.exists(old_file) and not os.path.exists(new_file):
+            try:
+                shutil.move(old_file, new_file)
+            except Exception:
+                pass
 
-# Assets (Read-Only -> Resource Dir)
-# 注意：在 PyInstaller 中，assets 文件夹需要被打包进去
+_migrate_old_data()
+
+# --- Assets (Read-Only → Resource Dir) ---
 ASSETS_DIR = os.path.join(RESOURCE_DIR, "assets")
 ICON_PATH = os.path.join(ASSETS_DIR, "icon.ico")
-
-# Translations (Read-Only -> Resource Dir)
 TRANSLATIONS_FILE = os.path.join(ASSETS_DIR, "translations.json")
 
-# App Metadata
-APP_VERSION = "2.4"
-GITHUB_URL = "https://github.com/msjsc001/Anki-TTS-Edge"
-
-
-# Voice Cache (Read/Write -> Data Dir, or Resource if serving as default)
-# We treat cache as something that might be updated or created, so let's check Data first, then Resource
-# But for simplicity in this app, let's keep it in Data dir if we want to update it,
-# OR in Resource dir if it's static.
-# 假设 cache 是只读的或者我们不介意它丢失（如果是临时目录），或者我们希望它持久化。
-# 为了稳妥，我们让 cache 文件也位于 Data Dir，如果不存在，可以从 Resource Dir 复制（可选逻辑），
-# 或者简单地只使用 Data Dir。如果 Data Dir 没有，就会重新下载。
-# 之前的逻辑似乎是直接读写 assets 下的文件，这在 EXE 中是不行的（assets在临时目录）。
-# 我们将 cache 移到 Data Dir。
+# --- User Data Files ---
 VOICE_CACHE_FILE = os.path.join(DATA_DIR, "voices_cache.json")
-
-# Settings File (Read/Write -> Data Dir)
 SETTINGS_FILE = os.path.join(DATA_DIR, "voice_settings.json")
 HISTORY_FILE = os.path.join(DATA_DIR, "history.json")
+LOG_FILE = os.path.join(LOGS_DIR, "monitor_debug.log")
+
+# App Metadata
+APP_VERSION = "2.5"
+GITHUB_URL = "https://github.com/msjsc001/Anki-TTS-Edge"
 
 # Default Configuration Values
 DEFAULT_MAX_AUDIO_FILES = 20
@@ -65,4 +110,4 @@ CUSTOM_WINDOW_TITLE = "Anki-TTS-Edge"
 # Timeouts & Thresholds
 FLOAT_WINDOW_TIMEOUT = 2
 MOUSE_TIP_TIMEOUT = 1
-MOUSE_DRAG_THRESHOLD = 10 # Pixels
+MOUSE_DRAG_THRESHOLD = 10  # Pixels

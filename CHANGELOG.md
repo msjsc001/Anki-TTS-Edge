@@ -1,5 +1,17 @@
 # 更新日志 / Changelog
 
+## v2.5 (2026-03-01)
+
+### ✨ 新功能 / Features
+
+- **用户数据统一管理**：所有用户生成的文件（设置、历史、音频、日志、语音缓存）迁移至 `%APPDATA%/Anki-TTS-Edge/`，目录使用英文命名（`audio/`、`logs/`），全球通用。首次启动自动迁移旧数据。
+  **Centralized user data**: All user-generated files (settings, history, audio, logs, voice cache) moved to `%APPDATA%/Anki-TTS-Edge/` with English-named directories (`audio/`, `logs/`). Automatic one-time migration from old paths on first launch.
+
+- **深色/浅色主题重新设计**：浅色模式采用暖色调 Teal 主色 + Stone 中性色，深色模式采用高对比 Teal-400 + Stone-900 背景，视觉更舒适自然。UI 控件全面使用语义化颜色 token（`primary`、`surface`、`primaryContainer`），主题切换无色彩断裂。
+  **Theme redesign**: Light mode uses warm Teal-600 primary + Stone neutral surfaces; dark mode uses vibrant Teal-400 + Stone-900 backgrounds. All UI components now use semantic color tokens for seamless theme switching.
+
+---
+
 ## v2.4 (2026-03-01)
 
 ### ✨ 新功能 / Features

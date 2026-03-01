@@ -57,9 +57,39 @@ async def main(page: ft.Page):
     
     # Note: handle_resize will be defined and bound later after settings_view is created
     
-    # Theme configuration (will be refined later)
+    # Theme configuration — warm teal for light, deep blue-grey for dark
+    page.theme = ft.Theme(
+        color_scheme_seed="#0D9488",  # Teal-600: warm, eye-friendly primary
+        color_scheme=ft.ColorScheme(
+            primary="#0D9488",
+            on_primary="#FFFFFF",
+            primary_container="#CCFBF1",        # Teal-100: soft container
+            on_primary_container="#134E4A",      # Teal-900: readable text
+            secondary="#6366F1",                 # Indigo-500: accent
+            secondary_container="#E0E7FF",       # Indigo-100
+            surface="#FAFAFA",                   # Warm off-white
+            on_surface="#1C1917",                # Stone-900
+            surface_variant="#F5F5F4",           # Stone-100
+            outline="#A8A29E",                   # Stone-400
+        ),
+    )
+    page.dark_theme = ft.Theme(
+        color_scheme_seed="#2DD4BF",  # Teal-400: vibrant in dark context
+        color_scheme=ft.ColorScheme(
+            primary="#2DD4BF",                   # Teal-400
+            on_primary="#042F2E",                # Teal-950
+            primary_container="#115E59",          # Teal-800
+            on_primary_container="#99F6E4",       # Teal-200
+            secondary="#A5B4FC",                  # Indigo-300
+            secondary_container="#312E81",        # Indigo-900
+            surface="#1C1917",                    # Stone-900
+            on_surface="#F5F5F4",                 # Stone-100
+            surface_variant="#292524",            # Stone-800
+            outline="#78716C",                    # Stone-500
+            background="#0C0A09",                # Stone-950
+        ),
+    )
     page.theme_mode = ft.ThemeMode.LIGHT
-    page.theme = ft.Theme(color_scheme_seed="indigo")
     
     
     # Helper for Snackbar (Flet 0.21+ compatibility)

@@ -17,7 +17,7 @@ class HomeView(ft.Container):
                 ft.Text("", size=12),
             ], spacing=5),
             visible=False,
-            bgcolor=ft.Colors.BLUE_50,
+            bgcolor="primaryContainer",
             border_radius=5,
             padding=ft.padding.symmetric(horizontal=10, vertical=3),
             margin=ft.margin.only(bottom=5),
@@ -32,7 +32,7 @@ class HomeView(ft.Container):
             max_lines=5,
             expand=True, # Expand to fill Stack
             border_color=ft.Colors.OUTLINE,
-            focused_border_color=ft.Colors.INDIGO,
+            focused_border_color="primary",
             on_change=self._on_text_input_change,
         )
         
@@ -49,7 +49,7 @@ class HomeView(ft.Container):
         self.highlighted_text_overlay = ft.Container(
             content=self.highlighted_text_column,
             visible=False,
-            bgcolor=ft.Colors.WHITE,
+            bgcolor="surface",
             border=ft.border.all(1, ft.Colors.TRANSPARENT), # Invisible border to match input
             # Use margin/padding to match TextField's internal content area
             # TextField has internal padding (~12px). 
@@ -381,7 +381,7 @@ class HomeView(ft.Container):
             # 强制重新应用当前高亮状态，避免展开后高亮丢失
             current_idx = self._current_word_index
             if current_idx >= 0 and hasattr(self, '_word_containers') and self._word_containers:
-                HIGHLIGHT_COLOR = ft.Colors.AMBER_300
+                HIGHLIGHT_COLOR = ft.Colors.AMBER_200
                 for i, container in enumerate(self._word_containers):
                     if i == current_idx:
                         container.bgcolor = HIGHLIGHT_COLOR
@@ -409,7 +409,7 @@ class HomeView(ft.Container):
             divisions=200, 
             value=value, 
             label="{value}%",
-            active_color=ft.Colors.INDIGO,
+            active_color="primary",
         )
 
     # --- Methods to Populate Data (To be called by Controller) ---
@@ -549,7 +549,7 @@ class HomeView(ft.Container):
                 bg = "surfaceVariant"
                 
                 # Colors
-                BG_B = ft.Colors.TEAL_50 if self.page.theme_mode == ft.ThemeMode.LIGHT else ft.Colors.TEAL_900
+                BG_B = "primaryContainer"  # Teal-tinted in both modes
                 BG_A = ft.Colors.INDIGO_50 if self.page.theme_mode == ft.ThemeMode.LIGHT else ft.Colors.INDIGO_900
                 BG_BOTH = ft.Colors.BLUE_50 if self.page.theme_mode == ft.ThemeMode.LIGHT else ft.Colors.BLUE_900
                 
@@ -580,7 +580,7 @@ class HomeView(ft.Container):
                     data=name,
                     on_click=self._on_voice_selected,
                     shape=ft.RoundedRectangleBorder(radius=8),
-                    hover_color=ft.Colors.with_opacity(0.1, ft.Colors.INDIGO),
+                    hover_color=ft.Colors.with_opacity(0.1, "primary"),
                     bgcolor=bg
                 )
                 target_list.controls.append(tile)
@@ -744,7 +744,7 @@ class HomeView(ft.Container):
         if current_word_index == self._current_word_index:
             return
         
-        HIGHLIGHT_COLOR = ft.Colors.AMBER_300
+        HIGHLIGHT_COLOR = ft.Colors.AMBER_200
         
         if hasattr(self, '_word_containers') and self._word_containers:
             # Clear previous
