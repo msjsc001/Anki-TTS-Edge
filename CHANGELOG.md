@@ -1,5 +1,20 @@
 # 更新日志 / Changelog
 
+## v2.6 (2026-03-01)
+
+### ✨ 改进 / Improvements
+
+- **中性配色主题**：浅色/深色模式均改为 Slate 蓝灰色系，无强烈色彩倾向，视觉中性专业，适合所有用户。
+  **Neutral color theme**: Both light/dark modes now use a Slate blue-grey palette with no strong color bias — clean, professional, and universally comfortable.
+
+- **设置即改即存**：移除"保存设置"按钮，所有设置项修改后立即生效并自动保存，减少不必要的点击。
+  **Instant settings save**: Removed the "Save Settings" button. All setting changes now take effect and are saved immediately, eliminating unnecessary clicks.
+
+- **README 核心特性精简**：核心特性小节不再堆积更新日志条目，仅保留软件功能的简洁描述。
+  **README features cleanup**: The Core Features section now contains only clean feature descriptions, not changelog entries.
+
+---
+
 ## v2.5 (2026-03-01)
 
 ### ✨ 新功能 / Features

@@ -98,7 +98,8 @@ class SettingsView(ft.Container):
             label=i18n.get("settings_max_files_label"),
             value="20",
             keyboard_type=ft.KeyboardType.NUMBER,
-            width=200
+            width=200,
+            on_blur=self._save_settings
         )
         
         # Section headers as instance variables for dynamic language update
@@ -109,18 +110,6 @@ class SettingsView(ft.Container):
         self.section_window_text = ft.Text(i18n.get("section_window"), weight="bold", size=16)
         self.window_size_label_text = ft.Text(i18n.get("window_size_label"), size=14, color="grey")
         self.section_storage_text = ft.Text(i18n.get("section_storage"), weight="bold", size=16)
-        self.save_button = ft.FilledButton(
-            text=i18n.get("save_settings"),
-            icon=ft.Icons.SAVE,
-            on_click=self._save_settings
-        )
-        
-        self.check_updates_button = ft.OutlinedButton(
-            text=i18n.get("check_for_updates"),
-            icon=ft.Icons.OPEN_IN_NEW,
-            on_click=lambda _: webbrowser.open(GITHUB_URL)
-        )
-        
         self.check_updates_button = ft.OutlinedButton(
             text=i18n.get("check_for_updates"),
             icon=ft.Icons.OPEN_IN_NEW,
@@ -174,8 +163,6 @@ class SettingsView(ft.Container):
                 self.max_files_input,
                 
                 ft.Divider(),
-                self.save_button,
-                ft.Divider(height=10, color="transparent"),
                 self.check_updates_button,
                 ft.Text(f"Version {APP_VERSION}", size=12, color="grey", text_align=ft.TextAlign.CENTER)
             ],

@@ -13,32 +13,21 @@ Anki-TTS-Edge is a free, high-quality voice generation tool powered by Microsoft
 
 ## ✨ Key Features
 
-- **Centralized User Data & Theme Redesign (v2.5)**:
-  - **Data Centralization**: All user files moved to `%APPDATA%/Anki-TTS-Edge/` with English directory names (`audio/`, `logs/`). Automatic migration from old paths on first launch.
-  - **Theme Redesign**: Light mode uses warm Teal + Stone palette; dark mode uses high-contrast Teal-400 + Stone-900 for comfortable viewing.
-- **Precise Click-to-Play (v2.4)**: Click any word/character in the text to start playback from that exact position, providing more precise control.
-- **Code Quality Fixes & edge-tts Compatibility (v2.3)**:
-  - **Fix TTS generation completely broken**: Upgraded `edge-tts` to 7.2.7, resolving 403 errors from expired Microsoft API tokens.
-  - **Fix word highlight sync broken**: Adapted to API changes, restoring word-level timestamps and real-time highlighting.
-  - **Window resize debounce**, **log rotation**, **bare except elimination** and more code quality improvements.
-- **Deep History Cleanup (v2.2)**:
-  - **Smart Garbage Collection**: The "Clear All" function in History now performs a deep scan of the audio directory.
-  - **Complete Storage Release**: Automatically identifies and removes all orphaned audio files (.mp3) and metadata (.json) to reclaim disk space.
-- **Enhanced Reading Experience (v2.1)**:
-  - **Real-time Highlight**: Words are highlighted in sync with audio playback, handling complex text mappings (e.g. "1" -> "one") perfectly.
-  - **Click-to-Play**: Click on any word/character during playback to instantly start playing from that exact position.
-  - **Smart Navigation**: "Previous/Next Sentence" controls allow for easy sentence-by-sentence review and navigation.
-- **Modern UI**: Rebuilt from scratch using Flet (Flutter) for a sleek, responsive, and material design experience.
-- **Top-tier Voices**: Access 300+ free Microsoft Edge Neural voices across multiple languages and regions.
-- **Dual Voice Mode**: "Dual Blue Dot" system allows quick switching or sequential generation of two different voices (e.g., Male/Female, US/UK accents).
-- **History Management**: Automatically saves generation history. Re-listen, copy, or delete audio records easily.
-- **Smart Monitoring**: 
-  - **Clipboard Monitor**: Automatically captures copied text and pops up for instant generation.
-  - **Selection Monitor**: (Windows only) Genereate audio instantly by selecting text.
+- **Modern UI**: Built with Flet (Flutter) for a sleek, responsive experience with dark/light theme support.
+- **300+ Free Voices**: Access the full Microsoft Edge Neural TTS voice library across dozens of languages and regional accents.
+- **Real-time Word Highlighting**: Words are highlighted in sync during playback, handling complex mappings (e.g. "1" -> "one") perfectly.
+- **Click-to-Play**: Click any word or character during playback to instantly start from that exact position.
+- **Smart Navigation**: "Previous/Next Sentence" controls for easy sentence-by-sentence review.
+- **Dual Voice Mode**: "Dual Blue Dot" system for quick switching between two voice configurations (e.g., Male/Female, US/UK accents).
+- **History Management**: Automatically saves generation history. Re-listen, copy, or delete records; deep cleanup reclaims orphaned files.
+- **Smart Monitoring**:
+  - **Clipboard Monitor**: Automatically captures copied text for instant generation.
+  - **Selection Monitor**: (Windows) Generate audio instantly by selecting text.
 - **System Integration**:
   - **Tray Support**: Minimize to system tray to keep your workspace clean.
-  - **Pin to Top**: Keep the window always on top for easy access while studying.
-- **Internationalization**: Full support for English and Chinese (Simplified) interfaces with real-time switching.
+  - **Pin to Top**: Keep the window always on top for studying.
+  - **Internationalization**: Full English and Chinese UI with live switching.
+  - **Centralized Data**: All user data stored in `%APPDATA%/Anki-TTS-Edge/` for clean organization.
 
 ## 📸 Screenshots
 

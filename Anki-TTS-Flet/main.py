@@ -57,36 +57,36 @@ async def main(page: ft.Page):
     
     # Note: handle_resize will be defined and bound later after settings_view is created
     
-    # Theme configuration — warm teal for light, deep blue-grey for dark
+    # Theme — neutral blue-grey, no strong color bias
     page.theme = ft.Theme(
-        color_scheme_seed="#0D9488",  # Teal-600: warm, eye-friendly primary
+        color_scheme_seed="#475569",
         color_scheme=ft.ColorScheme(
-            primary="#0D9488",
+            primary="#475569",                   # Slate-600: neutral, professional
             on_primary="#FFFFFF",
-            primary_container="#CCFBF1",        # Teal-100: soft container
-            on_primary_container="#134E4A",      # Teal-900: readable text
-            secondary="#6366F1",                 # Indigo-500: accent
-            secondary_container="#E0E7FF",       # Indigo-100
-            surface="#FAFAFA",                   # Warm off-white
-            on_surface="#1C1917",                # Stone-900
-            surface_variant="#F5F5F4",           # Stone-100
-            outline="#A8A29E",                   # Stone-400
+            primary_container="#E2E8F0",         # Slate-200: soft container
+            on_primary_container="#1E293B",       # Slate-800: readable text
+            secondary="#64748B",                  # Slate-500: muted accent
+            secondary_container="#F1F5F9",        # Slate-100
+            surface="#FAFAFA",                    # Neutral white
+            on_surface="#1E293B",                 # Slate-800
+            surface_variant="#F1F5F9",            # Slate-100
+            outline="#94A3B8",                    # Slate-400
         ),
     )
     page.dark_theme = ft.Theme(
-        color_scheme_seed="#2DD4BF",  # Teal-400: vibrant in dark context
+        color_scheme_seed="#94A3B8",
         color_scheme=ft.ColorScheme(
-            primary="#2DD4BF",                   # Teal-400
-            on_primary="#042F2E",                # Teal-950
-            primary_container="#115E59",          # Teal-800
-            on_primary_container="#99F6E4",       # Teal-200
-            secondary="#A5B4FC",                  # Indigo-300
-            secondary_container="#312E81",        # Indigo-900
-            surface="#1C1917",                    # Stone-900
-            on_surface="#F5F5F4",                 # Stone-100
-            surface_variant="#292524",            # Stone-800
-            outline="#78716C",                    # Stone-500
-            background="#0C0A09",                # Stone-950
+            primary="#94A3B8",                    # Slate-400
+            on_primary="#0F172A",                 # Slate-900
+            primary_container="#334155",           # Slate-700
+            on_primary_container="#CBD5E1",        # Slate-300
+            secondary="#64748B",                   # Slate-500
+            secondary_container="#1E293B",         # Slate-800
+            surface="#1E293B",                     # Slate-800
+            on_surface="#E2E8F0",                  # Slate-200
+            surface_variant="#334155",             # Slate-700
+            outline="#64748B",                     # Slate-500
+            background="#0F172A",                  # Slate-900
         ),
     )
     page.theme_mode = ft.ThemeMode.LIGHT
