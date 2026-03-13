@@ -3,8 +3,12 @@ from PyInstaller.utils.hooks import collect_all
 
 datas = [('Anki-TTS-Flet/assets', 'assets')]
 binaries = []
-hiddenimports = ['pystray', 'PIL', 'pygame', 'pynput', 'win32clipboard', 'win32con']
+hiddenimports = ['pystray', 'PIL', 'pygame', 'pynput', 'win32clipboard', 'win32con', 'flet', 'flet_desktop']
 tmp_ret = collect_all('edge_tts')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+tmp_ret = collect_all('flet')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+tmp_ret = collect_all('flet_desktop')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 

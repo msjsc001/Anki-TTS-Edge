@@ -1,10 +1,20 @@
 import flet as ft
 from utils.i18n import i18n
 
+MAX_HIGHLIGHT_WORDS = 320
+
+
+def create_dropdown(**kwargs):
+    on_event = kwargs.pop("on_event", None)
+    try:
+        return ft.Dropdown(on_change=on_event, **kwargs)
+    except TypeError:
+        return ft.Dropdown(on_select=on_event, **kwargs)
+
 class HomeView(ft.Container):
     def __init__(self, page: ft.Page):
         super().__init__()
-        self.page = page
+        self._host_page = page
         self.expand = True
         self.padding = 20
         
@@ -39,6 +49,7 @@ class HomeView(ft.Container):
         # 1.5 Highlighted Text Overlay (same size as text_input, shown during playback)
         self._word_timings = []  # Store word timings for highlighting
         self._current_word_index = -1
+        self._status_text = ""
         self.highlighted_text_column = ft.Column(
             controls=[],
             scroll=ft.ScrollMode.AUTO,
@@ -56,7 +67,7 @@ class HomeView(ft.Container):
             padding=12, 
             expand=True, # Expand to fill Stack
             clip_behavior=ft.ClipBehavior.HARD_EDGE,  # Clip overflow content
-            alignment=ft.alignment.top_left,
+            alignment=ft.alignment.Alignment(-1, -1),
             # CRITICAL FIX: Ensure it has a minimum height to prevent stack collapse
             height=None, # Let it expand, but...
         )
@@ -69,17 +80,17 @@ class HomeView(ft.Container):
         self.volume_label_text = ft.Text(i18n.get("volume_label"))
 
         # 2.5 Filters (Dual Dropdowns)
-        self.lang_dropdown_left = ft.Dropdown(
+        self.lang_dropdown_left = create_dropdown(
             label="Language (Left)",
             text_size=14,
-            on_change=lambda e: self._on_filter_change('left'),
+            on_event=lambda e: self._on_filter_change('left'),
             expand=True,
             dense=True
         )
-        self.lang_dropdown_right = ft.Dropdown(
+        self.lang_dropdown_right = create_dropdown(
             label="Language (Right)", 
             text_size=14,
-            on_change=lambda e: self._on_filter_change('right'),
+            on_event=lambda e: self._on_filter_change('right'),
             expand=True,
             dense=True
         )
@@ -132,14 +143,14 @@ class HomeView(ft.Container):
         
         # 4. Action Buttons
         self.btn_gen_a = ft.FilledTonalButton(
-            text=i18n.get("generate_button_previous"), 
+            text=i18n.get("generate_button_previous"),
             icon=ft.Icons.PLAY_CIRCLE_OUTLINE, 
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)),
             expand=True,
             height=50,
         )
         self.btn_gen_b = ft.FilledButton(
-            text=i18n.get("generate_button_latest"), 
+            text=i18n.get("generate_button_latest"),
             icon=ft.Icons.PLAY_CIRCLE_FILLED, 
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), 
             expand=True, 
@@ -227,7 +238,7 @@ class HomeView(ft.Container):
         # Simpler: Just put it in the column below. 
         expand_button_container = ft.Container(
             content=self.btn_expand_collapse,
-            alignment=ft.alignment.center,
+            alignment=ft.alignment.Alignment(0, 0),
             height=20,
         )
         
@@ -416,12 +427,11 @@ class HomeView(ft.Container):
         else:
             self.btn_gen_a.visible = False
             self.btn_gen_b.text = i18n.get("generate_button_label")
-        self.btn_gen_a.update()
-        self.btn_gen_b.update()
+        self._safe_update(self.btn_gen_a, self.btn_gen_b)
 
-    def set_selections(self, latest, previous):
-        self.selected_voice_latest = latest
-        self.selected_voice_previous = previous
+    def set_selections(self, left, right):
+        self.selected_voice_left = left
+        self.selected_voice_right = right
         if hasattr(self, 'all_voices_data'):
             # Refresh both sides
             self._render_voices(self.all_voices_data)
@@ -455,14 +465,11 @@ class HomeView(ft.Container):
             en = next((l for l in langs if l.startswith("en")), langs[0] if langs else None)
             self.lang_dropdown_right.value = en
 
-        self.lang_dropdown_left.update()
-        self.lang_dropdown_right.update()
-
         self._render_voices(voice_list, side)
 
     def _on_filter_change(self, side):
         if hasattr(self, 'all_voices_data'):
-            self._render_voices(self.all_voices_data)
+            self._render_voices(self.all_voices_data, side)
 
     def _render_voices(self, voice_list, side='both'):
         
@@ -473,7 +480,7 @@ class HomeView(ft.Container):
         left_voices = filter_list(voice_list, self.lang_dropdown_left.value)
         right_voices = filter_list(voice_list, self.lang_dropdown_right.value)
         
-        def create_tiles(target_list, nav_row, data_source, list_ref, region_positions):
+        def create_tiles(target_list, nav_row, data_source, list_ref, region_positions, list_side):
             target_list.controls.clear()
             nav_row.controls.clear()
             region_positions.clear()
@@ -488,7 +495,6 @@ class HomeView(ft.Container):
                     regions.append(item["region"])
             
             # Create region navigation chips
-            control_index = 0  # Track control index for scrolling
             for region in regions:
                 chip = ft.Container(
                     content=ft.Text(region, size=11, weight="w500", color="onPrimaryContainer"),
@@ -501,11 +507,9 @@ class HomeView(ft.Container):
                 nav_row.controls.append(chip)
             
             current_region = None
-            import re
             
             for item in data_source:
                 name = item["name"]
-                lang = item["lang"]
                 region = item["region"]
                 
                 # Region section header
@@ -527,43 +531,42 @@ class HomeView(ft.Container):
                         padding=ft.padding.symmetric(horizontal=12, vertical=4),
                         border_radius=15,
                         margin=ft.margin.only(top=12, bottom=6),
-                        alignment=ft.alignment.center,
+                        alignment=ft.alignment.Alignment(0, 0),
                     )
                     target_list.controls.append(section_header)
                     current_region = region
                 
                 # Simple display name extraction
-                match = re.search(r", (.*Neural)\)$", name)
-                display_name = match.group(1) if match else name
+                display_name = item.get("display_name") or name
 
                 # Selection status
-                is_latest = hasattr(self, 'selected_voice_latest') and name == self.selected_voice_latest
-                is_previous = hasattr(self, 'selected_voice_previous') and hasattr(self, 'dual_mode') and self.dual_mode and name == self.selected_voice_previous
+                is_right = hasattr(self, 'selected_voice_right') and name == self.selected_voice_right
+                is_left = hasattr(self, 'selected_voice_left') and hasattr(self, 'dual_mode') and self.dual_mode and name == self.selected_voice_left
                 
                 trailing_content = None
                 bg = "surfaceVariant"
                 
                 # Colors
                 BG_B = "primaryContainer"  # Teal-tinted in both modes
-                BG_A = ft.Colors.INDIGO_50 if self.page.theme_mode == ft.ThemeMode.LIGHT else ft.Colors.INDIGO_900
-                BG_BOTH = ft.Colors.BLUE_50 if self.page.theme_mode == ft.ThemeMode.LIGHT else ft.Colors.BLUE_900
+                BG_A = ft.Colors.INDIGO_50 if self._host_page.theme_mode == ft.ThemeMode.LIGHT else ft.Colors.INDIGO_900
+                BG_BOTH = ft.Colors.BLUE_50 if self._host_page.theme_mode == ft.ThemeMode.LIGHT else ft.Colors.BLUE_900
                 
                 show_b_badge = hasattr(self, 'dual_mode') and self.dual_mode
                 
-                if is_latest and is_previous:
+                if is_right and is_left:
                      trailing_content = ft.Row([
                          ft.Container(content=ft.Text("A", color="white", size=10, weight="bold"), bgcolor=ft.Colors.INDIGO, padding=5, border_radius=5),
                          ft.Container(content=ft.Text("B", color="white", size=10, weight="bold"), bgcolor=ft.Colors.TEAL, padding=5, border_radius=5)
                      ], spacing=5)
                      bg = BG_BOTH
-                elif is_latest:
+                elif is_right:
                      if show_b_badge:
                          trailing_content = ft.Container(content=ft.Text("B", color="white", size=10, weight="bold"), bgcolor=ft.Colors.TEAL, padding=5, border_radius=5)
                          bg = BG_B
                      else:
                          trailing_content = ft.Icon(ft.Icons.CHECK, color=ft.Colors.TEAL)
                          bg = BG_B
-                elif is_previous:
+                elif is_left:
                      trailing_content = ft.Container(content=ft.Text("A", color="white", size=10, weight="bold"), bgcolor=ft.Colors.INDIGO, padding=5, border_radius=5)
                      bg = BG_A
 
@@ -572,7 +575,7 @@ class HomeView(ft.Container):
                     title=ft.Text(display_name, size=14, weight="w500"),
                     trailing=trailing_content,
                     dense=True,
-                    data=name,
+                    data={"name": name, "side": list_side},
                     on_click=self._on_voice_selected,
                     shape=ft.RoundedRectangleBorder(radius=8),
                     hover_color=ft.Colors.with_opacity(0.1, "primary"),
@@ -580,14 +583,22 @@ class HomeView(ft.Container):
                 )
                 target_list.controls.append(tile)
             
+        if side in ('both', 'left'):
+            if not hasattr(self, '_region_positions_left'):
+                self._region_positions_left = {}
+            create_tiles(self.list_left, self.region_nav_left, left_voices, self.list_left, self._region_positions_left, "left")
+
+        if side in ('both', 'right'):
+            if not hasattr(self, '_region_positions_right'):
+                self._region_positions_right = {}
+            create_tiles(self.list_right, self.region_nav_right, right_voices, self.list_right, self._region_positions_right, "right")
+
         if side == 'both':
-            # Store region positions for scroll navigation
-            self._region_positions_left = {}
-            self._region_positions_right = {}
-            create_tiles(self.list_left, self.region_nav_left, left_voices, self.list_left, self._region_positions_left)
-            create_tiles(self.list_right, self.region_nav_right, right_voices, self.list_right, self._region_positions_right)
-        
-        self.update()
+            self._safe_update()
+        elif side == 'left':
+            self._safe_update(self.region_nav_left, self.list_left)
+        elif side == 'right':
+            self._safe_update(self.region_nav_right, self.list_right)
     
     def _scroll_to_region_by_index(self, list_view, index):
         """Scroll to a region section by control index - more reliable for distant items"""
@@ -596,12 +607,14 @@ class HomeView(ft.Container):
             # Average item height is roughly 50px (ListTile dense + section headers)
             estimated_offset = index * 50
             list_view.scroll_to(offset=estimated_offset, duration=300)
-            self.page.update()
+            self._host_page.update()
         except Exception as e:
             print(f"DEBUG: Scroll to region by index failed: {e}")
 
     def _on_voice_selected(self, e):
-        self.selected_voice_name = e.control.data
+        data = e.control.data if isinstance(e.control.data, dict) else {"name": e.control.data, "side": None}
+        self.selected_voice_name = data.get("name")
+        self.selected_voice_side = data.get("side")
         if hasattr(self, 'on_voice_selected'):
             self.on_voice_selected(e)
     
@@ -621,7 +634,7 @@ class HomeView(ft.Container):
         self.text_input.value = text
         if mark_as_generated:
             self._last_generated_text = text
-        self.text_input.update()
+        self._safe_update(self.text_input)
     
     def clean_text_input(self):
         """Remove HTML tags from text input"""
@@ -637,7 +650,7 @@ class HomeView(ft.Container):
         
         if cleaned != self.text_input.value:
             self.text_input.value = cleaned
-            self.text_input.update()
+            self._safe_update(self.text_input)
     
     def is_text_dirty(self):
         """Check if user has edited text since last generation"""
@@ -651,6 +664,15 @@ class HomeView(ft.Container):
         self._word_timings = word_timings
         self._original_text = original_text
         self._current_word_index = -1
+        self._word_containers = []
+
+        # 长文本逐词构建会显著拖慢点击与切页，超阈值时退化为只读文本模式。
+        if len(word_timings or []) > MAX_HIGHLIGHT_WORDS:
+            self.highlighted_text_overlay.visible = False
+            self.text_input.opacity = 1
+            self.text_input.read_only = True
+            self._safe_update(self.text_input)
+            return
         
         # Lock overlay height to match wrapper
         self._saved_wrapper_height = self.text_input_wrapper.height
@@ -660,8 +682,6 @@ class HomeView(ft.Container):
         
         FONT_SIZE = 14
         word_row = ft.Row(controls=[], wrap=True, spacing=0, run_spacing=0)
-        
-        self._word_containers = []
         
         # With AlignmentEngine, word_timings now contains "text", "start_char", "end_char"
         # that exact map to original_text substrings.
@@ -726,8 +746,7 @@ class HomeView(ft.Container):
         self.text_input.opacity = 0
         self.text_input.read_only = True
         self.highlighted_text_overlay.visible = True
-        self.text_input.update()
-        self.highlighted_text_overlay.update()
+        self._safe_update(self.text_input, self.highlighted_text_overlay)
 
     def _handle_word_click(self, word_index):
         """Internal handler to propagate word click event"""
@@ -741,7 +760,7 @@ class HomeView(ft.Container):
         
         HIGHLIGHT_COLOR = ft.Colors.AMBER_200
         
-        if hasattr(self, '_word_containers') and self._word_containers:
+        if self.highlighted_text_overlay.visible and hasattr(self, '_word_containers') and self._word_containers:
             # Clear previous
             if 0 <= self._current_word_index < len(self._word_containers):
                 self._word_containers[self._current_word_index].bgcolor = None
@@ -753,13 +772,8 @@ class HomeView(ft.Container):
                      container.bgcolor = HIGHLIGHT_COLOR
         
         self._current_word_index = current_word_index
-        self.highlighted_text_overlay.update()
+        self._safe_update(self.highlighted_text_overlay)
         
-        # Update status bar
-        if 0 <= current_word_index < len(self._word_timings):
-            word = self._word_timings[current_word_index]["text"]
-            self.set_status(f"播放中: {word}", ft.Icons.GRAPHIC_EQ, ft.Colors.GREEN_100)
-
     def hide_highlighted_text(self):
         """Hide overlay and restore text input
         
@@ -769,14 +783,14 @@ class HomeView(ft.Container):
         self.text_input.opacity = 1
         self.text_input.read_only = False
         self._word_timings = []
+        self._word_containers = []
         self._current_word_index = -1
         
         # 关键修复：重置覆盖层高度，恢复动态布局能力
         self.highlighted_text_overlay.height = None
         self.highlighted_text_column.height = None
         
-        self.text_input.update()
-        self.highlighted_text_overlay.update()
+        self._safe_update(self.text_input, self.highlighted_text_overlay)
     
     def set_status(self, message, icon=None, color=None):
         """
@@ -785,9 +799,14 @@ class HomeView(ft.Container):
         color: background color (optional)
         """
         if not message:
+            self._status_text = ""
             self.status_bar.visible = False
-            self.status_bar.update()
+            self._safe_update(self.status_bar)
             return
+
+        if message == self._status_text and self.status_bar.visible:
+            return
+        self._status_text = message
         
         # Update icon and text
         if self.status_bar.content and isinstance(self.status_bar.content, ft.Row):
@@ -803,7 +822,7 @@ class HomeView(ft.Container):
             self.status_bar.bgcolor = color
         
         self.status_bar.visible = True
-        self.status_bar.update()
+        self._safe_update(self.status_bar)
 
     def get_params(self):
         rate = f"{int(self.rate_slider.value):+d}%"
@@ -841,4 +860,19 @@ class HomeView(ft.Container):
         self.btn_next_sentence.tooltip = i18n.get("control_next_sentence", "下一句")
         self.btn_pin.tooltip = i18n.get("window_pin", "置顶窗口")
         self.btn_expand_collapse.tooltip = i18n.get("collapse_text_input", "收纳") if self._text_expanded else i18n.get("expand_text_input", "展开")
-        self.update()
+        self._safe_update()
+
+    def _is_mounted(self):
+        return getattr(self, "page", None) is not None
+
+    def _safe_update(self, *controls):
+        if not self._is_mounted():
+            return
+        try:
+            if controls:
+                for control in controls:
+                    control.update()
+                return
+            self.update()
+        except Exception as ex:
+            print(f"DEBUG: HomeView safe update skipped: {ex}")

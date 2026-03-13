@@ -3,9 +3,12 @@ from utils.i18n import i18n
 import threading
 import ctypes
 import asyncio
-from config.constants import CUSTOM_WINDOW_TITLE, ICON_PATH, APP_VERSION
+import inspect
+import re
+import time
+from config.constants import CUSTOM_WINDOW_TITLE, ICON_PATH, APP_VERSION, DEFAULT_VOICE
 from ui.home_view import HomeView
-from core.voices import get_available_voices_async
+from core.voices import get_cached_voices, fetch_voices_from_network
 from ui.history_view import HistoryView
 from ui.settings_view import SettingsView
 from core.audio_gen import generate_audio_task, load_timestamps
@@ -25,6 +28,10 @@ saved_language = settings_manager.get("language", "zh")
 i18n.set_language(saved_language)
 
 async def main(page: ft.Page):
+    async def maybe_await(result):
+        if inspect.isawaitable(result):
+            await result
+
     # 1. Page Configuration
     page.title = f"{CUSTOM_WINDOW_TITLE} v{APP_VERSION}"
     
@@ -53,14 +60,28 @@ async def main(page: ft.Page):
     page.window.icon = ICON_PATH
     
     # Center window on screen
-    await page.window.center()
+    await maybe_await(page.window.center())
     
     # Note: handle_resize will be defined and bound later after settings_view is created
     
-    # Theme — neutral blue-grey, no strong color bias
+    # Theme — keep custom palette, but tolerate older Flet ColorScheme fields in packaged builds.
+    def create_compatible_color_scheme(**kwargs):
+        filtered_kwargs = dict(kwargs)
+        while True:
+            try:
+                return ft.ColorScheme(**filtered_kwargs)
+            except TypeError as exc:
+                match = re.search(r"unexpected keyword argument '([^']+)'", str(exc))
+                if not match:
+                    raise
+                unsupported_key = match.group(1)
+                if unsupported_key not in filtered_kwargs:
+                    raise
+                filtered_kwargs.pop(unsupported_key)
+
     page.theme = ft.Theme(
         color_scheme_seed="#475569",
-        color_scheme=ft.ColorScheme(
+        color_scheme=create_compatible_color_scheme(
             primary="#475569",                   # Slate-600: neutral, professional
             on_primary="#FFFFFF",
             primary_container="#E2E8F0",         # Slate-200: soft container
@@ -75,7 +96,7 @@ async def main(page: ft.Page):
     )
     page.dark_theme = ft.Theme(
         color_scheme_seed="#94A3B8",
-        color_scheme=ft.ColorScheme(
+        color_scheme=create_compatible_color_scheme(
             primary="#94A3B8",                    # Slate-400
             on_primary="#0F172A",                 # Slate-900
             primary_container="#334155",           # Slate-700
@@ -106,54 +127,113 @@ async def main(page: ft.Page):
     # Helper functions removed
 
 
-    # 2. Tab Navigation - Top tabs for compact layout
-    # Create views first so we can put them in tabs
+    # 2. Top Navigation
+    # Create views first so we can switch them in place.
     home_view = HomeView(page)
     history_view = HistoryView(page)
     settings_view = SettingsView(page)
     
-    views = [home_view, history_view, settings_view]
-    
-    tabs = ft.Tabs(
-        selected_index=0,
-        animation_duration=200,
-        expand=True,
-        tabs=[
-            ft.Tab(
-                text=i18n.get("tab_voices", "合成"),
-                icon=ft.Icons.RECORD_VOICE_OVER,
-                content=home_view,
+    nav_state = {"index": 0}
+    nav_items = []
+    tab_specs = [
+        {
+            "label_key": "tab_voices",
+            "fallback": "合成",
+            "icon": ft.Icons.RECORD_VOICE_OVER,
+            "view": home_view,
+        },
+        {
+            "label_key": "history_panel_title",
+            "fallback": "历史",
+            "icon": ft.Icons.HISTORY,
+            "view": history_view,
+        },
+        {
+            "label_key": "tab_settings",
+            "fallback": "设置",
+            "icon": ft.Icons.SETTINGS,
+            "view": settings_view,
+        },
+    ]
+
+    def refresh_navigation_styles():
+        is_dark = page.theme_mode == ft.ThemeMode.DARK
+        active_text = "#E2E8F0" if is_dark else "#1E293B"
+        inactive_text = "#94A3B8" if is_dark else "#64748B"
+        active_bg = "#334155" if is_dark else "#E2E8F0"
+
+        for index, spec in enumerate(tab_specs):
+            is_active = nav_state["index"] == index
+            spec["icon_control"].color = active_text if is_active else inactive_text
+            spec["label_control"].color = active_text if is_active else inactive_text
+            spec["label_control"].weight = "w700" if is_active else "w600"
+            spec["nav_item"].bgcolor = active_bg if is_active else None
+
+    def set_active_view(index, should_update=True):
+        nav_state["index"] = index
+        view_host.content = tab_specs[index]["view"]
+        refresh_navigation_styles()
+        if should_update:
+            navigation_bar.update()
+            view_host.update()
+
+    for index, spec in enumerate(tab_specs):
+        spec["icon_control"] = ft.Icon(spec["icon"], size=18)
+        spec["label_control"] = ft.Text(
+            i18n.get(spec["label_key"], spec["fallback"]),
+            size=11,
+            weight="w600",
+        )
+        spec["nav_item"] = ft.Container(
+            content=ft.Row(
+                [
+                    spec["icon_control"],
+                    spec["label_control"],
+                ],
+                spacing=4,
+                alignment=ft.MainAxisAlignment.CENTER,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            ft.Tab(
-                text=i18n.get("history_panel_title", "历史"),
-                icon=ft.Icons.HISTORY,
-                content=history_view,
-            ),
-            ft.Tab(
-                text=i18n.get("tab_settings", "设置"),
-                icon=ft.Icons.SETTINGS,
-                content=settings_view,
-            ),
-        ],
+            padding=ft.padding.symmetric(vertical=4, horizontal=10),
+            border_radius=6,
+            ink=True,
+            on_click=lambda e, idx=index: set_active_view(idx),
+        )
+        nav_items.append(spec["nav_item"])
+
+    view_host = ft.Container(content=home_view, expand=True)
+    navigation_bar = ft.Container(
+        content=ft.Row(nav_items, spacing=8, alignment=ft.MainAxisAlignment.START),
+        padding=ft.padding.symmetric(horizontal=12, vertical=6),
     )
+    main_layout = ft.Column(
+        [
+            navigation_bar,
+            ft.Divider(height=1),
+            view_host,
+        ],
+        expand=True,
+        spacing=0,
+    )
+    refresh_navigation_styles()
 
     # Language change handler - refresh UI text
     def handle_language_change(new_lang):
         """Refresh UI elements when language changes"""
         print(f"DEBUG: Language changed to {new_lang}, refreshing UI...")
         
-        # Update tab labels
-        tabs.tabs[0].text = i18n.get("tab_voices")
-        tabs.tabs[1].text = i18n.get("history_panel_title")
-        tabs.tabs[2].text = i18n.get("tab_settings")
+        for spec in tab_specs:
+            spec["label_control"].value = i18n.get(spec["label_key"], spec["fallback"])
         
         # Update page title
         page.title = f"{CUSTOM_WINDOW_TITLE} v{APP_VERSION}"
         home_view.refresh_texts()
         history_view.refresh_texts()
         settings_view.refresh_texts()
-        
-        page.update()
+
+        refresh_navigation_styles()
+        navigation_bar.update()
+        view_host.update()
     
     settings_view.on_language_changed = handle_language_change
     monitor_manager = None
@@ -162,7 +242,7 @@ async def main(page: ft.Page):
     async def restore_main_window():
         page.window.minimized = False
         page.window.visible = True
-        await page.window.to_front()
+        await maybe_await(page.window.to_front())
         page.update()
 
     async def destroy_main_window():
@@ -170,7 +250,7 @@ async def main(page: ft.Page):
             monitor_manager.stop_monitors()
         if tray_manager:
             tray_manager.stop()
-        await page.window.destroy()
+        await maybe_await(page.window.destroy())
     
     # Restart cleanup handler - stop tray and monitors before restart
     def handle_app_restart():
@@ -216,150 +296,132 @@ async def main(page: ft.Page):
         
     settings_view.on_window_size_change = handle_window_size_from_settings
 
-    # 4. Main Layout - Just the tabs (content is inside each tab)
-    page.add(tabs)
+    # 4. Main Layout
+    page.add(main_layout)
     
     # Initialize Pygame Mixer early (fast operation)
     pygame.mixer.init()
     
     # Show UI immediately
+    home_view.set_status("正在加载语音列表...", ft.Icons.HOURGLASS_EMPTY, ft.Colors.BLUE_100)
+    page.splash = None
     page.update()
-    
-    # Load voices from cache (instant) or network (slow)
-    voices = await get_available_voices_async()
-    home_view.populate_voices(voices)
-    page.update()
-    
+
+    voice_state = {"current": [], "loaded_from_cache": False}
+
+    def voice_signature(voices):
+        return tuple(v.get("name") for v in voices or [])
+
     # Background refresh: check network for updates
     async def background_voice_refresh():
-        from core.voices import fetch_voices_from_network, get_cached_voices
         try:
             # Wait a bit to not slow down startup
             await asyncio.sleep(3)
             
             # Fetch fresh data
             fresh_voices = await fetch_voices_from_network()
+            current_voices = voice_state["current"]
             
             # Compare with current (cache was already shown)
-            if fresh_voices and len(fresh_voices) != len(voices):
-                print(f"DEBUG: Voice list updated in background ({len(voices)} -> {len(fresh_voices)})")
+            if fresh_voices and voice_signature(fresh_voices) != voice_signature(current_voices):
+                print(f"DEBUG: Voice list updated in background ({len(current_voices)} -> {len(fresh_voices)})")
+                voice_state["current"] = fresh_voices
                 home_view.populate_voices(fresh_voices)
                 page.update()
         except Exception as e:
             print(f"DEBUG: Background voice refresh failed: {e}")
-    
-    # Start background refresh (non-blocking)
-    asyncio.create_task(background_voice_refresh())
-    
-    page.splash = None
-    page.update()
+
+    async def load_initial_voices():
+        try:
+            cached_voices = get_cached_voices()
+            voice_state["loaded_from_cache"] = bool(cached_voices)
+
+            if cached_voices:
+                voices = cached_voices
+            else:
+                home_view.set_status("正在联网加载语音列表...", ft.Icons.HOURGLASS_EMPTY, ft.Colors.BLUE_100)
+                page.update()
+                voices = await fetch_voices_from_network()
+
+            voice_state["current"] = voices
+            home_view.populate_voices(voices)
+            home_view.set_status("", None, None)
+            page.update()
+
+            if voice_state["loaded_from_cache"]:
+                asyncio.create_task(background_voice_refresh())
+        except Exception as e:
+            home_view.set_status(f"加载语音失败: {e}", ft.Icons.ERROR_OUTLINE, ft.Colors.RED_100)
+            page.update()
+
+    page.run_task(load_initial_voices)
 
     
     # Mini Mode Removed - Replaced by Satellite Process logic
     # (See satellite_loop below)
         # Satellite Poll Loop
     import queue
+
+    def get_voice_for_slot(slot, fallback_to_default=True):
+        key = "selected_voice_left" if slot == "left" else "selected_voice_right"
+        voice = settings_manager.get(key)
+        if voice:
+            return voice
+        return DEFAULT_VOICE if fallback_to_default else None
     
     async def handle_satellite_action(text, mode="B"):
-        if not text: return
+        if not text:
+            return
         print(f"Main: Received ACTION for '{text[:10]}', mode='{mode}'")
         
-        # Update input text field with the text being generated
-        home_view.set_input_text(text, mark_as_generated=True)
+        home_view.set_input_text(text)
+        if monitor_manager:
+            monitor_manager.set_selection_overlay_active(False)
+            monitor_manager.set_selection_generation_active(True)
         
-        voice_key = "selected_voice_latest" if mode == "B" else "selected_voice_previous"
-        voice = settings_manager.get(voice_key)
+        voice_slot = "right" if mode == "B" else "left"
+        voice = get_voice_for_slot(voice_slot)
         
-        print(f"DEBUG: Handle Action - Voice Key: {voice_key}, Voice: '{voice}'")
-        
-        # Fallback if voice is missing (e.g. first run)
+        print(f"DEBUG: Handle Action - Voice Slot: {voice_slot}, Voice: '{voice}'")
+
         if not voice:
-             from config.constants import DEFAULT_VOICE
-             print(f"DEBUG: Voice missing for {mode}, using default: {DEFAULT_VOICE}")
-             voice = DEFAULT_VOICE
-             # Optionally save it back?
-             if mode == "B": settings_manager.set("selected_voice_latest", voice)
-             
-        if not voice:
-             show_message(i18n.get("status_no_voice_error") + f" (Mode {mode})", True)
-             return
-             
-        # Call Generate Task (Wait for result? Or separate task?)
-        # Since on_done is callback, we wrapping it.
-        # But generate_audio_task is async.
+            if monitor_manager:
+                monitor_manager.set_selection_generation_active(False)
+            show_message(i18n.get("status_no_voice_error") + f" (Mode {mode})", True)
+            return
         
-        # Send Generating State
         try:
-             monitor_manager.sat_input_q.put(("STATE", "generating"))
+            monitor_manager.sat_input_q.put(("STATE", "generating"))
         except Exception:
             pass
 
-        def on_done(path, error, timestamps=None):
-            print(f"DEBUG: on_done called. Path={path}, Error={error}")
-            if path:
-                try:
-                     monitor_manager.sat_input_q.put(("STATE", "success"))
-                except Exception:
-                    pass
-                
-                # Update playback state
-                current_audio_state["path"] = path
-                current_audio_state["timestamps"] = timestamps
-                current_audio_state["text"] = text
-                current_audio_state["text_dirty"] = False
-                
-                enabled = settings_manager.get("autoplay_enabled", True)
-                print(f"DEBUG: Autoplay Check (Satellite): {enabled}")
-                if enabled:
-                    handle_play_audio({"path": path, "timestamps": timestamps})
-                if settings_manager.get("copy_path_enabled", True):
-                     try:
-                        copy_file_to_clipboard(path)
-                     except Exception:
-                        pass
-                
-                # Add to history
-                history_manager.add_record(text, voice, path)
-                history_view.populate_history(history_manager.get_records())
-            else:
-                try:
-                     monitor_manager.sat_input_q.put(("STATE", "error"))
-                except Exception:
-                    pass
-                home_view.set_status(f"生成失败: {error}", ft.Icons.ERROR_OUTLINE, ft.Colors.RED_100)
-                show_message(f"Error: {error}", True)
-
-        print(f"DEBUG: Calling generate_audio_task with text='{text[:10]}...', voice='{voice}'")
-        timestamps = None
         try:
-            path, error, timestamps = await asyncio.wait_for(
-                generate_audio_task(text, voice, 
-                    f"{int(home_view.rate_slider.value):+d}%", 
-                    f"{int(home_view.volume_slider.value):+d}%",
-                    "+0Hz"
-                ),
-                timeout=30.0
-            )
-        except asyncio.TimeoutError:
-            path = None
-            error = i18n.get("status_timeout_error", "Generation timed out")
-        except Exception as e:
-            path = None
-            error = str(e)
-            
-        on_done(path, error, timestamps)
+            path, _, _ = await generate_audio_for_voice(text, voice)
+            try:
+                monitor_manager.sat_input_q.put(("STATE", "success" if path else "error"))
+            except Exception:
+                pass
+        finally:
+            if monitor_manager:
+                monitor_manager.set_selection_generation_active(False)
 
     async def satellite_loop():
         # print("DEBUG: Satellite Loop Started")
         while True:
             try:
-                if monitor_manager and hasattr(monitor_manager, 'sat_output_q') and monitor_manager.sat_output_q:
+                selection_enabled = settings_manager.get("monitor_selection_enabled", False)
+                sat_queue_ready = monitor_manager and hasattr(monitor_manager, 'sat_output_q') and monitor_manager.sat_output_q
+
+                if selection_enabled and sat_queue_ready:
                     try:
                         cmd, *args = monitor_manager.sat_output_q.get_nowait()
                         if cmd == "ACTION":
                             text = args[0]
                             mode = args[1] if len(args) > 1 else "B"
                             await handle_satellite_action(text, mode=mode)
+                        elif cmd == "DISMISSED":
+                            if monitor_manager:
+                                monitor_manager.set_selection_overlay_active(False)
                         elif cmd == "RESTORE":
                             print("Main: Restoring Window")
                             await restore_main_window()
@@ -368,7 +430,7 @@ async def main(page: ft.Page):
             except Exception as e:
                 print(f"DEBUG: Error in Satellite Loop: {e}")
             
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.04 if settings_manager.get("monitor_selection_enabled", False) else 0.4)
 
     page.run_task(satellite_loop)
 
@@ -387,6 +449,85 @@ async def main(page: ft.Page):
         "stop_playback_at_ms": None # If set, stop when this pos is reached
     }
     playback_monitor_state = {"run_id": 0}
+    clipboard_generation_state = {"text": "", "at": 0.0}
+    generation_lock = asyncio.Lock()
+
+    def sync_home_controls(*controls):
+        home_view._safe_update(*controls)
+
+    def copy_generated_file_to_clipboard(path):
+        if not path or not settings_manager.get("copy_path_enabled", True):
+            return False
+        try:
+            if monitor_manager:
+                monitor_manager.suppress_clipboard(1.2)
+            copy_file_to_clipboard(path)
+            return True
+        except Exception as ex:
+            print(f"DEBUG: copy generated file failed: {ex}")
+            show_message(f"MP3 剪贴板写入失败: {ex}", True)
+            return False
+
+    def apply_generated_audio_result(text, voice, path, timestamps=None, autoplay=None):
+        if not path:
+            return
+
+        home_view.set_input_text(text, mark_as_generated=True)
+        home_view.set_status("音频生成成功", ft.Icons.CHECK_CIRCLE_OUTLINE, ft.Colors.GREEN_100)
+
+        current_audio_state["path"] = path
+        current_audio_state["timestamps"] = timestamps
+        current_audio_state["text"] = text
+        current_audio_state["text_dirty"] = False
+        current_audio_state["current_sentence_index"] = 0
+        current_audio_state["current_word_index"] = 0
+        current_audio_state["current_playback_start_ms"] = 0
+        current_audio_state["stop_playback_at_ms"] = None
+
+        copy_generated_file_to_clipboard(path)
+        history_manager.add_record(text, voice, path)
+        history_view.populate_history(history_manager.get_records())
+
+        should_autoplay = settings_manager.get("autoplay_enabled", True) if autoplay is None else autoplay
+        if should_autoplay:
+            handle_play_audio({"path": path, "timestamps": timestamps, "text": text})
+
+    async def generate_audio_for_voice(text, voice, status_message="正在生成音频...", autoplay=None):
+        sanitized_text = (text or "").strip()
+        if not sanitized_text:
+            home_view.set_status("请输入文本", ft.Icons.WARNING_AMBER, ft.Colors.ORANGE_100)
+            return None, i18n.get("status_no_text_error"), None
+
+        selected_voice = voice or DEFAULT_VOICE
+        if not selected_voice:
+            home_view.set_status("请选择声音", ft.Icons.WARNING_AMBER, ft.Colors.ORANGE_100)
+            return None, i18n.get("status_no_voice_error"), None
+
+        async with generation_lock:
+            home_view.set_status(status_message, ft.Icons.HOURGLASS_EMPTY, ft.Colors.BLUE_100)
+            try:
+                path, error, timestamps = await asyncio.wait_for(
+                    generate_audio_task(
+                        sanitized_text,
+                        selected_voice,
+                        f"{int(home_view.rate_slider.value):+d}%",
+                        f"{int(home_view.volume_slider.value):+d}%",
+                        "+0Hz",
+                    ),
+                    timeout=30.0,
+                )
+            except asyncio.TimeoutError:
+                path, error, timestamps = None, i18n.get("status_timeout_error", "Generation timed out"), None
+            except Exception as ex:
+                path, error, timestamps = None, str(ex), None
+
+            if path:
+                apply_generated_audio_result(sanitized_text, selected_voice, path, timestamps, autoplay=autoplay)
+            else:
+                home_view.set_status(f"生成失败: {error}", ft.Icons.ERROR_OUTLINE, ft.Colors.RED_100)
+                show_message(f"Error: {error}", True)
+
+            return path, error, timestamps
 
     def restart_playback_monitor():
         playback_monitor_state["run_id"] += 1
@@ -406,52 +547,15 @@ async def main(page: ft.Page):
         
         text = home_view.get_input_text()
         if not text:
-             show_message(i18n.get("status_no_text_error"), True)
-             home_view.set_status("请输入文本", ft.Icons.WARNING_AMBER, ft.Colors.ORANGE_100)
-             return
-        
-        # Show generating status
-        home_view.set_status("正在生成音频...", ft.Icons.HOURGLASS_EMPTY, ft.Colors.BLUE_100)
-        
-        # Mark text as generated (for edit detection)
-        home_view.set_input_text(text, mark_as_generated=True)
+            show_message(i18n.get("status_no_text_error"), True)
+            home_view.set_status("请输入文本", ft.Icons.WARNING_AMBER, ft.Colors.ORANGE_100)
+            return
 
-        path, error, timestamps = await generate_audio_task(text, voice, 
-            f"{int(home_view.rate_slider.value):+d}%", 
-            f"{int(home_view.volume_slider.value):+d}%",
-            "+0Hz"
-        )
-        
-        if path:
-            home_view.set_status("音频生成成功", ft.Icons.CHECK_CIRCLE_OUTLINE, ft.Colors.GREEN_100)
-            
-            # Update playback state
-            current_audio_state["path"] = path
-            current_audio_state["timestamps"] = timestamps
-            current_audio_state["text"] = text
-            current_audio_state["text_dirty"] = False
-            current_audio_state["current_sentence_index"] = 0
-            
-            enabled = settings_manager.get("autoplay_enabled", True)
-            print(f"DEBUG: Autoplay Check (Button): {enabled}")
-            if enabled:
-                handle_play_audio({"path": path, "timestamps": timestamps})
-            if settings_manager.get("copy_path_enabled", True):
-                 try:
-                    copy_file_to_clipboard(path)
-                 except Exception:
-                    pass
-            
-            # Add to history
-            history_manager.add_record(text, voice, path)
-            history_view.populate_history(history_manager.get_records())
-        else:
-            home_view.set_status(f"生成失败: {error}", ft.Icons.ERROR_OUTLINE, ft.Colors.RED_100)
-            show_message(f"Error: {error}", True)
+        await generate_audio_for_voice(text, voice)
 
     async def handle_generate_b(e):
         # Latest Voice (B)
-        v = settings_manager.get("selected_voice_latest")
+        v = get_voice_for_slot("right", fallback_to_default=False)
         if not v:
             show_message(i18n.get("status_no_voice_error"), True)
             return
@@ -459,7 +563,7 @@ async def main(page: ft.Page):
 
     async def handle_generate_a(e):
         # Previous Voice (A)
-        v = settings_manager.get("selected_voice_previous")
+        v = get_voice_for_slot("left", fallback_to_default=False)
         if not v:
              show_message(i18n.get("status_no_voice_error"), True)
              return
@@ -516,12 +620,12 @@ async def main(page: ft.Page):
                         ts["words"]
                     )
                 
-                home_view.text_input.update()
+                sync_home_controls(home_view.text_input)
                 
                 pygame.mixer.music.load(path)
                 pygame.mixer.music.play()
                 home_view.btn_play_pause.selected = True
-                home_view.btn_play_pause.update()
+                sync_home_controls(home_view.btn_play_pause)
                 
                 # Start playback monitoring
                 restart_playback_monitor()
@@ -543,8 +647,7 @@ async def main(page: ft.Page):
         home_view.text_input.read_only = False
         home_view.hide_highlighted_text()  # Hide highlighting
         home_view.set_status("已停止", ft.Icons.STOP_CIRCLE_OUTLINED, ft.Colors.GREY_200)
-        home_view.btn_play_pause.update()
-        home_view.text_input.update()
+        sync_home_controls(home_view.btn_play_pause, home_view.text_input)
     
     async def handle_pause_resume(e):
         """Toggle play/pause state, or generate if no audio exists"""
@@ -554,7 +657,7 @@ async def main(page: ft.Page):
             current_audio_state["is_paused"] = True
             home_view.btn_play_pause.selected = False
             home_view.set_status("已暂停", ft.Icons.PAUSE_CIRCLE_OUTLINE, ft.Colors.AMBER_100)
-            home_view.btn_play_pause.update()
+            sync_home_controls(home_view.btn_play_pause)
             return
         
         # Case 2: Paused -> resume
@@ -567,7 +670,7 @@ async def main(page: ft.Page):
             
             home_view.btn_play_pause.selected = True
             home_view.set_status("正在播放...", ft.Icons.PLAY_CIRCLE_OUTLINE, ft.Colors.GREEN_100)
-            home_view.btn_play_pause.update()
+            sync_home_controls(home_view.btn_play_pause)
             return
         
         # Case 3: No audio or text changed -> need to generate first
@@ -592,41 +695,8 @@ async def main(page: ft.Page):
             })
         else:
             # Need to generate first
-            home_view.set_status("正在生成音频...", ft.Icons.HOURGLASS_EMPTY, ft.Colors.BLUE_100)
-            
-            # Get voice
-            voice = settings_manager.get("selected_voice_latest")
-            if not voice:
-                from config.constants import DEFAULT_VOICE
-                voice = DEFAULT_VOICE
-            
-            if not voice:
-                home_view.set_status("请选择声音", ft.Icons.WARNING_AMBER, ft.Colors.ORANGE_100)
-                return
-            
-            # Generate audio
-            path, error, timestamps = await generate_audio_task(
-                text, voice, 
-                f"{int(home_view.rate_slider.value):+d}%", 
-                f"{int(home_view.volume_slider.value):+d}%",
-                "+0Hz"
-            )
-            
-            if path:
-                home_view.set_input_text(text, mark_as_generated=True)
-                current_audio_state["path"] = path
-                current_audio_state["timestamps"] = timestamps
-                current_audio_state["text"] = text
-                current_audio_state["text_dirty"] = False
-                
-                home_view.set_status("正在播放...", ft.Icons.PLAY_CIRCLE_OUTLINE, ft.Colors.GREEN_100)
-                handle_play_audio({"path": path, "timestamps": timestamps})
-                
-                # Add to history
-                history_manager.add_record(text, voice, path)
-                history_view.populate_history(history_manager.get_records())
-            else:
-                home_view.set_status(f"生成失败: {error}", ft.Icons.ERROR_OUTLINE, ft.Colors.RED_100)
+            voice = get_voice_for_slot("right")
+            await generate_audio_for_voice(text, voice, status_message="正在生成音频...", autoplay=True)
     
     def handle_replay(e):
         """Replay from beginning"""
@@ -638,7 +708,7 @@ async def main(page: ft.Page):
         """Helper to generate audio if missing before navigation"""
         if not current_audio_state.get("timestamps"):
              # Need to generate
-             v = settings_manager.get("selected_voice_latest")
+             v = get_voice_for_slot("right", fallback_to_default=False)
              if not v:
                  home_view.set_status("请选择声音", ft.Icons.WARNING_AMBER, ft.Colors.ORANGE_100)
                  return False
@@ -677,7 +747,7 @@ async def main(page: ft.Page):
             pygame.mixer.music.play(start=target_ms / 1000.0)
             
             home_view.btn_play_pause.selected = True
-            home_view.btn_play_pause.update()
+            sync_home_controls(home_view.btn_play_pause)
             
             # FIX: Immediate Highlight Update
             first_word_idx = -1
@@ -725,7 +795,7 @@ async def main(page: ft.Page):
                 pygame.mixer.music.play(start=target_ms / 1000.0)
 
                 home_view.btn_play_pause.selected = True
-                home_view.btn_play_pause.update()
+                sync_home_controls(home_view.btn_play_pause)
                 
                 # FIX: Immediate Highlight Update
                 first_word_idx = -1
@@ -770,7 +840,7 @@ async def main(page: ft.Page):
             
             current_audio_state["is_paused"] = False
             home_view.btn_play_pause.selected = True
-            home_view.btn_play_pause.update()
+            sync_home_controls(home_view.btn_play_pause)
             
             # Highlight the clicked word immediately
             current_audio_state["current_word_index"] = word_index
@@ -811,8 +881,7 @@ async def main(page: ft.Page):
                     home_view.text_input.read_only = False
                     home_view.hide_highlighted_text()  # Hide highlighting when done
                     home_view.set_status("播放完成", ft.Icons.CHECK_CIRCLE_OUTLINE, ft.Colors.GREEN_100)
-                    home_view.btn_play_pause.update()
-                    home_view.text_input.update()
+                    sync_home_controls(home_view.btn_play_pause, home_view.text_input)
                     break
                 
                 # Get current position in ms
@@ -830,7 +899,7 @@ async def main(page: ft.Page):
                     current_audio_state["stop_playback_at_ms"] = None # Clear constraint so Resume works
                     home_view.btn_play_pause.selected = False
                     home_view.set_status("已暂停 (句末)", ft.Icons.PAUSE_CIRCLE_OUTLINE, ft.Colors.AMBER_100)
-                    home_view.btn_play_pause.update()
+                    sync_home_controls(home_view.btn_play_pause)
                     continue
                 
                 timestamps = current_audio_state.get("timestamps")
@@ -858,47 +927,47 @@ async def main(page: ft.Page):
             await asyncio.sleep(0.05)  # 50ms update interval
 
     # Bindings
-    home_view.btn_gen_a.on_click = handle_generate_a
-    home_view.btn_gen_b.on_click = handle_generate_b
+    def bind_async(handler):
+        def _wrapped(e):
+            async def _runner():
+                result = handler(e)
+                if inspect.isawaitable(result):
+                    await result
+            page.run_task(_runner)
+        return _wrapped
+
+    home_view.btn_gen_a.on_click = bind_async(handle_generate_a)
+    home_view.btn_gen_b.on_click = bind_async(handle_generate_b)
     home_view.btn_stop.on_click = handle_stop_audio
     home_view.btn_replay.on_click = handle_replay
-    home_view.btn_play_pause.on_click = handle_pause_resume
-    home_view.btn_prev_sentence.on_click = handle_prev_sentence
-    home_view.btn_next_sentence.on_click = handle_next_sentence
+    home_view.btn_play_pause.on_click = bind_async(handle_pause_resume)
+    home_view.btn_prev_sentence.on_click = bind_async(handle_prev_sentence)
+    home_view.btn_next_sentence.on_click = bind_async(handle_next_sentence)
     
     # Voice Selection Handler
     # Voice Selection Handler
     def handle_voice_selected(e):
-        new_voice = e.control.data
-        current_latest = settings_manager.get("selected_voice_latest")
-        
-        # Avoid rotation if clicking the same voice? 
-        # User says "First selected (current) -> B, Previous -> A".
-        # If I click the SAME voice, do I rotate? Probably not.
-        if new_voice == current_latest:
-            print("Selected same voice, no rotation.")
+        payload = e.control.data if isinstance(e.control.data, dict) else {"name": e.control.data, "side": "right"}
+        new_voice = payload.get("name")
+        voice_side = payload.get("side") or "right"
+        key = "selected_voice_left" if voice_side == "left" else "selected_voice_right"
+        current_voice = settings_manager.get(key)
+
+        if not new_voice:
+            return
+        if new_voice == current_voice:
+            print(f"Selected same voice on {voice_side}, no change.")
             return
 
-        # Rotate: Current Latest -> Previous (A)
-        # New Voice -> Latest (B)
-        settings_manager.set("selected_voice_previous", current_latest)
-        settings_manager.set("selected_voice_latest", new_voice)
+        settings_manager.set(key, new_voice)
         settings_manager.save_settings()
         
-        print(f"Voice Selection Rotated: B(Latest)='{new_voice}', A(Prev)='{current_latest}'")
-        
-        # Update UI (Optional: Highlight logic in HomeView might need 'previous' awareness?)
-        # For now, just refresh the list visual if it relies on this.
-        # Check if home_view.set_selections exists or uses 'previous'
-        if hasattr(home_view, 'set_selections'):
-            home_view.set_selections(
-                new_voice,
-                current_latest
-            )
-        else:
-             # Fallback to update logic if Method missing
-             # (See HomeView implementation)
-             pass 
+        print(f"Voice Slot Updated: {voice_side}='{new_voice}'")
+
+        home_view.set_selections(
+            get_voice_for_slot("left"),
+            get_voice_for_slot("right")
+        )
         page.update()
 
     home_view.on_voice_selected = handle_voice_selected
@@ -928,13 +997,23 @@ async def main(page: ft.Page):
 
     # History Handlers
     def handle_history_play(record):
-        if record and "path" in record:
-            handle_play_audio({
-                "path": record["path"],
-                "text": record.get("text"),
-            })
+        if not record:
+            return
+        path = record.get("path")
+        if not path or not os.path.exists(path):
+            show_message("历史音频不存在，已移除该记录", True)
+            history_manager.remove_record(record)
+            history_view.populate_history(history_manager.get_records())
+            return
+        home_view.set_input_text(record.get("text", ""), mark_as_generated=True)
+        handle_play_audio({
+            "path": path,
+            "text": record.get("text"),
+        })
 
     def handle_history_delete(record):
+        if not record:
+            return
         # Unload audio to release file lock (Windows specific)
         if record and record.get("path") == current_audio_state.get("path"):
             handle_stop_audio(None)
@@ -948,6 +1027,7 @@ async def main(page: ft.Page):
              
         history_manager.remove_record(record)
         history_view.populate_history(history_manager.get_records())
+        show_message("历史记录已删除")
 
     def handle_history_clear():
         print("DEBUG: handle_history_clear TRIGGERED")
@@ -970,17 +1050,49 @@ async def main(page: ft.Page):
              print(f"DEBUG: Repopulating with {len(new_records)} records")
              history_view.populate_history(new_records)
              page.update()
+             show_message("历史记录已清空")
              
         except Exception as ex:
              print(f"ERROR in handle_history_clear: {ex}")
+             show_message(f"清空历史失败: {ex}", True)
 
     history_view.on_play_audio = handle_history_play
     history_view.on_delete_item = handle_history_delete
     history_view.on_clear_all = handle_history_clear
 
+    def handle_selection_text(text, source="selection"):
+        if not text:
+            return
+
+        async def _runner():
+            home_view.set_input_text(text)
+
+        page.run_task(_runner)
+
+    def handle_monitored_text(text, source="clipboard"):
+        if not text:
+            return
+        async def _runner():
+            home_view.set_input_text(text)
+            now = time.monotonic()
+            if text == clipboard_generation_state["text"] and now - clipboard_generation_state["at"] < 1.2:
+                print("DEBUG: duplicate clipboard generation ignored")
+                return
+            clipboard_generation_state["text"] = text
+            clipboard_generation_state["at"] = now
+            voice = get_voice_for_slot("right")
+            await generate_audio_for_voice(text, voice, status_message="正在根据复制内容生成音频...")
+
+        page.run_task(_runner)
+
     monitor_manager = MonitorManager(
-        on_clipboard_change=lambda t: home_view.set_input_text(t) if t else None,
-        on_selection_trigger=lambda pos: threading.Thread(target=monitor_manager.simulate_copy, args=(pos,)).start()
+        on_clipboard_change=handle_monitored_text,
+        on_selection_captured=handle_selection_text,
+        on_selection_trigger=lambda pos: threading.Thread(
+            target=monitor_manager.simulate_copy,
+            args=(pos,),
+            daemon=True,
+        ).start()
     )
     monitor_manager.start_monitors() 
 
@@ -995,8 +1107,19 @@ async def main(page: ft.Page):
     def on_tray_exit():
         page.run_task(destroy_main_window)
 
-    tray_manager = TrayIconManager(on_show_hide=on_tray_show_hide, on_exit=on_tray_exit)
-    tray_manager.start() # Start tray icon immediately
+    def ensure_tray_manager():
+        nonlocal tray_manager
+        if tray_manager is None:
+            tray_manager = TrayIconManager(on_show_hide=on_tray_show_hide, on_exit=on_tray_exit)
+        return tray_manager
+
+    def sync_tray_icon():
+        if settings_manager.get("minimize_to_tray", False):
+            ensure_tray_manager().start()
+        elif tray_manager:
+            tray_manager.stop()
+
+    sync_tray_icon()
 
 
 
@@ -1035,12 +1158,14 @@ async def main(page: ft.Page):
                 if settings_dict["appearance_mode"] == "dark"
                 else ft.ThemeMode.LIGHT
             )
+            refresh_navigation_styles()
         
         # Apply immediate effects checks
         monitor_manager.start_monitors() # Will adjust/stop based on new flags
+        sync_tray_icon()
         
         # Update dual mode
-        is_dual = settings_manager.get("dual_blue_dot_enabled", False)
+        is_dual = settings_manager.get("dual_voice_mode_enabled", False)
         home_view.set_dual_mode(is_dual)
         
         page.update()
@@ -1053,11 +1178,11 @@ async def main(page: ft.Page):
     history_view.populate_history(history_manager.get_records())
     
     # Init Views state
-    is_dual = settings_manager.get("dual_blue_dot_enabled", False)
+    is_dual = settings_manager.get("dual_voice_mode_enabled", False)
     home_view.set_dual_mode(is_dual)
     home_view.set_selections(
-        settings_manager.get("selected_voice_latest"),
-        settings_manager.get("selected_voice_previous")
+        get_voice_for_slot("left"),
+        get_voice_for_slot("right")
     )
     settings_view.set_values(settings_manager.settings)
     

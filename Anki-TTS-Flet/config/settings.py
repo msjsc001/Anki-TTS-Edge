@@ -19,10 +19,11 @@ class SettingsManager:
             "monitor_clipboard_enabled": False,
             "monitor_selection_enabled": False,
             "minimize_to_tray": False,
-            "dual_blue_dot_enabled": False,
+            "dual_voice_mode_enabled": False,
+            "selection_dual_mode_enabled": False,
             "max_audio_files": DEFAULT_MAX_AUDIO_FILES,
-            "selected_voice_latest": DEFAULT_VOICE,
-            "selected_voice_previous": DEFAULT_VOICE,
+            "selected_voice_left": DEFAULT_VOICE,
+            "selected_voice_right": DEFAULT_VOICE,
             "rate": 0,
             "volume": 0,
             "appearance_mode": DEFAULT_APPEARANCE_MODE,
@@ -43,10 +44,20 @@ class SettingsManager:
                     loaded["monitor_selection_enabled"] = loaded.pop("select_trigger_enabled")
                 if "selected_voice" in loaded:
                     old_voice = loaded.pop("selected_voice")
-                    if "selected_voice_latest" not in loaded:
-                        loaded["selected_voice_latest"] = old_voice
-                    if "selected_voice_previous" not in loaded:
-                        loaded["selected_voice_previous"] = loaded.get("selected_voice_latest", old_voice)
+                    loaded.setdefault("selected_voice_right", old_voice)
+                    loaded.setdefault("selected_voice_left", old_voice)
+                if "selected_voice_latest" in loaded and "selected_voice_right" not in loaded:
+                    loaded["selected_voice_right"] = loaded.get("selected_voice_latest")
+                if "selected_voice_previous" in loaded and "selected_voice_left" not in loaded:
+                    loaded["selected_voice_left"] = loaded.get("selected_voice_previous")
+                if "selected_voice_right" not in loaded:
+                    loaded["selected_voice_right"] = loaded.get("selected_voice_left", DEFAULT_VOICE)
+                if "selected_voice_left" not in loaded:
+                    loaded["selected_voice_left"] = loaded.get("selected_voice_right", DEFAULT_VOICE)
+                if "dual_blue_dot_enabled" in loaded:
+                    legacy_dual = bool(loaded.pop("dual_blue_dot_enabled"))
+                    loaded.setdefault("dual_voice_mode_enabled", legacy_dual)
+                    loaded.setdefault("selection_dual_mode_enabled", legacy_dual)
                 if "theme_dark" in loaded and "appearance_mode" not in loaded:
                     loaded["appearance_mode"] = "dark" if loaded.pop("theme_dark") else "light"
 
@@ -63,8 +74,13 @@ class SettingsManager:
                 if self.settings.get("appearance_mode") not in ["light", "dark"]:
                     self.settings["appearance_mode"] = DEFAULT_APPEARANCE_MODE
 
-                if not self.settings.get("selected_voice_previous"):
-                     self.settings["selected_voice_previous"] = self.settings.get("selected_voice_latest", DEFAULT_VOICE)
+                if not self.settings.get("selected_voice_right"):
+                     self.settings["selected_voice_right"] = self.settings.get("selected_voice_left", DEFAULT_VOICE)
+                if not self.settings.get("selected_voice_left"):
+                     self.settings["selected_voice_left"] = self.settings.get("selected_voice_right", DEFAULT_VOICE)
+                if self.settings.get("selection_dual_mode_enabled"):
+                    self.settings["dual_voice_mode_enabled"] = True
+                    self.settings["monitor_selection_enabled"] = True
 
             except Exception as e:
                 print(f"Load settings failed: {e}")

@@ -20,22 +20,41 @@ def get_base_paths():
 
 RESOURCE_DIR, EXE_DIR = get_base_paths()
 
+def ensure_directory(path):
+    if os.path.isdir(path):
+        return
+    try:
+        os.makedirs(path, exist_ok=True)
+    except OSError:
+        if not os.path.isdir(path):
+            raise
+
+
+def resolve_data_dir():
+    """Prefer %APPDATA%; fall back to a local data dir if the environment blocks it."""
+    appdata = os.environ.get("APPDATA")
+    if appdata:
+        preferred = os.path.join(appdata, "Anki-TTS-Edge")
+        try:
+            ensure_directory(preferred)
+            return preferred
+        except OSError:
+            pass
+
+    fallback = os.path.join(EXE_DIR, "data")
+    ensure_directory(fallback)
+    return fallback
+
 # --- User Data Directory ---
 # Centralize ALL user-generated files under %APPDATA%/Anki-TTS-Edge/
 # Falls back to exe directory if APPDATA is not available (e.g. portable mode)
-_appdata = os.environ.get("APPDATA")
-if _appdata:
-    DATA_DIR = os.path.join(_appdata, "Anki-TTS-Edge")
-else:
-    DATA_DIR = EXE_DIR
-
-os.makedirs(DATA_DIR, exist_ok=True)
+DATA_DIR = resolve_data_dir()
 
 # Sub-directories (English names for universal compatibility)
 AUDIO_DIR = os.path.join(DATA_DIR, "audio")
 LOGS_DIR = os.path.join(DATA_DIR, "logs")
-os.makedirs(AUDIO_DIR, exist_ok=True)
-os.makedirs(LOGS_DIR, exist_ok=True)
+ensure_directory(AUDIO_DIR)
+ensure_directory(LOGS_DIR)
 
 # Backward compatibility: keep BASE_DIR pointing to DATA_DIR
 BASE_DIR = DATA_DIR
@@ -97,7 +116,7 @@ HISTORY_FILE = os.path.join(DATA_DIR, "history.json")
 LOG_FILE = os.path.join(LOGS_DIR, "monitor_debug.log")
 
 # App Metadata
-APP_VERSION = "2.8"
+APP_VERSION = "2.8.2"
 GITHUB_URL = "https://github.com/msjsc001/Anki-TTS-Edge"
 
 # Default Configuration Values

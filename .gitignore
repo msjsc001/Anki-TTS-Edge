@@ -22,8 +22,10 @@ ENV/
 # Build / Distribution
 build/
 build2/
+build*/
 dist/
 dist2/
+dist*/
 .vendor/
 .tmp/
 *.manifest

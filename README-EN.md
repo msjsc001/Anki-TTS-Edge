@@ -11,6 +11,13 @@ Anki-TTS-Edge is a free, high-quality voice generation tool powered by Microsoft
 
 </div>
 
+## 🔄 Latest Stabilization Update (v2.8.2)
+
+- Fully stabilized the `Flet` desktop runtime and packaged EXE startup path.
+- Reworked the main interaction flows for copy-to-generate, selection single/dual voice mode, and history play/delete/clear.
+- Added a busy-state circuit breaker to the selection flow to prevent freezes and runaway CPU/memory usage during repeated selections.
+- Hardened MP3 file clipboard output, history cleanup, and same-request audio cache hits for faster repeat generation.
+
 ## ✨ Key Features
 
 - **Modern UI**: Built with Flet (Flutter) for a sleek, responsive experience with dark/light theme support.
@@ -18,11 +25,11 @@ Anki-TTS-Edge is a free, high-quality voice generation tool powered by Microsoft
 - **Real-time Word Highlighting**: Words are highlighted in sync during playback, handling complex mappings (e.g. "1" -> "one") perfectly.
 - **Click-to-Play**: Click any word or character during playback to instantly start from that exact position.
 - **Smart Navigation**: "Previous/Next Sentence" controls for easy sentence-by-sentence review.
-- **Dual Voice Mode**: "Dual Blue Dot" system for quick switching between two voice configurations (e.g., Male/Female, US/UK accents).
-- **History Management**: Automatically saves generation history. Re-listen, copy, or delete records; deep cleanup reclaims orphaned files.
+- **Dual Voice Mode**: Stable dual-slot voice configuration for quick switching between two voices (e.g., Male/Female, US/UK accents).
+- **History Management**: Automatically saves generation history. Re-listen, delete, or clear records; deep cleanup reclaims orphaned files.
 - **Smart Monitoring**:
-  - **Clipboard Monitor**: Automatically captures copied text for instant generation.
-  - **Selection Monitor**: (Windows) Generate audio instantly by selecting text.
+  - **Copy to Generate**: Automatically generates audio from copied text and can autoplay based on settings.
+  - **Selection Single/Dual Voice Mode**: (Windows) Use `GO / A / B` after text selection to choose how audio is generated.
 - **System Integration**:
   - **Tray Support**: Minimize to system tray to keep your workspace clean.
   - **Pin to Top**: Keep the window always on top for studying.
@@ -58,7 +65,7 @@ Anki-TTS-Edge is a free, high-quality voice generation tool powered by Microsoft
    ```
    *Note: If `requirements.txt` is missing, manually install:*
    ```bash
-   pip install flet edge-tts pygame pyperclip pynput pystray pillow pywin32
+   pip install flet==0.82.2 flet-desktop==0.82.2 edge-tts pygame pyperclip pynput pystray pillow pywin32
    ```
 
 3. **Run Application**
@@ -114,7 +121,7 @@ To bundle the application into a standalone Windows executable, we use PyInstall
 pip install pyinstaller
 
 # Run the build command from the project root (folder mode)
-.\.venv\Scripts\python.exe -m PyInstaller Anki-TTS-Flet/main.py --name "Anki-TTS-Edge" --icon "Anki-TTS-Flet/assets/icon.ico" --add-data "Anki-TTS-Flet/assets;assets" --collect-all edge_tts --hidden-import=pystray --hidden-import=PIL --hidden-import=pygame --hidden-import=pynput --hidden-import=win32clipboard --hidden-import=win32con --noconsole --clean --noconfirm
+.\.venv\Scripts\python.exe -m PyInstaller Anki-TTS-Flet/main.py --name "Anki-TTS-Edge" --icon "Anki-TTS-Flet/assets/icon.ico" --add-data "Anki-TTS-Flet/assets;assets" --collect-all edge_tts --collect-all flet --collect-all flet_desktop --hidden-import=pystray --hidden-import=PIL --hidden-import=pygame --hidden-import=pynput --hidden-import=win32clipboard --hidden-import=win32con --hidden-import=flet --hidden-import=flet_desktop --noconsole --clean --noconfirm
 ```
 
 Upon successful build, the `dist/Anki-TTS-Edge/` directory contains the complete distributable application, with `Anki-TTS-Edge.exe` as the entry point.

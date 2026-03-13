@@ -42,6 +42,7 @@ class HistoryManager:
         Add a new record to the history.
         Removes oldest records if count exceeds max_audio_files.
         """
+        self.records = [record for record in self.records if record.get("path") != path]
         record = {
             "text": text,
             "voice": voice,
@@ -68,12 +69,27 @@ class HistoryManager:
         self.save_records()
 
     def remove_record(self, record):
+        if not isinstance(record, dict):
+            return
+
+        target = None
         if record in self.records:
-            # Delete physical file
-            path = record.get("path")
+            target = record
+        else:
+            target_path = record.get("path")
+            target_timestamp = record.get("timestamp") or record.get("time")
+            for existing in self.records:
+                if target_path and existing.get("path") == target_path:
+                    target = existing
+                    break
+                if target_timestamp and existing.get("timestamp") == target_timestamp and existing.get("text") == record.get("text"):
+                    target = existing
+                    break
+
+        if target:
+            path = target.get("path")
             self._delete_associated_files(path)
-                
-            self.records.remove(record)
+            self.records.remove(target)
             self.save_records()
 
     def get_records(self):

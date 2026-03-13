@@ -1,5 +1,72 @@
 # 更新日志 / Changelog
 
+## v2.8.2 (2026-03-13)
+
+### 🔧 修复 / Fixes
+
+- **监听语义正式拆分**：设置项现在区分“复制后生成音频”“鼠标划选生成音频”“双语音模式”“划词双语音模式”，首页双生成按钮与划词卫星双点不再共享同一个旧字段。
+  **Monitoring semantics split cleanly**: Settings now distinguish between copy-triggered generation, mouse-selection generation, dual voice mode, and selection dual voice mode. The home view A/B buttons and the selection satellite A/B dots no longer depend on the same legacy flag.
+
+- **设置页分组与文案重排**：按“播放 / 声音模式 / 划词模式 / 复制模式 / 窗口 / 存储 / 维护”重排设置页，并将“鼠标划选生成音频”更名为“划词单语音模式”，与“划词双语音模式”并排。
+  **Settings page regrouped and renamed**: Reorganized settings into Playback, Voice Mode, Selection Mode, Copy Mode, Window, Storage, and Maintenance, and renamed the selection single-toggle to “Selection Single Voice Mode” so it sits next to the dual-selection toggle.
+
+- **修复 Ctrl+C 复制后只填文本不生成的问题**：剪贴板监听现在会走统一生成入口，自动使用最新声音生成音频，并按自动播放设置决定是否立即朗读。
+  **Fix copied text only filling the input without generating audio**: Clipboard monitoring now goes through the unified generation pipeline, uses the latest voice automatically, and respects autoplay for immediate playback.
+
+- **修复生成后 MP3 文件到剪贴板失效**：文件剪贴板写入改为带重试的 `CF_HDROP` 方案，并在写入前抑制内部监听，避免刚生成的 MP3 再反向干扰文本监听。
+  **Fix broken “put MP3 on clipboard after generation” flow**: File clipboard writes now use a retrying `CF_HDROP` path and suppress the internal monitor before writing so generated MP3 copies no longer feed back into text monitoring.
+
+- **修复历史页按钮失效**：历史项外层不再吞掉“播放 / 删除”按钮事件，清空全部改回标准 `page.dialog` 链路。
+  **Fix inactive history controls**: The outer history item container no longer swallows Play/Delete clicks, and Clear All now uses the standard `page.dialog` flow.
+
+- **降低划词提示与监听延迟**：划词优先尝试直接读取当前控件选区，失败时才退回 `Ctrl+C`，同时降低卫星与监听轮询延迟。
+  **Reduce selection prompt latency**: Selection capture now first tries direct control selection access before falling back to `Ctrl+C`, and both satellite and monitor polling have been tightened for faster response.
+
+- **修复划词与复制链路串扰**：划词捕获不再复用剪贴板生成回调，内部选区读取和外部 `Ctrl+C` 生成被彻底拆分，避免未点 `GO` 自动生成以及系统剪贴板被划词流程污染。
+  **Fix cross-talk between selection and clipboard flows**: Selection capture no longer reuses the clipboard-generation callback. Internal selection reads and external `Ctrl+C` generation are now split cleanly, preventing auto-generation without `GO` and avoiding clipboard pollution from the selection flow.
+
+- **修复 A / B 与声音列表 1 / 2 的语义错位**：双语音状态从“latest / previous”迁移为稳定的 `left / right` 槽位，首页和划词卫星统一固定为 `A -> 声音列表 1`、`B -> 声音列表 2`。
+  **Fix A/B mapping drift against Voice List 1 / 2**: Dual-voice state now uses stable `left / right` slots instead of the rotating `latest / previous` model, so both the home screen and the selection satellite now consistently map `A -> Voice List 1` and `B -> Voice List 2`.
+
+- **新增运行时自检脚本**：添加 `tools/flet_runtime_selfcheck.py`，在打包前验证视图构造、设置联动、历史页回调和当前 Flet 运行时签名，减少“进程活着但界面已经报错”的漏检。
+  **Add runtime self-check script**: Added `tools/flet_runtime_selfcheck.py` to validate view construction, settings coupling, history callbacks, and the active Flet runtime signature before packaging, reducing false positives where the process stays alive but the UI is already broken.
+
+- **修复划词模式仍会扰乱系统剪贴板**：内部划词回退复制不再回放整份原始剪贴板句柄，而是只恢复用户真正可见的安全格式，降低文本复制/粘贴被污染的概率。
+  **Fix selection mode still disturbing the system clipboard**: Internal selection fallback no longer replays the entire raw clipboard payload and instead restores only safe user-visible formats, reducing the chance of corrupting normal copy/paste behavior.
+
+- **修复 MP3 文件到剪贴板“能写不能粘”**：文件剪贴板改为标准 `CF_HDROP + Preferred DropEffect` 结构，并在本地验证可读回。
+  **Fix MP3 clipboard writes that could not actually paste**: File clipboard writes now use the standard `CF_HDROP + Preferred DropEffect` structure and were locally validated by round-trip reads.
+
+- **优化重复生成耗时**：相同文本/声音/参数的请求现在直接命中本地音频缓存，避免重复走 `edge-tts` 生成。
+  **Improve repeated generation latency**: Identical text/voice/parameter requests now hit a local audio cache instead of regenerating through `edge-tts`.
+
+- **修复非“声音”页时后台功能像失效**：复制后生成、划词生成、历史页播放/删除不再依赖当前 `HomeView` 已挂载，隐藏页状态更新统一走安全刷新链路。
+  **Fix background features appearing broken outside the Voices tab**: Clipboard generation, selection generation, and history play/delete no longer assume the Home view is currently mounted; hidden view updates now go through a safe refresh path.
+
+- **修复反复划词导致卡死和高占用**：划词流程新增忙时断路器，在卫星窗等待点击或划词生成进行中时直接忽略新的划词触发，避免后台捕获与生成堆积。
+  **Fix repeated selection causing freezes and high CPU/memory use**: The selection flow now has a busy-state circuit breaker that ignores new selection triggers while the satellite is awaiting input or generation is already running.
+
+- **修复历史页右上角“清空全部”无响应**：历史清空确认框切换到当前 Flet 运行时兼容的 `page.open(dialog) / page.close(dialog)` 链路，避免旧式 `page.dialog` 打开方式在打包版中看起来无反应。
+  **Fix the unresponsive “Clear All” action in the history header**: The history confirmation dialog now uses the runtime-compatible `page.open(dialog) / page.close(dialog)` flow instead of the legacy `page.dialog` pattern that appeared inert in packaged builds.
+
+## v2.8.1 (2026-03-13)
+
+### 🔧 修复 / Fixes
+
+- **修复打包版启动时缺失 `flet_desktop` 运行时**：将 `flet` 与 `flet-desktop` 固定到同一版本，并在 PyInstaller 构建中显式收集 `flet_desktop` 模块与资源，解决 EXE 启动后立即报 `ModuleNotFoundError: No module named 'flet_desktop'` 的问题。
+  **Fix missing `flet_desktop` runtime in packaged builds**: Pinned `flet` and `flet-desktop` to the same version and explicitly collected `flet_desktop` in PyInstaller so the EXE no longer fails on startup with `ModuleNotFoundError: No module named 'flet_desktop'`.
+
+- **修复主题配色与当前 Flet 运行时不兼容导致的启动异常**：主题构造改为兼容模式，遇到旧版 `ColorScheme` 不支持的字段时自动降级，解决 `surface_variant` 触发的启动错误。
+  **Fix startup error caused by ColorScheme incompatibility**: Theme creation now falls back gracefully when older Flet runtimes do not accept newer `ColorScheme` fields, fixing the startup failure triggered by `surface_variant`.
+
+- **修复视图类写入只读 `page` 属性导致的启动异常**：`HomeView`、`HistoryView`、`SettingsView` 改用私有页面引用，兼容当前 Flet 控件基类的只读属性约束。
+  **Fix startup error caused by writing to the read-only `page` property**: `HomeView`, `HistoryView`, and `SettingsView` now store the host page in a private reference instead of assigning to Flet's read-only `page` property.
+
+- **修复首屏和页面交互的强延迟**：语音列表改为“优先本地缓存、命中缓存时再后台刷新”，顶部三页切换改为单宿主视图切换，托盘与卫星轮询改为惰性/降频启动，长文本播放不再无上限构建逐词高亮控件。
+  **Fix severe UI latency on startup and page interactions**: Voice loading now prefers local cache and only refreshes in the background when cache exists, the top navigation uses a single hosted view instead of a three-page stack, tray/satellite work is lazily initialized or throttled, and long playback sessions no longer build unbounded per-word highlight controls.
+
+---
+
 ## v2.8 (2026-03-13)
 
 ### 🔧 修复 / Fixes

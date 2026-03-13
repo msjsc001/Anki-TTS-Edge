@@ -6,15 +6,15 @@ from core.voices import get_display_voice_name
 class HistoryView(ft.Container):
     def __init__(self, page: ft.Page):
         super().__init__()
-        self.page = page
+        self._host_page = page
         self.expand = True
         self.padding = 20
 
         self.header_text = ft.Text(i18n.get("history_panel_title"), size=24, weight="bold")
-        self.clear_all_button = ft.IconButton(
+        self.clear_all_button = ft.TextButton(
+            text=i18n.get("history_clear_all"),
             icon=ft.Icons.DELETE_SWEEP,
-            icon_color=ft.Colors.RED_400,
-            tooltip=i18n.get("history_clear_all"),
+            style=ft.ButtonStyle(color=ft.Colors.RED_400),
             on_click=self._on_clear_all
         )
         
@@ -33,8 +33,8 @@ class HistoryView(ft.Container):
             title=ft.Text(i18n.get("history_clear_confirm_title", "Confirm Clear")),
             content=ft.Text(i18n.get("history_clear_confirm_msg", "Delete all history?")),
             actions=[
-                ft.TextButton(i18n.get("dialog_cancel", "Cancel"), on_click=self._close_dialog),
-                ft.TextButton(i18n.get("dialog_confirm", "Yes"), on_click=self._confirm_clear),
+                ft.TextButton(text=i18n.get("dialog_cancel", "Cancel"), on_click=self._close_dialog),
+                ft.TextButton(text=i18n.get("dialog_confirm", "Yes"), on_click=self._confirm_clear),
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
@@ -51,13 +51,23 @@ class HistoryView(ft.Container):
                 self.history_list
             ]
         )
+
+    def _is_mounted(self):
+        return getattr(self, "page", None) is not None
+
+    def _safe_update(self):
+        if self._is_mounted():
+            try:
+                self.update()
+            except Exception as ex:
+                print(f"DEBUG: HistoryView safe update skipped: {ex}")
         
     def populate_history(self, records):
         self.history_list.controls.clear()
         
         if not records:
             self.history_list.controls.append(ft.Text(i18n.get("history_empty"), italic=True))
-            self.update()
+            self._safe_update()
             return
 
         for rec in records:
@@ -72,6 +82,24 @@ class HistoryView(ft.Container):
             meta_parts = [part for part in [voice_text, timestamp_text] if part]
             meta_text = " | ".join(meta_parts) if meta_parts else "-"
 
+            action_buttons = ft.Row(
+                [
+                    ft.TextButton(
+                        text=i18n.get("control_play_pause", "播放"),
+                        icon=ft.Icons.PLAY_ARROW,
+                        on_click=lambda e, r=rec: self._play_audio(r),
+                    ),
+                    ft.TextButton(
+                        text=i18n.get("history_rec_delete", "删除"),
+                        icon=ft.Icons.DELETE,
+                        style=ft.ButtonStyle(color=ft.Colors.RED_400),
+                        on_click=lambda e, r=rec: self._delete_item(r),
+                    ),
+                ],
+                spacing=0,
+                tight=True,
+            )
+
             tile = ft.Container(
                 content=ft.Row(
                     [
@@ -84,39 +112,50 @@ class HistoryView(ft.Container):
                             expand=True,
                             spacing=2
                         ),
-                        ft.IconButton(ft.Icons.PLAY_ARROW, on_click=lambda e, r=rec: self._play_audio(r)),
-                        ft.IconButton(ft.Icons.DELETE, icon_color=ft.Colors.RED_400, on_click=lambda e, r=rec: self._delete_item(r)),
+                        action_buttons,
                     ],
                 ),
                 padding=10,
                 bgcolor="surfaceVariant",
                 border_radius=10,
-                on_click=lambda e, r=rec: self._on_item_click(r),
-                ink=True, # Ripple effect
             )
             self.history_list.controls.append(tile)
             
-        self.update()
+        self._safe_update()
 
     def _play_audio(self, record):
+        print(f"DEBUG: History play clicked -> {record.get('path') if isinstance(record, dict) else record}")
         if hasattr(self, 'on_play_audio'):
             self.on_play_audio(record)
 
     def _delete_item(self, record):
+        print(f"DEBUG: History delete clicked -> {record.get('path') if isinstance(record, dict) else record}")
         if hasattr(self, 'on_delete_item'):
             self.on_delete_item(record)
 
+    def _open_dialog(self, dialog):
+        if hasattr(self._host_page, "open"):
+            self._host_page.open(dialog)
+            return
+        self._host_page.dialog = dialog
+        dialog.open = True
+        self._host_page.update()
+
+    def _close_host_dialog(self, dialog):
+        if hasattr(self._host_page, "close"):
+            self._host_page.close(dialog)
+            return
+        dialog.open = False
+        self._host_page.update()
+        if getattr(self._host_page, "dialog", None) is dialog:
+            self._host_page.dialog = None
+
     def _on_clear_all(self, e):
-        print("DEBUG: Opening Clear All Dialog (Overlay Mode)")
-        self.page.overlay.append(self.confirm_dialog)
-        self.confirm_dialog.open = True
-        self.page.update()
+        print("DEBUG: Opening Clear All Dialog")
+        self._open_dialog(self.confirm_dialog)
 
     def _close_dialog(self, e):
-        self.confirm_dialog.open = False
-        self.page.update()
-        # Cleanup (Optional, but good practice)
-        # self.page.overlay.remove(self.confirm_dialog)
+        self._close_host_dialog(self.confirm_dialog)
 
     def _confirm_clear(self, e):
         print("DEBUG: User confirmed Clear All")
@@ -133,12 +172,12 @@ class HistoryView(ft.Container):
 
     def refresh_texts(self):
         self.header_text.value = i18n.get("history_panel_title")
-        self.clear_all_button.tooltip = i18n.get("history_clear_all")
+        self.clear_all_button.text = i18n.get("history_clear_all")
         self.confirm_dialog.title.value = i18n.get("history_clear_confirm_title", "Confirm Clear")
         self.confirm_dialog.content.value = i18n.get("history_clear_confirm_msg", "Delete all history?")
         self.confirm_dialog.actions[0].text = i18n.get("dialog_cancel", "Cancel")
         self.confirm_dialog.actions[1].text = i18n.get("dialog_confirm", "Yes")
-        self.update()
+        self._safe_update()
 
     def _format_timestamp(self, value):
         if not value:

@@ -2,8 +2,7 @@ import os
 import re
 import asyncio
 import json
-import uuid
-from datetime import datetime
+import hashlib
 import edge_tts
 from config.constants import AUDIO_DIR
 from utils.text import sanitize_text
@@ -63,6 +62,17 @@ async def generate_audio_with_timestamps_async(text, voice, rate, volume, pitch,
         return output_path, timestamps_data
         
     except Exception as e:
+        try:
+            if os.path.exists(output_path):
+                os.remove(output_path)
+        except Exception:
+            pass
+        try:
+            timestamps_path = output_path.replace(".mp3", ".timestamps.json")
+            if os.path.exists(timestamps_path):
+                os.remove(timestamps_path)
+        except Exception:
+            pass
         msg = str(e)
         if "No audio was received" in msg:
             msg += " (Hint: Does this voice support the text language?)"
@@ -79,11 +89,28 @@ async def generate_audio_task(text, voice, rate, volume, pitch):
     if not text:
         return None, i18n.get("debug_empty_text"), None
 
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    cache_payload = json.dumps(
+        {
+            "text": text,
+            "voice": voice,
+            "rate": rate,
+            "volume": volume,
+            "pitch": pitch,
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+    cache_key = hashlib.sha1(cache_payload.encode("utf-8")).hexdigest()
     match = re.search(r", (.*Neural)\)$", voice)
     part = re.sub(r'\W+', '', match.group(1)) if match else "Unknown"
-    fname = f"Anki-TTS-Edge_{part}_{ts}_{uuid.uuid4().hex[:8]}.mp3"
+    fname = f"Anki-TTS-Edge_{part}_{cache_key[:16]}.mp3"
     out_path = os.path.join(AUDIO_DIR, fname)
+
+    if os.path.exists(out_path):
+        cached_timestamps = load_timestamps(out_path)
+        if cached_timestamps:
+            print(f"DEBUG: Audio cache hit -> {out_path}")
+            return out_path, None, cached_timestamps
     
     print(i18n.get("debug_generating_audio", voice, rate, volume, pitch))
     print(i18n.get("debug_output_path", out_path))

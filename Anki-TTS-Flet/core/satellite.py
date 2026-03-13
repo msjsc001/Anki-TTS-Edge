@@ -15,6 +15,7 @@ class SatelliteWindow:
     def __init__(self, input_queue: multiprocessing.Queue, output_queue: multiprocessing.Queue):
         self.input_queue = input_queue
         self.output_queue = output_queue
+        self.user32 = ctypes.windll.user32
         
         self.root = tk.Tk()
         
@@ -56,13 +57,15 @@ class SatelliteWindow:
         
         # Timers
         self.idle_timer = None
+        self.last_action_time = 0
         
         # Initial Hide
         self.root.withdraw()
         
         # Polling Loop
         self.current_text = ""
-        self.root.after(50, self.check_queue)
+        self.return_focus_hwnd = 0
+        self.root.after(20, self.check_queue)
         
     def start_move(self, event):
         self.x = event.x
@@ -77,7 +80,11 @@ class SatelliteWindow:
         self.root.geometry(f"+{x}+{y}")
 
     def on_click(self, event):
-        if hasattr(self, 'x') and abs(event.x - self.x) < 5 and abs(event.y - self.y) < 5:
+        if hasattr(self, 'x') and abs(event.x - self.x) < 14 and abs(event.y - self.y) < 14:
+            now = time.time()
+            if now - self.last_action_time < 0.25:
+                return
+            self.last_action_time = now
             self._cancel_idle_timer()
             
             mode = "B" # Default (Single/Main)
@@ -95,13 +102,26 @@ class SatelliteWindow:
                 
             print(f"Satellite: Clicked Mode {mode}! Sending ACTION")
             self.output_queue.put(("ACTION", self.current_text, mode))
+            self.root.withdraw()
+            self._restore_focus()
 
     def on_double_click(self, event):
         self.output_queue.put(("RESTORE",))
 
+    def _restore_focus(self):
+        hwnd = int(self.return_focus_hwnd or 0)
+        if not hwnd:
+            return
+        try:
+            if self.user32.IsWindow(hwnd):
+                self.user32.ShowWindow(hwnd, 5)
+                self.user32.SetForegroundWindow(hwnd)
+        except Exception:
+            pass
+
     def _start_idle_timer(self):
         self._cancel_idle_timer()
-        self.idle_timer = self.root.after(3000, self._auto_hide)
+        self.idle_timer = self.root.after(5000, self._auto_hide)
 
     def _cancel_idle_timer(self):
         if self.idle_timer:
@@ -111,6 +131,7 @@ class SatelliteWindow:
     def _auto_hide(self):
         print("Satellite: Auto-hiding due to inactivity")
         self.root.withdraw()
+        self.output_queue.put(("DISMISSED",))
 
     def set_mode(self, is_dual):
         if self.is_dual == is_dual:
@@ -134,13 +155,18 @@ class SatelliteWindow:
                 cmd, *args = self.input_queue.get_nowait()
                 if cmd == "SHOW":
                     # args: text, x, y, [is_dual]
-                    if len(args) == 4:
+                    if len(args) >= 5:
+                        text, x, y, is_dual, focus_hwnd = args[:5]
+                    elif len(args) == 4:
                         text, x, y, is_dual = args
+                        focus_hwnd = 0
                     else:
                         text, x, y = args
                         is_dual = False
+                        focus_hwnd = 0
                         
                     self.current_text = text
+                    self.return_focus_hwnd = focus_hwnd or 0
                     
                     self.set_mode(is_dual)
                     self.root.geometry(f"{self.width}x{self.height}+{int(x)}+{int(y)}")
@@ -155,6 +181,8 @@ class SatelliteWindow:
                     
                 elif cmd == "HIDE":
                     self.root.withdraw()
+                    self._restore_focus()
+                    self.output_queue.put(("DISMISSED",))
                 
                 elif cmd == "UPDATE_TEXT":
                     # Update current_text without changing position/visibility
@@ -199,7 +227,7 @@ class SatelliteWindow:
                     return
         except queue.Empty:
             pass
-        self.root.after(50, self.check_queue)
+        self.root.after(20, self.check_queue)
         
     def _reset_state(self):
         self.canvas.itemconfig(self.circle_main, fill='#2196F3')
