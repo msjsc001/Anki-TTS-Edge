@@ -14,7 +14,16 @@ class HistoryManager:
         if os.path.exists(self.history_file):
             try:
                 with open(self.history_file, "r", encoding="utf-8") as f:
-                    self.records = json.load(f)
+                    loaded = json.load(f)
+                if isinstance(loaded, list):
+                    normalized = []
+                    for record in loaded:
+                        normalized_record = self._normalize_record(record)
+                        if normalized_record:
+                            normalized.append(normalized_record)
+                    self.records = normalized
+                else:
+                    self.records = []
             except Exception as e:
                 print(f"Failed to load history: {e}")
                 self.records = []
@@ -48,9 +57,13 @@ class HistoryManager:
              max_files = int(settings_manager.get("max_audio_files", 20))
         except (ValueError, TypeError):
              max_files = 20
-             
+        max_files = max(1, max_files)
+
         if len(self.records) > max_files:
+            overflow_records = self.records[max_files:]
             self.records = self.records[:max_files]
+            for overflow_record in overflow_records:
+                self._delete_associated_files(overflow_record.get("path"))
             
         self.save_records()
 
@@ -65,6 +78,17 @@ class HistoryManager:
 
     def get_records(self):
         return self.records
+
+    def _normalize_record(self, record):
+        if not isinstance(record, dict):
+            return None
+
+        return {
+            "text": record.get("text", ""),
+            "voice": record.get("voice") or record.get("voice_key") or "",
+            "path": record.get("path"),
+            "timestamp": record.get("timestamp") or record.get("time") or time.time(),
+        }
 
     def clear_records(self):
         print(f"DEBUG: Clearing {len(self.records)} records...")

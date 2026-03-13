@@ -2,6 +2,7 @@ import os
 import re
 import asyncio
 import json
+import uuid
 from datetime import datetime
 import edge_tts
 from config.constants import AUDIO_DIR
@@ -78,10 +79,10 @@ async def generate_audio_task(text, voice, rate, volume, pitch):
     if not text:
         return None, i18n.get("debug_empty_text"), None
 
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     match = re.search(r", (.*Neural)\)$", voice)
     part = re.sub(r'\W+', '', match.group(1)) if match else "Unknown"
-    fname = f"Anki-TTS-Edge_{part}_{ts}.mp3"
+    fname = f"Anki-TTS-Edge_{part}_{ts}_{uuid.uuid4().hex[:8]}.mp3"
     out_path = os.path.join(AUDIO_DIR, fname)
     
     print(i18n.get("debug_generating_audio", voice, rate, volume, pitch))

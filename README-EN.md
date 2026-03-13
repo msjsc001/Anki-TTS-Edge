@@ -58,7 +58,7 @@ Anki-TTS-Edge is a free, high-quality voice generation tool powered by Microsoft
    ```
    *Note: If `requirements.txt` is missing, manually install:*
    ```bash
-   pip install flet edge-tts pygame pyperclip pystray pillow
+   pip install flet edge-tts pygame pyperclip pynput pystray pillow pywin32
    ```
 
 3. **Run Application**
@@ -91,6 +91,7 @@ Welcome developers to contribute and customize Anki-TTS-Edge! Below are the core
 
 ```text
 Anki-TTS-Edge/
+├── ARCHITECTURE.md      # Architecture decisions and maintenance memory
 ├── Anki-TTS-Flet/       # Main compiled source code
 │   ├── assets/          # Static resources like icons and localization files
 │   ├── config/          # Default configurations and settings I/O
@@ -113,7 +114,7 @@ To bundle the application into a standalone Windows executable, we use PyInstall
 pip install pyinstaller
 
 # Run the build command from the project root (folder mode)
-.\.venv\Scripts\python.exe -m PyInstaller Anki-TTS-Flet/main.py --name "Anki-TTS-Edge" --icon "Anki-TTS-Flet/assets/icon.ico" --add-data "Anki-TTS-Flet/assets;assets" --collect-all edge_tts --hidden-import=pystray --hidden-import=PIL --hidden-import=pygame --noconsole --clean --noconfirm
+.\.venv\Scripts\python.exe -m PyInstaller Anki-TTS-Flet/main.py --name "Anki-TTS-Edge" --icon "Anki-TTS-Flet/assets/icon.ico" --add-data "Anki-TTS-Flet/assets;assets" --collect-all edge_tts --hidden-import=pystray --hidden-import=PIL --hidden-import=pygame --hidden-import=pynput --hidden-import=win32clipboard --hidden-import=win32con --noconsole --clean --noconfirm
 ```
 
 Upon successful build, the `dist/Anki-TTS-Edge/` directory contains the complete distributable application, with `Anki-TTS-Edge.exe` as the entry point.

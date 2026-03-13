@@ -40,7 +40,7 @@ class SettingsView(ft.Container):
         )
 
         self.ctrl_c_switch = ft.Switch(
-            label=i18n.get("settings_enable_ctrl_c_label"),
+            label=i18n.get("settings_enable_clipboard_monitor_label", i18n.get("settings_enable_ctrl_c_label")),
             value=True,
             on_change=self._save_settings
         )
@@ -181,10 +181,11 @@ class SettingsView(ft.Container):
 
     def _on_theme_changed(self, e):
         self.page.theme_mode = ft.ThemeMode.DARK if e.control.value else ft.ThemeMode.LIGHT
+        self._save_settings(e)
         self.page.update()
     
     def _on_language_change(self, e):
-        """Handle language change - save setting and show restart dialog"""
+        """Apply language change immediately and persist it."""
         new_lang = e.control.value
         print(f"DEBUG: _on_language_change triggered with: {new_lang}")
         
@@ -197,31 +198,10 @@ class SettingsView(ft.Container):
                 "language": new_lang
             })
             print("DEBUG: Settings saved")
-        
-        # Show restart confirmation dialog
-        lang_name = "中文" if new_lang == "zh" else "English"
-        
-        def close_dialog(e):
-            dialog.open = False
-            self.page.update()
-        
-        dialog = ft.AlertDialog(
-            modal=True,
-            title=ft.Text("语言切换" if new_lang == "zh" else "Language Switch"),
-            content=ft.Text(
-                "修改语言后重启程序才会生效。" 
-                if new_lang == "zh" else 
-                "Language change will take effect after restart."
-            ),
-            actions=[
-                ft.FilledButton("好" if new_lang == "zh" else "OK", on_click=close_dialog),
-            ],
-            actions_alignment=ft.MainAxisAlignment.END,
-        )
-        
-        # Add dialog to page overlay and open it
-        self.page.overlay.append(dialog)
-        dialog.open = True
+
+        self.refresh_texts()
+        if hasattr(self, "on_language_changed") and self.on_language_changed:
+            self.on_language_changed(new_lang)
         self.page.update()
 
     def _on_selection_change(self, e):
@@ -232,14 +212,8 @@ class SettingsView(ft.Container):
         self.dual_mode_switch.disabled = not is_enabled
         if not is_enabled:
              self.dual_mode_switch.value = False
-             
-        # Ctrl+C dependency requested by user
-        self.ctrl_c_switch.disabled = not is_enabled
-        if not is_enabled:
-             self.ctrl_c_switch.value = False
-             
+              
         self.dual_mode_switch.update()
-        self.ctrl_c_switch.update()
         # Auto-save to apply changes immediately
         self._save_settings(e)
 
@@ -254,7 +228,7 @@ class SettingsView(ft.Container):
                 "monitor_selection_enabled": self.selection_switch.value,
                 "copy_path_enabled": self.copy_file_switch.value,
                 "minimize_to_tray": self.tray_switch.value,
-                "theme_dark": self.theme_switch.value
+                "appearance_mode": "dark" if self.theme_switch.value else "light"
             }
             self.on_save_settings(settings)
 
@@ -269,11 +243,10 @@ class SettingsView(ft.Container):
         self.dual_mode_switch.disabled = not sel_enabled
         
         self.ctrl_c_switch.value = settings_dict.get("monitor_clipboard_enabled", False)
-        self.ctrl_c_switch.disabled = not sel_enabled
         
         self.copy_file_switch.value = settings_dict.get("copy_path_enabled", True)
         self.tray_switch.value = settings_dict.get("minimize_to_tray", False)
-        self.theme_switch.value = settings_dict.get("theme_dark", False)
+        self.theme_switch.value = settings_dict.get("appearance_mode", "light") == "dark"
         
         # Window size
         self.window_width_input.value = str(settings_dict.get("window_width", 750))
@@ -311,3 +284,24 @@ class SettingsView(ft.Container):
         
         if hasattr(self, 'on_window_size_change'):
             self.on_window_size_change(750, 850)
+
+    def refresh_texts(self):
+        self.header.value = i18n.get("tab_settings")
+        self.theme_switch.label = i18n.get("theme_label", "Dark Mode")
+        self.autoplay_switch.label = i18n.get("settings_autoplay_label")
+        self.ctrl_c_switch.label = i18n.get("settings_enable_clipboard_monitor_label", i18n.get("settings_enable_ctrl_c_label"))
+        self.selection_switch.label = i18n.get("settings_enable_selection_label")
+        self.dual_mode_switch.label = i18n.get("settings_dual_blue_dot_label")
+        self.copy_file_switch.label = i18n.get("copy_audio_to_clipboard")
+        self.tray_switch.label = i18n.get("settings_minimize_to_tray_label", "Minimize to Tray")
+        self.max_files_input.label = i18n.get("settings_max_files_label")
+        self.reset_size_button.text = i18n.get("reset_button")
+        self.open_data_dir_button.text = i18n.get("open_data_dir", "Open Data Directory")
+        self.check_updates_button.text = i18n.get("check_for_updates")
+        self.section_appearance_text.value = i18n.get("section_appearance")
+        self.language_label_text.value = i18n.get("language_label")
+        self.section_behavior_text.value = i18n.get("section_behavior")
+        self.clipboard_label_text.value = i18n.get("settings_clipboard_label")
+        self.section_window_text.value = i18n.get("section_window")
+        self.window_size_label_text.value = i18n.get("window_size_label")
+        self.section_storage_text.value = i18n.get("section_storage")

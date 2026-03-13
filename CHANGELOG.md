@@ -1,5 +1,37 @@
 # 更新日志 / Changelog
 
+## v2.8 (2026-03-13)
+
+### 🔧 修复 / Fixes
+
+- **修复安装后缺依赖直接崩溃**：补齐 `pynput` 与 `pywin32` 依赖，并同步更新打包入口，避免按 README 安装后因监听或文件剪贴板模块缺失而无法启动。
+  **Fix startup crashes caused by missing dependencies**: Added `pynput` and `pywin32` to the runtime requirements and updated the packaging entry so fresh installs no longer fail before launch.
+
+- **修复托盘/卫星恢复主窗口失效**：移除残留旧版 Flet 窗口 API，统一切换到 `page.window.*` 新接口，恢复托盘显示/隐藏与卫星双击唤醒链路。
+  **Fix tray/satellite window restore flow**: Removed legacy Flet window calls and standardized on the current `page.window.*` API so tray restore and satellite double-click bring the main window back reliably.
+
+- **修复历史回放状态串音**：播放历史记录时现在会同步刷新文本与时间戳，避免沿用上一条音频的高亮、句导航与播放状态。
+  **Fix state leakage when replaying history**: History playback now refreshes the active text and timestamps so highlighting, sentence navigation, and playback state always match the selected record.
+
+- **修复历史缓存只删记录不删文件**：达到历史上限时会同步删除被淘汰记录对应的音频和 `.timestamps.json`，磁盘占用不再无限增长。
+  **Fix cache trimming leaving orphaned files**: When history exceeds the configured limit, the app now deletes the evicted audio file and matching `.timestamps.json` instead of only trimming the JSON list.
+
+- **修复音频文件秒级重名覆盖**：输出文件名改为“微秒时间戳 + 短 UUID”，高频连续生成不会再静默覆盖前一个文件。
+  **Fix silent audio overwrite on rapid generation**: Output filenames now use a microsecond timestamp plus a short UUID, preventing collisions during back-to-back generations.
+
+- **修复主题与设置持久化不一致**：统一使用 `appearance_mode` 存储主题，并兼容旧版 `theme_dark` 设置迁移；同时解除剪贴板监听与划词监听的错误绑定。
+  **Fix inconsistent settings persistence**: Theme storage now uses a single `appearance_mode` key with compatibility migration from `theme_dark`, and clipboard monitoring is no longer incorrectly coupled to selection monitoring.
+
+- **修复播放监控并发竞态**：播放、高亮与暂停恢复监控改为单实例运行，避免多个后台协程同时修改 UI 和播放状态。
+  **Fix playback monitor race conditions**: Playback/highlight monitoring is now single-instance, preventing multiple background tasks from mutating the UI and playback state at the same time.
+
+### 📚 文档 / Docs
+
+- **新增架构文档**：补充 `ARCHITECTURE.md`，固化主流程、状态边界、持久化规则与本轮修复决策，降低后续维护成本。
+  **New architecture document**: Added `ARCHITECTURE.md` to document the runtime flow, state boundaries, persistence rules, and the decisions behind this stabilization pass.
+
+---
+
 ## v2.7 (2026-03-01)
 
 ### ✨ 新功能 / Features

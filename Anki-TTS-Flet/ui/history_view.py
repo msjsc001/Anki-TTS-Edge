@@ -1,6 +1,7 @@
 import flet as ft
+from datetime import datetime
 from utils.i18n import i18n
-import os
+from core.voices import get_display_voice_name
 
 class HistoryView(ft.Container):
     def __init__(self, page: ft.Page):
@@ -8,17 +9,20 @@ class HistoryView(ft.Container):
         self.page = page
         self.expand = True
         self.padding = 20
+
+        self.header_text = ft.Text(i18n.get("history_panel_title"), size=24, weight="bold")
+        self.clear_all_button = ft.IconButton(
+            icon=ft.Icons.DELETE_SWEEP,
+            icon_color=ft.Colors.RED_400,
+            tooltip=i18n.get("history_clear_all"),
+            on_click=self._on_clear_all
+        )
         
         # Header
         self.header = ft.Row(
             [
-                ft.Text(i18n.get("history_panel_title"), size=24, weight="bold"),
-                ft.IconButton(
-                    icon=ft.Icons.DELETE_SWEEP, 
-                    icon_color=ft.Colors.RED_400,
-                    tooltip=i18n.get("history_clear_all"),
-                    on_click=self._on_clear_all
-                )
+                self.header_text,
+                self.clear_all_button,
             ],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )
@@ -29,8 +33,8 @@ class HistoryView(ft.Container):
             title=ft.Text(i18n.get("history_clear_confirm_title", "Confirm Clear")),
             content=ft.Text(i18n.get("history_clear_confirm_msg", "Delete all history?")),
             actions=[
-                ft.TextButton("Cancel", on_click=self._close_dialog),
-                ft.TextButton("Yes", on_click=self._confirm_clear),
+                ft.TextButton(i18n.get("dialog_cancel", "Cancel"), on_click=self._close_dialog),
+                ft.TextButton(i18n.get("dialog_confirm", "Yes"), on_click=self._confirm_clear),
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
@@ -63,6 +67,11 @@ class HistoryView(ft.Container):
             text_preview = rec.get("text", "")
             if len(text_preview) > 50: text_preview = text_preview[:50] + "..."
             
+            voice_text = get_display_voice_name(rec.get("voice") or rec.get("voice_key"))
+            timestamp_text = self._format_timestamp(rec.get("timestamp") or rec.get("time"))
+            meta_parts = [part for part in [voice_text, timestamp_text] if part]
+            meta_text = " | ".join(meta_parts) if meta_parts else "-"
+
             tile = ft.Container(
                 content=ft.Row(
                     [
@@ -70,7 +79,7 @@ class HistoryView(ft.Container):
                         ft.Column(
                             [
                                 ft.Text(text_preview, weight="bold", size=14),
-                                ft.Text(f"{rec.get('voice_key')} | {rec.get('time')}", size=12, color=ft.Colors.OUTLINE),
+                                ft.Text(meta_text, size=12, color=ft.Colors.OUTLINE),
                             ],
                             expand=True,
                             spacing=2
@@ -121,3 +130,21 @@ class HistoryView(ft.Container):
     def _on_item_click(self, record):
         if hasattr(self, 'on_click_record'):
             self.on_click_record(record)
+
+    def refresh_texts(self):
+        self.header_text.value = i18n.get("history_panel_title")
+        self.clear_all_button.tooltip = i18n.get("history_clear_all")
+        self.confirm_dialog.title.value = i18n.get("history_clear_confirm_title", "Confirm Clear")
+        self.confirm_dialog.content.value = i18n.get("history_clear_confirm_msg", "Delete all history?")
+        self.confirm_dialog.actions[0].text = i18n.get("dialog_cancel", "Cancel")
+        self.confirm_dialog.actions[1].text = i18n.get("dialog_confirm", "Yes")
+        self.update()
+
+    def _format_timestamp(self, value):
+        if not value:
+            return ""
+
+        try:
+            return datetime.fromtimestamp(float(value)).strftime("%Y-%m-%d %H:%M:%S")
+        except (TypeError, ValueError, OSError):
+            return str(value)

@@ -53,7 +53,7 @@ async def main(page: ft.Page):
     page.window.icon = ICON_PATH
     
     # Center window on screen
-    page.window.center()
+    await page.window.center()
     
     # Note: handle_resize will be defined and bound later after settings_view is created
     
@@ -89,7 +89,11 @@ async def main(page: ft.Page):
             background="#0F172A",                  # Slate-900
         ),
     )
-    page.theme_mode = ft.ThemeMode.LIGHT
+    page.theme_mode = (
+        ft.ThemeMode.DARK
+        if settings_manager.get("appearance_mode", "light") == "dark"
+        else ft.ThemeMode.LIGHT
+    )
     
     
     # Helper for Snackbar (Flet 0.21+ compatibility)
@@ -144,48 +148,37 @@ async def main(page: ft.Page):
         tabs.tabs[2].text = i18n.get("tab_settings")
         
         # Update page title
-        page.title = i18n.get("window_title", CUSTOM_WINDOW_TITLE)
-        
-        # Update home view labels
-        home_view.header_left.value = i18n.get("voice_list_label_1")
-        home_view.header_right.value = i18n.get("voice_list_label_2")
-        home_view.btn_gen_a.text = i18n.get("generate_button_previous")
-        home_view.btn_gen_b.text = i18n.get("generate_button_latest")
-        
-        # Update history view
-        history_view.header.value = i18n.get("history_panel_title")
-        
-        # Update settings view - switch labels
-        settings_view.header.value = i18n.get("tab_settings")
-        settings_view.theme_switch.label = i18n.get("theme_label")
-        settings_view.autoplay_switch.label = i18n.get("settings_autoplay_label")
-        settings_view.ctrl_c_switch.label = i18n.get("settings_enable_ctrl_c_label")
-        settings_view.selection_switch.label = i18n.get("settings_enable_selection_label")
-        settings_view.dual_mode_switch.label = i18n.get("settings_dual_blue_dot_label")
-        settings_view.copy_file_switch.label = i18n.get("copy_audio_to_clipboard")
-        settings_view.tray_switch.label = i18n.get("settings_minimize_to_tray_label")
-        settings_view.max_files_input.label = i18n.get("settings_max_files_label")
-        settings_view.reset_size_button.text = i18n.get("reset_button")
-        
-        # Update settings view - section headers
-        settings_view.section_appearance_text.value = i18n.get("section_appearance")
-        settings_view.language_label_text.value = i18n.get("language_label")
-        settings_view.section_behavior_text.value = i18n.get("section_behavior")
-        settings_view.clipboard_label_text.value = i18n.get("settings_clipboard_label")
-        settings_view.section_window_text.value = i18n.get("section_window")
-        settings_view.window_size_label_text.value = i18n.get("window_size_label")
-        settings_view.section_storage_text.value = i18n.get("section_storage")
-        settings_view.save_button.text = i18n.get("save_settings")
+        page.title = f"{CUSTOM_WINDOW_TITLE} v{APP_VERSION}"
+        home_view.refresh_texts()
+        history_view.refresh_texts()
+        settings_view.refresh_texts()
         
         page.update()
     
     settings_view.on_language_changed = handle_language_change
+    monitor_manager = None
+    tray_manager = None
+
+    async def restore_main_window():
+        page.window.minimized = False
+        page.window.visible = True
+        await page.window.to_front()
+        page.update()
+
+    async def destroy_main_window():
+        if monitor_manager:
+            monitor_manager.stop_monitors()
+        if tray_manager:
+            tray_manager.stop()
+        await page.window.destroy()
     
     # Restart cleanup handler - stop tray and monitors before restart
     def handle_app_restart():
         print("DEBUG: Cleanup before restart...")
-        monitor_manager.stop()
-        tray_manager.stop()
+        if monitor_manager:
+            monitor_manager.stop()
+        if tray_manager:
+            tray_manager.stop()
     
     settings_view.on_app_restart = handle_app_restart
     
@@ -360,7 +353,7 @@ async def main(page: ft.Page):
         # print("DEBUG: Satellite Loop Started")
         while True:
             try:
-                if hasattr(monitor_manager, 'sat_output_q') and monitor_manager.sat_output_q:
+                if monitor_manager and hasattr(monitor_manager, 'sat_output_q') and monitor_manager.sat_output_q:
                     try:
                         cmd, *args = monitor_manager.sat_output_q.get_nowait()
                         if cmd == "ACTION":
@@ -369,10 +362,7 @@ async def main(page: ft.Page):
                             await handle_satellite_action(text, mode=mode)
                         elif cmd == "RESTORE":
                             print("Main: Restoring Window")
-                            page.window_minimized = False
-                            page.window_visible = True
-                            page.window_to_front()
-                            page.update()
+                            await restore_main_window()
                     except queue.Empty:
                         pass
             except Exception as e:
@@ -396,6 +386,19 @@ async def main(page: ft.Page):
         "current_playback_start_ms": 0, # Offset to add to pygame.get_pos()
         "stop_playback_at_ms": None # If set, stop when this pos is reached
     }
+    playback_monitor_state = {"run_id": 0}
+
+    def restart_playback_monitor():
+        playback_monitor_state["run_id"] += 1
+        run_id = playback_monitor_state["run_id"]
+
+        async def _runner():
+            await playback_monitor_loop(run_id)
+
+        page.run_task(_runner)
+
+    def cancel_playback_monitor():
+        playback_monitor_state["run_id"] += 1
 
     async def handle_generate(e, voice):
         # Auto-clean HTML tags before processing
@@ -466,29 +469,41 @@ async def main(page: ft.Page):
     def handle_play_audio(e):
         path = None
         timestamps = None
+        text = None
         if isinstance(e, dict):
              path = e.get("path")
              timestamps = e.get("timestamps")
+             text = e.get("text")
         
         if path and os.path.exists(path):
             print(f"DEBUG: Playing Audio: {path}")
             try:
                 # Update status
                 home_view.set_status("正在播放...", ft.Icons.PLAY_CIRCLE_OUTLINE, ft.Colors.GREEN_100)
+                path_changed = current_audio_state["path"] != path
                 
                 # Update state
                 current_audio_state["path"] = path
                 current_audio_state["is_playing"] = True
                 current_audio_state["is_paused"] = False
                 current_audio_state["current_word_index"] = 0
+                current_audio_state["current_sentence_index"] = 0
                 current_audio_state["current_playback_start_ms"] = 0 # Reset offset
                 current_audio_state["stop_playback_at_ms"] = None # Reset stop constraint
+                if path_changed:
+                    current_audio_state["timestamps"] = None
+                    current_audio_state["text"] = None
                 
                 if timestamps:
                     current_audio_state["timestamps"] = timestamps
-                elif not current_audio_state["timestamps"]:
+                elif path_changed or not current_audio_state["timestamps"]:
                     # Try to load timestamps from file
                     current_audio_state["timestamps"] = load_timestamps(path)
+                
+                if text:
+                    current_audio_state["text"] = text
+                elif current_audio_state["timestamps"] and current_audio_state["timestamps"].get("text"):
+                    current_audio_state["text"] = current_audio_state["timestamps"]["text"]
                 
                 # Set text input to read-only during playback
                 home_view.text_input.read_only = True
@@ -509,7 +524,7 @@ async def main(page: ft.Page):
                 home_view.btn_play_pause.update()
                 
                 # Start playback monitoring
-                page.run_task(playback_monitor_loop)
+                restart_playback_monitor()
             except Exception as ex:
                 print(f"Error playing: {ex}")
                 home_view.set_status(f"播放失败: {ex}", ft.Icons.ERROR_OUTLINE, ft.Colors.RED_100)
@@ -517,10 +532,13 @@ async def main(page: ft.Page):
     
     def handle_stop_audio(e):
         pygame.mixer.music.stop()
+        cancel_playback_monitor()
         current_audio_state["is_playing"] = False
         current_audio_state["is_paused"] = False
         current_audio_state["current_sentence_index"] = 0
         current_audio_state["current_word_index"] = 0
+        current_audio_state["current_playback_start_ms"] = 0
+        current_audio_state["stop_playback_at_ms"] = None
         home_view.btn_play_pause.selected = False
         home_view.text_input.read_only = False
         home_view.hide_highlighted_text()  # Hide highlighting
@@ -549,8 +567,6 @@ async def main(page: ft.Page):
             
             home_view.btn_play_pause.selected = True
             home_view.set_status("正在播放...", ft.Icons.PLAY_CIRCLE_OUTLINE, ft.Colors.GREEN_100)
-            # Restart monitoring loop if it stopped
-            page.run_task(playback_monitor_loop)
             home_view.btn_play_pause.update()
             return
         
@@ -677,7 +693,7 @@ async def main(page: ft.Page):
             # Ensure loop running
             if not current_audio_state["is_playing"]:
                 current_audio_state["is_playing"] = True
-                page.run_task(playback_monitor_loop)
+                restart_playback_monitor()
                 
         except Exception as ex:
             print(f"DEBUG: prev failed: {ex}")
@@ -724,7 +740,7 @@ async def main(page: ft.Page):
                 
                 if not current_audio_state["is_playing"]:
                     current_audio_state["is_playing"] = True
-                    page.run_task(playback_monitor_loop)
+                    restart_playback_monitor()
 
             except Exception as ex:
                 print(f"DEBUG: next failed: {ex}")
@@ -762,19 +778,22 @@ async def main(page: ft.Page):
             
             if not current_audio_state["is_playing"]:
                 current_audio_state["is_playing"] = True
-                page.run_task(playback_monitor_loop)
+                restart_playback_monitor()
                 
         except Exception as ex:
             print(f"DEBUG: jump failed: {ex}")
 
     home_view.on_word_click = handle_word_jump
     
-    async def playback_monitor_loop():
+    async def playback_monitor_loop(expected_run_id):
         """Monitor playback progress and update highlighting"""
         last_word_idx = -1
         
         while True:
             try:
+                if expected_run_id != playback_monitor_state["run_id"]:
+                    break
+
                 # Check if we should exit the loop
                 if not current_audio_state["is_playing"] and not current_audio_state["is_paused"]:
                     break
@@ -910,10 +929,18 @@ async def main(page: ft.Page):
     # History Handlers
     def handle_history_play(record):
         if record and "path" in record:
-            handle_play_audio({"path": record["path"]})
+            handle_play_audio({
+                "path": record["path"],
+                "text": record.get("text"),
+            })
 
     def handle_history_delete(record):
         # Unload audio to release file lock (Windows specific)
+        if record and record.get("path") == current_audio_state.get("path"):
+            handle_stop_audio(None)
+            current_audio_state["path"] = None
+            current_audio_state["timestamps"] = None
+            current_audio_state["text"] = None
         try:
              pygame.mixer.music.unload() 
         except Exception:
@@ -926,6 +953,10 @@ async def main(page: ft.Page):
         print("DEBUG: handle_history_clear TRIGGERED")
         try:
              # Stop playback first
+             handle_stop_audio(None)
+             current_audio_state["path"] = None
+             current_audio_state["timestamps"] = None
+             current_audio_state["text"] = None
              try: pygame.mixer.music.unload()
              except Exception: pass
              try: pygame.mixer.music.stop()
@@ -955,13 +986,14 @@ async def main(page: ft.Page):
 
     # Tray Logic
     def on_tray_show_hide():
-        page.window.visible = not page.window.visible
-        page.update()
+        if page.window.visible:
+            page.window.visible = False
+            page.update()
+            return
+        page.run_task(restore_main_window)
         
     def on_tray_exit():
-        monitor_manager.stop_monitors()
-        tray_manager.stop()
-        page.window.destroy()
+        page.run_task(destroy_main_window)
 
     tray_manager = TrayIconManager(on_show_hide=on_tray_show_hide, on_exit=on_tray_exit)
     tray_manager.start() # Start tray icon immediately
@@ -996,6 +1028,13 @@ async def main(page: ft.Page):
         for k, v in settings_dict.items():
             settings_manager.set(k, v)
         settings_manager.save_settings()
+
+        if "appearance_mode" in settings_dict:
+            page.theme_mode = (
+                ft.ThemeMode.DARK
+                if settings_dict["appearance_mode"] == "dark"
+                else ft.ThemeMode.LIGHT
+            )
         
         # Apply immediate effects checks
         monitor_manager.start_monitors() # Will adjust/stop based on new flags

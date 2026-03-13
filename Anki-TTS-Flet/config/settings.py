@@ -47,6 +47,8 @@ class SettingsManager:
                         loaded["selected_voice_latest"] = old_voice
                     if "selected_voice_previous" not in loaded:
                         loaded["selected_voice_previous"] = loaded.get("selected_voice_latest", old_voice)
+                if "theme_dark" in loaded and "appearance_mode" not in loaded:
+                    loaded["appearance_mode"] = "dark" if loaded.pop("theme_dark") else "light"
 
                 self.settings = defaults.copy()
                 self.settings.update(loaded)
@@ -58,6 +60,8 @@ class SettingsManager:
                 
                 if self.settings.get("language") not in ["zh", "en"]:
                     self.settings["language"] = "zh"
+                if self.settings.get("appearance_mode") not in ["light", "dark"]:
+                    self.settings["appearance_mode"] = DEFAULT_APPEARANCE_MODE
 
                 if not self.settings.get("selected_voice_previous"):
                      self.settings["selected_voice_previous"] = self.settings.get("selected_voice_latest", DEFAULT_VOICE)

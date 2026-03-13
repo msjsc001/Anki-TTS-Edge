@@ -64,8 +64,9 @@ class HomeView(ft.Container):
         # 2. Parameters (Sliders)
         self.rate_slider = self._build_slider(i18n.get("rate_label"), 0, -100, 100)
         self.volume_slider = self._build_slider(i18n.get("volume_label"), 0, -100, 100)
-
-        self.volume_slider = self._build_slider(i18n.get("volume_label"), 0, -100, 100)
+        self.input_label_text = ft.Text(i18n.get("input_text_label"), weight="bold", size=16)
+        self.rate_label_text = ft.Text(i18n.get("rate_label"))
+        self.volume_label_text = ft.Text(i18n.get("volume_label"))
 
         # 2.5 Filters (Dual Dropdowns)
         self.lang_dropdown_left = ft.Dropdown(
@@ -211,7 +212,7 @@ class HomeView(ft.Container):
         # Header Row - with text label and playback controls next to it
         header_row = ft.Row(
             [
-                ft.Text(i18n.get("input_text_label"), weight="bold", size=16),
+                self.input_label_text,
                 ft.Container(width=10), # Spacer
                 playback_controls,
                 ft.Container(expand=True), # Spacer to push pin to right
@@ -259,8 +260,8 @@ class HomeView(ft.Container):
         self.params_row = ft.Container(
             content=ft.Row(
                 [
-                    ft.Column([ft.Text(i18n.get("rate_label")), self.rate_slider], expand=True),
-                    ft.Column([ft.Text(i18n.get("volume_label")), self.volume_slider], expand=True),
+                    ft.Column([self.rate_label_text, self.rate_slider], expand=True),
+                    ft.Column([self.volume_label_text, self.volume_slider], expand=True),
                 ],
                 spacing=20
             ),
@@ -309,12 +310,6 @@ class HomeView(ft.Container):
             ],
         )
 
-    def _toggle_pin(self, e):
-        e.control.selected = not e.control.selected
-        e.control.update()
-        if hasattr(self, 'on_pin_toggle'):
-            self.on_pin_toggle(e.control.selected)
-    
     def _toggle_expand_collapse(self, e):
         """Toggle text input expansion to cover parameters area
         
@@ -830,3 +825,20 @@ class HomeView(ft.Container):
         
         if hasattr(self, 'on_pin_toggle'):
             self.on_pin_toggle(is_pinned)
+
+    def refresh_texts(self):
+        self.input_label_text.value = i18n.get("input_text_label")
+        self.header_left.value = i18n.get("voice_list_label_1")
+        self.header_right.value = i18n.get("voice_list_label_2")
+        self.rate_label_text.value = i18n.get("rate_label")
+        self.volume_label_text.value = i18n.get("volume_label")
+        self.btn_gen_a.text = i18n.get("generate_button_previous")
+        self.btn_gen_b.text = i18n.get("generate_button_latest") if getattr(self, "dual_mode", False) else i18n.get("generate_button_label")
+        self.btn_replay.tooltip = i18n.get("control_replay", "重播")
+        self.btn_play_pause.tooltip = i18n.get("control_play_pause", "播放/暂停")
+        self.btn_stop.tooltip = i18n.get("control_stop", "停止")
+        self.btn_prev_sentence.tooltip = i18n.get("control_prev_sentence", "上一句")
+        self.btn_next_sentence.tooltip = i18n.get("control_next_sentence", "下一句")
+        self.btn_pin.tooltip = i18n.get("window_pin", "置顶窗口")
+        self.btn_expand_collapse.tooltip = i18n.get("collapse_text_input", "收纳") if self._text_expanded else i18n.get("expand_text_input", "展开")
+        self.update()

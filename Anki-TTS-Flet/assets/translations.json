@@ -1,6 +1,6 @@
 {
   "zh": {
-    "window_title": "Anki-TTS-Edge v2.0",
+    "window_title": "Anki-TTS-Edge",
     "window_pin": "置顶窗口",
     "input_text_label": "输入文本:",
     "tab_voices": "声音",
@@ -32,6 +32,7 @@
     "history_clear_confirm_title": "确认清空",
     "history_clear_confirm_msg": "确定要清空所有历史记录并删除对应的音频文件吗？",
     "settings_clipboard_label": "剪贴板功能",
+    "settings_enable_clipboard_monitor_label": "启用剪贴板监控 (复制文本)",
     "settings_enable_ctrl_c_label": "启用 Ctrl+C (复制)",
     "settings_enable_selection_label": "启用 划词 (鼠标选中文本)",
     "settings_dual_blue_dot_label": "双语音列表模式",
@@ -50,10 +51,12 @@
     "control_next_sentence": "下一句",
     "expand_text_input": "展开",
     "collapse_text_input": "收纳",
-    "open_data_dir": "打开数据目录"
+    "open_data_dir": "打开数据目录",
+    "dialog_cancel": "取消",
+    "dialog_confirm": "确定"
   },
   "en": {
-    "window_title": "Anki-TTS-Edge v2.0",
+    "window_title": "Anki-TTS-Edge",
     "window_pin": "Pin Window",
     "input_text_label": "Input Text:",
     "tab_voices": "Voices",
@@ -85,6 +88,7 @@
     "history_clear_confirm_title": "Confirm Clear",
     "history_clear_confirm_msg": "Are you sure you want to clear all history?",
     "settings_clipboard_label": "Clipboard Features",
+    "settings_enable_clipboard_monitor_label": "Enable Clipboard Monitor (Copied Text)",
     "settings_enable_ctrl_c_label": "Enable Ctrl+C (Copy)",
     "settings_enable_selection_label": "Enable Text Selection",
     "settings_dual_blue_dot_label": "Dual Voice List Mode",
@@ -103,6 +107,8 @@
     "control_next_sentence": "Next",
     "expand_text_input": "Expand",
     "collapse_text_input": "Collapse",
-    "open_data_dir": "Open Data Directory"
+    "open_data_dir": "Open Data Directory",
+    "dialog_cancel": "Cancel",
+    "dialog_confirm": "Confirm"
   }
 }

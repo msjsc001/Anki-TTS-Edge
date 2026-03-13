@@ -24,6 +24,8 @@ build/
 build2/
 dist/
 dist2/
+.vendor/
+.tmp/
 *.manifest
 
 # Logs
