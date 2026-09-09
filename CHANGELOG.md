@@ -1,5 +1,12 @@
 # 更新日志 / Changelog
 
+## v2.9.5 (2026-09-09)
+
+### ✨ 新功能 / Features
+
+- **应用内界面缩放**：设置页支持输入 `30%` 至 `200%` 之间的自定义缩放比例，统一调整文字、图标、间距和关键固定区域；短窗口会启用可滚动紧凑布局，设置在下次启动时生效。
+  **In-app interface scaling**: Interface scaling now accepts a custom value between `30%` and `200%` for text, icons, spacing, and key fixed regions. Short windows use a scrollable compact layout, and the setting applies on the next launch.
+
 ## v2.9.4 (2026-09-09)
 
 ### ✨ 新功能 / Features

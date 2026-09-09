@@ -3,7 +3,8 @@ from utils.i18n import i18n
 from config.constants import APP_VERSION, GITHUB_URL, DATA_DIR
 from config.ui_scale import (
     DEFAULT_UI_SCALE_PERCENT,
-    SUPPORTED_UI_SCALE_PERCENTS,
+    MAX_UI_SCALE_PERCENT,
+    MIN_UI_SCALE_PERCENT,
     UiScale,
     normalize_ui_scale_percent,
 )
@@ -51,16 +52,19 @@ class SettingsView(ft.Container):
             on_event=self._on_language_change,
         )
 
-        self.ui_scale_dropdown = create_dropdown(
+        self.ui_scale_input = ft.TextField(
             value=str(DEFAULT_UI_SCALE_PERCENT),
-            options=[
-                ft.dropdown.Option(str(percent), f"{percent}%")
-                for percent in SUPPORTED_UI_SCALE_PERCENTS
-            ],
-            width=px(120),
+            keyboard_type=ft.KeyboardType.NUMBER,
+            input_filter=ft.NumbersOnlyInputFilter(),
+            hint_text=f"{MIN_UI_SCALE_PERCENT}-{MAX_UI_SCALE_PERCENT}",
+            suffix_text="%",
+            width=px(120, minimum=90),
             text_size=font(14),
-            on_event=self._save_settings,
+            on_change=self._on_ui_scale_input_changed,
+            on_blur=self._on_ui_scale_changed,
+            on_submit=self._on_ui_scale_changed,
         )
+        self._ui_scale_draft = str(DEFAULT_UI_SCALE_PERCENT)
         
         # 2. Behavior
         self.autoplay_switch = ft.Switch(
@@ -284,7 +288,7 @@ class SettingsView(ft.Container):
                 ], spacing=px(10), wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER),
                 ft.Row([
                     self.ui_scale_label_text,
-                    self.ui_scale_dropdown
+                    self.ui_scale_input
                 ], spacing=px(10), wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER),
                 ft.Divider(height=px(10), color="transparent"),
                 
@@ -565,6 +569,18 @@ class SettingsView(ft.Container):
             self._safe_update(self.selection_switch, self.dual_voice_mode_switch)
         self._save_settings(e)
 
+    def _on_ui_scale_input_changed(self, e):
+        self._ui_scale_draft = str(
+            getattr(e, "data", None) or getattr(e.control, "value", "")
+        )
+
+    def _on_ui_scale_changed(self, e):
+        normalized = normalize_ui_scale_percent(self._ui_scale_draft)
+        self._ui_scale_draft = str(normalized)
+        self.ui_scale_input.value = self._ui_scale_draft
+        self._safe_update(self.ui_scale_input)
+        self._save_settings(e)
+
     def _save_settings(self, e):
         if hasattr(self, 'on_save_settings'):
             selection_dual_enabled = bool(self.selection_dual_mode_switch.value)
@@ -584,7 +600,7 @@ class SettingsView(ft.Container):
                 "copy_path_enabled": self.copy_file_switch.value,
                 "minimize_to_tray": self.tray_switch.value,
                 "appearance_mode": "dark" if self.theme_switch.value else "light",
-                "ui_scale_percent": normalize_ui_scale_percent(self.ui_scale_dropdown.value),
+                "ui_scale_percent": normalize_ui_scale_percent(self.ui_scale_input.value),
             }
             self.on_save_settings(settings)
 
@@ -613,7 +629,8 @@ class SettingsView(ft.Container):
         ui_scale_percent = normalize_ui_scale_percent(
             settings_dict.get("ui_scale_percent", DEFAULT_UI_SCALE_PERCENT)
         )
-        self.ui_scale_dropdown.value = str(ui_scale_percent)
+        self._ui_scale_draft = str(ui_scale_percent)
+        self.ui_scale_input.value = self._ui_scale_draft
         
         # Window size
         self.window_width_input.value = str(settings_dict.get("window_width", 750))

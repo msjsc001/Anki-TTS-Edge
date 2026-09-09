@@ -4,12 +4,13 @@ from dataclasses import dataclass
 from typing import Any
 
 
-SUPPORTED_UI_SCALE_PERCENTS = (80, 90, 100, 110, 120)
+MIN_UI_SCALE_PERCENT = 30
+MAX_UI_SCALE_PERCENT = 200
 DEFAULT_UI_SCALE_PERCENT = 100
 
 
 def normalize_ui_scale_percent(value: Any) -> int:
-    """Return a supported application UI scale percentage."""
+    """Return an integer UI scale percentage within the supported range."""
     if isinstance(value, bool):
         return DEFAULT_UI_SCALE_PERCENT
     if isinstance(value, float) and not value.is_integer():
@@ -19,7 +20,7 @@ def normalize_ui_scale_percent(value: Any) -> int:
     except (TypeError, ValueError):
         return DEFAULT_UI_SCALE_PERCENT
 
-    if normalized not in SUPPORTED_UI_SCALE_PERCENTS:
+    if not MIN_UI_SCALE_PERCENT <= normalized <= MAX_UI_SCALE_PERCENT:
         return DEFAULT_UI_SCALE_PERCENT
     return normalized
 
@@ -46,4 +47,4 @@ class UiScale:
         return scaled
 
     def font(self, value: int | float) -> int | float:
-        return self.px(value, minimum=8)
+        return self.px(value)
