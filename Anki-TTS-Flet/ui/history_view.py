@@ -2,15 +2,19 @@ import flet as ft
 from datetime import datetime
 from utils.i18n import i18n
 from core.voices import get_display_voice_name
+from config.ui_scale import UiScale
 
 class HistoryView(ft.Container):
-    def __init__(self, page: ft.Page):
+    def __init__(self, page: ft.Page, ui_scale: UiScale | None = None):
         super().__init__()
         self._host_page = page
+        self.ui_scale = ui_scale or UiScale()
+        px = self.ui_scale.px
+        font = self.ui_scale.font
         self.expand = True
-        self.padding = 20
+        self.padding = px(20)
 
-        self.header_text = ft.Text(i18n.get("history_panel_title"), size=24, weight="bold")
+        self.header_text = ft.Text(i18n.get("history_panel_title"), size=font(24), weight="bold")
         self.clear_all_button = ft.TextButton(
             text=i18n.get("history_clear_all"),
             icon=ft.Icons.DELETE_SWEEP,
@@ -40,7 +44,7 @@ class HistoryView(ft.Container):
         )
 
         # List
-        self.history_list = ft.ListView(expand=True, spacing=10)
+        self.history_list = ft.ListView(expand=True, spacing=px(10))
         
         self.content = ft.Column(
             expand=True,
@@ -106,18 +110,18 @@ class HistoryView(ft.Container):
                         ft.Icon(ft.Icons.AUDIO_FILE, color=ft.Colors.INDIGO),
                         ft.Column(
                             [
-                                ft.Text(text_preview, weight="bold", size=14),
-                                ft.Text(meta_text, size=12, color=ft.Colors.OUTLINE),
+                                ft.Text(text_preview, weight="bold", size=self.ui_scale.font(14)),
+                                ft.Text(meta_text, size=self.ui_scale.font(12), color=ft.Colors.OUTLINE),
                             ],
                             expand=True,
-                            spacing=2
+                            spacing=self.ui_scale.px(2)
                         ),
                         action_buttons,
                     ],
                 ),
-                padding=10,
+                padding=self.ui_scale.px(10),
                 bgcolor="surfaceVariant",
-                border_radius=10,
+                border_radius=self.ui_scale.px(10),
             )
             self.history_list.controls.append(tile)
             

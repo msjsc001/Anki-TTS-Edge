@@ -15,6 +15,7 @@ from ui.settings_view import SettingsView
 from core.audio_gen import load_timestamps
 from core.history import history_manager
 from config.settings import settings_manager
+from config.ui_scale import UiScale, normalize_ui_scale_percent
 from core.tts_manager import TTSManager
 from core.tts_types import SynthesisRequest
 from utils.text import sanitize_text
@@ -39,6 +40,10 @@ async def main(page: ft.Page):
 
     # 1. Page Configuration
     page.title = f"{CUSTOM_WINDOW_TITLE} v{APP_VERSION}"
+
+    ui_scale = UiScale(settings_manager.get("ui_scale_percent", 100))
+    px = ui_scale.px
+    font = ui_scale.font
     
     # Load Window Dimensions (Default: 750x850)
     saved_width = settings_manager.get("window_width", 750)
@@ -84,8 +89,38 @@ async def main(page: ft.Page):
                     raise
                 filtered_kwargs.pop(unsupported_key)
 
+    def create_scaled_text_theme(text_color):
+        return ft.TextTheme(
+            body_large=ft.TextStyle(size=font(16), color=text_color),
+            body_medium=ft.TextStyle(size=font(14), color=text_color),
+            body_small=ft.TextStyle(size=font(12), color=text_color),
+            display_large=ft.TextStyle(size=font(57), color=text_color),
+            display_medium=ft.TextStyle(size=font(45), color=text_color),
+            display_small=ft.TextStyle(size=font(36), color=text_color),
+            headline_large=ft.TextStyle(size=font(32), color=text_color),
+            headline_medium=ft.TextStyle(size=font(28), color=text_color),
+            headline_small=ft.TextStyle(size=font(24), color=text_color),
+            label_large=ft.TextStyle(size=font(14), color=text_color),
+            label_medium=ft.TextStyle(size=font(12), color=text_color),
+            label_small=ft.TextStyle(size=font(11), color=text_color),
+            title_large=ft.TextStyle(size=font(22), color=text_color),
+            title_medium=ft.TextStyle(size=font(16), color=text_color),
+            title_small=ft.TextStyle(size=font(14), color=text_color),
+        )
+
+    visual_density = (
+        ft.VisualDensity.COMPACT
+        if ui_scale.percent <= 90
+        else ft.VisualDensity.COMFORTABLE
+        if ui_scale.percent >= 110
+        else ft.VisualDensity.STANDARD
+    )
+
     page.theme = ft.Theme(
         color_scheme_seed="#475569",
+        text_theme=create_scaled_text_theme("#1E293B"),
+        icon_theme=ft.IconTheme(size=px(24)),
+        visual_density=visual_density,
         color_scheme=create_compatible_color_scheme(
             primary="#475569",                   # Slate-600: neutral, professional
             on_primary="#FFFFFF",
@@ -101,6 +136,9 @@ async def main(page: ft.Page):
     )
     page.dark_theme = ft.Theme(
         color_scheme_seed="#94A3B8",
+        text_theme=create_scaled_text_theme("#E2E8F0"),
+        icon_theme=ft.IconTheme(size=px(24)),
+        visual_density=visual_density,
         color_scheme=create_compatible_color_scheme(
             primary="#94A3B8",                    # Slate-400
             on_primary="#0F172A",                 # Slate-900
@@ -134,9 +172,10 @@ async def main(page: ft.Page):
 
     # 2. Top Navigation
     # Create views first so we can switch them in place.
-    home_view = HomeView(page)
-    history_view = HistoryView(page)
-    settings_view = SettingsView(page)
+    home_view = HomeView(page, ui_scale)
+    history_view = HistoryView(page, ui_scale)
+    settings_view = SettingsView(page, ui_scale)
+    home_view.set_compact_height_layout(saved_height / ui_scale.factor < 700)
     local_engine_manager = LocalEngineManager(settings_manager)
     
     nav_state = {"index": 0}
@@ -184,10 +223,10 @@ async def main(page: ft.Page):
             view_host.update()
 
     for index, spec in enumerate(tab_specs):
-        spec["icon_control"] = ft.Icon(spec["icon"], size=18)
+        spec["icon_control"] = ft.Icon(spec["icon"], size=px(18))
         spec["label_control"] = ft.Text(
             i18n.get(spec["label_key"], spec["fallback"]),
-            size=11,
+            size=font(11),
             weight="w600",
         )
         spec["nav_item"] = ft.Container(
@@ -196,12 +235,12 @@ async def main(page: ft.Page):
                     spec["icon_control"],
                     spec["label_control"],
                 ],
-                spacing=4,
+                spacing=px(4),
                 alignment=ft.MainAxisAlignment.CENTER,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            padding=ft.padding.symmetric(vertical=4, horizontal=10),
-            border_radius=6,
+            padding=ft.padding.symmetric(vertical=px(4), horizontal=px(10)),
+            border_radius=px(6),
             ink=True,
             on_click=lambda e, idx=index: set_active_view(idx),
         )
@@ -209,8 +248,8 @@ async def main(page: ft.Page):
 
     view_host = ft.Container(content=home_view, expand=True)
     navigation_bar = ft.Container(
-        content=ft.Row(nav_items, spacing=8, alignment=ft.MainAxisAlignment.START),
-        padding=ft.padding.symmetric(horizontal=12, vertical=6),
+        content=ft.Row(nav_items, spacing=px(8), alignment=ft.MainAxisAlignment.START),
+        padding=ft.padding.symmetric(horizontal=px(12), vertical=px(6)),
     )
     main_layout = ft.Column(
         [
@@ -378,6 +417,7 @@ async def main(page: ft.Page):
         new_height = int(page.window.height) if page.window.height else 850
         # Sync UI display immediately (cheap)
         settings_view.update_window_size_display(new_width, new_height)
+        home_view.set_compact_height_layout(new_height / ui_scale.factor < 700)
         
         # Debounce disk write: cancel previous timer, start new 300ms delay
         async def _save_after_delay():
@@ -1727,6 +1767,9 @@ async def main(page: ft.Page):
     # Settings Handler
     def handle_save_settings(settings_dict):
         old_engine = settings_manager.get("tts_engine", "edge_online") or "edge_online"
+        old_ui_scale_percent = normalize_ui_scale_percent(
+            settings_manager.get("ui_scale_percent", 100)
+        )
         print("DEBUG: Saving Settings:", settings_dict)
         for k, v in settings_dict.items():
             settings_manager.set(k, v)
@@ -1739,6 +1782,11 @@ async def main(page: ft.Page):
                 else ft.ThemeMode.LIGHT
             )
             refresh_navigation_styles()
+
+        if "ui_scale_percent" in settings_dict:
+            new_ui_scale_percent = normalize_ui_scale_percent(settings_dict["ui_scale_percent"])
+            if new_ui_scale_percent != old_ui_scale_percent:
+                show_message(i18n.get("ui_scale_restart_message"))
         
         # Apply immediate effects checks
         monitor_manager.start_monitors() # Will adjust/stop based on new flags
