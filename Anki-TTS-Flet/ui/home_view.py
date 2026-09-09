@@ -1,6 +1,7 @@
 import flet as ft
 from utils.i18n import i18n
 from core.kokoro_voice_catalog import KOKORO_MULTI_LANG_V1_1_DOC_URL
+from config.ui_scale import UiScale
 
 MAX_HIGHLIGHT_WORDS = 320
 
@@ -13,25 +14,28 @@ def create_dropdown(**kwargs):
         return ft.Dropdown(on_select=on_event, **kwargs)
 
 class HomeView(ft.Container):
-    def __init__(self, page: ft.Page):
+    def __init__(self, page: ft.Page, ui_scale: UiScale | None = None):
         super().__init__()
         self._host_page = page
+        self.ui_scale = ui_scale or UiScale()
+        px = self.ui_scale.px
+        font = self.ui_scale.font
         self.expand = True
-        self.padding = 20
+        self.padding = px(20)
         
         # --- UI Components ---
         
         # 0. Status Bar (shown at top of text input area)
         self.status_bar = ft.Container(
             content=ft.Row([
-                ft.Icon(ft.Icons.INFO_OUTLINE, size=14),
-                ft.Text("", size=12),
-            ], spacing=5),
+                ft.Icon(ft.Icons.INFO_OUTLINE, size=px(14)),
+                ft.Text("", size=font(12)),
+            ], spacing=px(5)),
             visible=False,
             bgcolor="primaryContainer",
-            border_radius=5,
-            padding=ft.padding.symmetric(horizontal=10, vertical=3),
-            margin=ft.margin.only(bottom=5),
+            border_radius=px(5),
+            padding=ft.padding.symmetric(horizontal=px(10), vertical=px(3)),
+            margin=ft.margin.only(bottom=px(5)),
         )
         
         # 1. Text Input with edit detection
@@ -41,6 +45,8 @@ class HomeView(ft.Container):
             multiline=True,
             min_lines=3,
             max_lines=5,
+            text_size=font(14),
+            content_padding=px(12),
             expand=True, # Expand to fill Stack
             border_color=ft.Colors.OUTLINE,
             focused_border_color="primary",
@@ -65,7 +71,7 @@ class HomeView(ft.Container):
             border=ft.border.all(1, ft.Colors.TRANSPARENT), # Invisible border to match input
             # Use margin/padding to match TextField's internal content area
             # TextField has internal padding (~12px). 
-            padding=12, 
+            padding=px(12),
             expand=True, # Expand to fill Stack
             clip_behavior=ft.ClipBehavior.HARD_EDGE,  # Clip overflow content
             alignment=ft.alignment.Alignment(-1, -1),
@@ -76,21 +82,21 @@ class HomeView(ft.Container):
         # 2. Parameters (Sliders)
         self.rate_slider = self._build_slider(i18n.get("rate_label"), 0, -100, 100)
         self.volume_slider = self._build_slider(i18n.get("volume_label"), 0, -100, 100)
-        self.input_label_text = ft.Text(i18n.get("input_text_label"), weight="bold", size=16)
+        self.input_label_text = ft.Text(i18n.get("input_text_label"), weight="bold", size=font(16))
         self.rate_label_text = ft.Text(i18n.get("rate_label"))
         self.volume_label_text = ft.Text(i18n.get("volume_label"))
 
         # 2.5 Filters (Dual Dropdowns)
         self.lang_dropdown_left = create_dropdown(
             label="Language (Left)",
-            text_size=14,
+            text_size=font(14),
             on_event=lambda e: self._on_filter_change('left'),
             expand=True,
             dense=True
         )
         self.lang_dropdown_right = create_dropdown(
             label="Language (Right)", 
-            text_size=14,
+            text_size=font(14),
             on_event=lambda e: self._on_filter_change('right'),
             expand=True,
             dense=True
@@ -102,20 +108,20 @@ class HomeView(ft.Container):
         self._local_sid_right = 0
         # In single-voice mode (dual_mode=False), which slot is considered "active" for generation.
         self._single_active_slot = "right"
-        self.offline_hint_text = ft.Text(i18n.get("offline_voice_hint"), size=12)
+        self.offline_hint_text = ft.Text(i18n.get("offline_voice_hint"), size=font(12))
         self.offline_hint_container = ft.Container(
             content=ft.Row(
                 [
-                    ft.Icon(ft.Icons.INFO_OUTLINE, size=14),
+                    ft.Icon(ft.Icons.INFO_OUTLINE, size=px(14)),
                     self.offline_hint_text,
                 ],
-                spacing=6,
+                spacing=px(6),
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             visible=False,
             bgcolor="primaryContainer",
-            border_radius=8,
-            padding=ft.padding.symmetric(horizontal=10, vertical=6),
+            border_radius=px(8),
+            padding=ft.padding.symmetric(horizontal=px(10), vertical=px(6)),
         )
 
         self.offline_demo_button = ft.TextButton(
@@ -125,26 +131,26 @@ class HomeView(ft.Container):
             on_click=self._open_offline_demo,
         )
         self.offline_demo_container = ft.Container(
-            content=ft.Row([self.offline_demo_button], spacing=6),
+            content=ft.Row([self.offline_demo_button], spacing=px(6)),
             visible=False,
-            padding=ft.padding.only(left=2),
+            padding=ft.padding.only(left=px(2)),
         )
         
         # 3. Voice Lists (Dual Column)
         # Using ListView for efficient scrolling
-        self.list_left = ft.ListView(expand=True, spacing=2, padding=10, auto_scroll=False)
-        self.list_right = ft.ListView(expand=True, spacing=2, padding=10, auto_scroll=False)
+        self.list_left = ft.ListView(expand=True, spacing=px(2), padding=px(10), auto_scroll=False)
+        self.list_right = ft.ListView(expand=True, spacing=px(2), padding=px(10), auto_scroll=False)
         
         # Region navigation (auto-wrap instead of scroll)
         self.region_nav_left = ft.Row(
-            spacing=5, 
+            spacing=px(5),
             wrap=True,
-            run_spacing=5,
+            run_spacing=px(5),
         )
         self.region_nav_right = ft.Row(
-            spacing=5, 
+            spacing=px(5),
             wrap=True,
-            run_spacing=5,
+            run_spacing=px(5),
         )
         
         # Headers for lists
@@ -155,72 +161,72 @@ class HomeView(ft.Container):
         list_container_left = ft.Container(
             content=ft.Column([
                 self.header_left,
-                ft.Container(content=self.region_nav_left, padding=ft.padding.only(bottom=5)),
+                ft.Container(content=self.region_nav_left, padding=ft.padding.only(bottom=px(5))),
                 self.list_left
-            ], spacing=5),
+            ], spacing=px(5)),
             expand=True,
             border=ft.border.all(1, ft.Colors.OUTLINE),
-            border_radius=10,
-            padding=10,
+            border_radius=px(10),
+            padding=px(10),
         )
         
         list_container_right = ft.Container(
             content=ft.Column([
                 self.header_right,
-                ft.Container(content=self.region_nav_right, padding=ft.padding.only(bottom=5)),
+                ft.Container(content=self.region_nav_right, padding=ft.padding.only(bottom=px(5))),
                 self.list_right
-            ], spacing=5),
+            ], spacing=px(5)),
             expand=True,
             border=ft.border.all(1, ft.Colors.OUTLINE),
-            border_radius=10,
-            padding=10,
+            border_radius=px(10),
+            padding=px(10),
         )
         
         # 4. Action Buttons
         self.btn_gen_a = ft.FilledTonalButton(
             text=i18n.get("generate_button_previous"),
             icon=ft.Icons.PLAY_CIRCLE_OUTLINE, 
-            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)),
+            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=px(8))),
             expand=True,
-            height=50,
+            height=px(50),
         )
         self.btn_gen_b = ft.FilledButton(
             text=i18n.get("generate_button_latest"),
             icon=ft.Icons.PLAY_CIRCLE_FILLED, 
-            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)), 
+            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=px(8))),
             expand=True, 
-            height=50,
+            height=px(50),
         )
 
         # 4.5 Audio Control Buttons (Replay, Play/Pause, Stop)
         self.btn_replay = ft.IconButton(
             icon=ft.Icons.REPLAY,
             tooltip=i18n.get("control_replay", "重播"),
-            icon_size=20,
+            icon_size=px(20),
         )
         self.btn_play_pause = ft.IconButton(
             icon=ft.Icons.PLAY_CIRCLE_OUTLINE,
             selected_icon=ft.Icons.PAUSE_CIRCLE_OUTLINE,
             tooltip=i18n.get("control_play_pause", "播放/暂停"),
-            icon_size=20,
+            icon_size=px(20),
         )
         self.btn_stop = ft.IconButton(
             icon=ft.Icons.STOP_CIRCLE_OUTLINED,
             tooltip=i18n.get("control_stop", "停止"),
             icon_color=ft.Colors.RED,
-            icon_size=20,
+            icon_size=px(20),
         )
         
         # 4.6 Sentence Navigation Buttons
         self.btn_prev_sentence = ft.IconButton(
             icon=ft.Icons.SKIP_PREVIOUS,
             tooltip=i18n.get("control_prev_sentence", "上一句"),
-            icon_size=20,
+            icon_size=px(20),
         )
         self.btn_next_sentence = ft.IconButton(
             icon=ft.Icons.SKIP_NEXT,
             tooltip=i18n.get("control_next_sentence", "下一句"),
-            icon_size=20,
+            icon_size=px(20),
         )
         
         # 5. Pin Button
@@ -228,7 +234,7 @@ class HomeView(ft.Container):
              icon=ft.Icons.PUSH_PIN_OUTLINED,
              selected_icon=ft.Icons.PUSH_PIN,
              tooltip=i18n.get("window_pin", "置顶窗口"),
-             icon_size=20,
+             icon_size=px(20),
              on_click=self._toggle_pin
         )
         
@@ -237,7 +243,7 @@ class HomeView(ft.Container):
         self.btn_expand_collapse = ft.IconButton(
             icon=ft.Icons.EXPAND_MORE,
             tooltip=i18n.get("expand_text_input", "展开"),
-            icon_size=16,
+            icon_size=px(16),
             on_click=self._toggle_expand_collapse,
         )
 
@@ -248,7 +254,7 @@ class HomeView(ft.Container):
                 self.btn_replay,
                 self.btn_play_pause,
                 self.btn_stop,
-                ft.VerticalDivider(width=5),
+                ft.VerticalDivider(width=px(5)),
                 self.btn_prev_sentence,
                 self.btn_next_sentence,
             ],
@@ -259,7 +265,7 @@ class HomeView(ft.Container):
         header_row = ft.Row(
             [
                 self.input_label_text,
-                ft.Container(width=10), # Spacer
+                ft.Container(width=px(10)), # Spacer
                 playback_controls,
                 ft.Container(expand=True), # Spacer to push pin to right
                 self.btn_pin
@@ -274,7 +280,7 @@ class HomeView(ft.Container):
         expand_button_container = ft.Container(
             content=self.btn_expand_collapse,
             alignment=ft.alignment.Alignment(0, 0),
-            height=20,
+            height=px(20),
         )
         
         # Text input container with Stack overlay for highlighting
@@ -288,7 +294,7 @@ class HomeView(ft.Container):
         # We will manually toggle this height in _toggle_expand_collapse
         self.text_input_wrapper = ft.Container(
             content=self.text_input_stack,
-            height=140, 
+            height=px(140),
         )
         
         self.text_input_container = ft.Container(
@@ -309,7 +315,7 @@ class HomeView(ft.Container):
                     ft.Column([self.rate_label_text, self.rate_slider], expand=True),
                     ft.Column([self.volume_label_text, self.volume_slider], expand=True),
                 ],
-                spacing=20
+                spacing=px(20)
             ),
             visible=True,
             animate_opacity=300,
@@ -320,13 +326,13 @@ class HomeView(ft.Container):
         self.list_container_right = list_container_right
 
         # Filters row (online only)
-        self.filters_row = ft.Row([self.lang_dropdown_left, self.lang_dropdown_right], spacing=20)
+        self.filters_row = ft.Row([self.lang_dropdown_left, self.lang_dropdown_right], spacing=px(20))
 
         # Voice selection areas (online + offline)
         self.voice_row_online = ft.Row(
             [list_container_left, list_container_right],
             expand=True,
-            spacing=20,
+            spacing=px(20),
         )
         self.voice_area = ft.Column(
             [
@@ -334,7 +340,7 @@ class HomeView(ft.Container):
                 self.offline_demo_container,
                 self.voice_row_online,
             ],
-            spacing=10,
+            spacing=px(10),
             expand=True,
         )
         
@@ -344,21 +350,21 @@ class HomeView(ft.Container):
             controls=[
                 header_row,
                 self.text_input_container,
-                ft.Divider(height=10, color="transparent"),
+                ft.Divider(height=px(10), color="transparent"),
                 
                 # Filters
                 self.filters_row,
-                ft.Divider(height=10, color="transparent"),
+                ft.Divider(height=px(10), color="transparent"),
 
                 # Voice Selection Area
                 self.voice_area,
                 
-                ft.Divider(height=10, color="transparent"),
+                ft.Divider(height=px(10), color="transparent"),
                 
                 # Parameters Row
                 self.params_row,
                 
-                ft.Divider(height=10, color="transparent"),
+                ft.Divider(height=px(10), color="transparent"),
                 
                 # Buttons Row (only generate buttons, playback controls moved to header)
                 ft.Row(
@@ -366,10 +372,28 @@ class HomeView(ft.Container):
                         self.btn_gen_a, 
                         self.btn_gen_b,
                     ],
-                    spacing=10,
+                    spacing=px(10),
                 )
             ],
         )
+
+    def set_compact_height_layout(self, enabled: bool):
+        """Keep all home-page actions reachable in short windows."""
+        enabled = bool(enabled)
+        if getattr(self, "_compact_height_layout", None) == enabled:
+            return
+        self._compact_height_layout = enabled
+
+        if enabled:
+            self.content.scroll = ft.ScrollMode.AUTO
+            self.voice_area.expand = False
+            self.voice_area.height = self.ui_scale.px(190)
+        else:
+            self.content.scroll = None
+            self.voice_area.expand = True
+            self.voice_area.height = None
+
+        self._safe_update(self.voice_area)
 
     def _toggle_expand_collapse(self, e):
         """Toggle text input expansion to cover parameters area
@@ -412,7 +436,7 @@ class HomeView(ft.Container):
             
             # 恢复固定高度
             self.text_input_wrapper.expand = False
-            self.text_input_wrapper.height = 140
+            self.text_input_wrapper.height = self.ui_scale.px(140)
             self.text_input_container.expand = False
             
             self.btn_expand_collapse.icon = ft.Icons.EXPAND_MORE
@@ -429,9 +453,9 @@ class HomeView(ft.Container):
             else:
                 # 收缩时恢复固定高度
                 self.highlighted_text_overlay.expand = False
-                self.highlighted_text_overlay.height = 140
+                self.highlighted_text_overlay.height = self.ui_scale.px(140)
                 self.highlighted_text_column.expand = False
-                overlay_content_height = 140 - 24
+                overlay_content_height = self.ui_scale.px(140 - 24)
                 self.highlighted_text_column.height = overlay_content_height
             
             # 强制重新应用当前高亮状态，避免展开后高亮丢失
@@ -594,10 +618,13 @@ class HomeView(ft.Container):
             # Create region navigation chips
             for region in regions:
                 chip = ft.Container(
-                    content=ft.Text(region, size=11, weight="w500", color="onPrimaryContainer"),
-                    padding=ft.padding.symmetric(horizontal=10, vertical=4),
+                    content=ft.Text(region, size=self.ui_scale.font(11), weight="w500", color="onPrimaryContainer"),
+                    padding=ft.padding.symmetric(
+                        horizontal=self.ui_scale.px(10),
+                        vertical=self.ui_scale.px(4),
+                    ),
                     bgcolor="primaryContainer",
-                    border_radius=12,
+                    border_radius=self.ui_scale.px(12),
                     on_click=lambda e, r=region, lv=list_ref, rp=region_positions: self._scroll_to_region_by_index(lv, rp.get(r, 0)),
                     ink=True,
                 )
@@ -620,14 +647,20 @@ class HomeView(ft.Container):
                         content=ft.Text(
                             region, 
                             weight="bold", 
-                            size=12, 
+                            size=self.ui_scale.font(12),
                             color="onSecondaryContainer",
                             text_align=ft.TextAlign.CENTER,
                         ),
                         bgcolor="secondaryContainer",
-                        padding=ft.padding.symmetric(horizontal=12, vertical=4),
-                        border_radius=15,
-                        margin=ft.margin.only(top=12, bottom=6),
+                        padding=ft.padding.symmetric(
+                            horizontal=self.ui_scale.px(12),
+                            vertical=self.ui_scale.px(4),
+                        ),
+                        border_radius=self.ui_scale.px(15),
+                        margin=ft.margin.only(
+                            top=self.ui_scale.px(12),
+                            bottom=self.ui_scale.px(6),
+                        ),
                         alignment=ft.alignment.Alignment(0, 0),
                     )
                     target_list.controls.append(section_header)
@@ -665,35 +698,35 @@ class HomeView(ft.Container):
                         trailing_content = ft.Row(
                             [
                                 ft.Container(
-                                    content=ft.Text("A", color="white", size=10, weight="bold"),
+                                    content=ft.Text("A", color="white", size=self.ui_scale.font(10), weight="bold"),
                                     bgcolor=ft.Colors.INDIGO,
-                                    padding=5,
-                                    border_radius=5,
+                                    padding=self.ui_scale.px(5),
+                                    border_radius=self.ui_scale.px(5),
                                 ),
                                 ft.Container(
-                                    content=ft.Text("B", color="white", size=10, weight="bold"),
+                                    content=ft.Text("B", color="white", size=self.ui_scale.font(10), weight="bold"),
                                     bgcolor=ft.Colors.TEAL,
-                                    padding=5,
-                                    border_radius=5,
+                                    padding=self.ui_scale.px(5),
+                                    border_radius=self.ui_scale.px(5),
                                 ),
                             ],
-                            spacing=5,
+                            spacing=self.ui_scale.px(5),
                         )
                         bg = BG_BOTH
                     elif is_right:
                         trailing_content = ft.Container(
-                            content=ft.Text("B", color="white", size=10, weight="bold"),
+                            content=ft.Text("B", color="white", size=self.ui_scale.font(10), weight="bold"),
                             bgcolor=ft.Colors.TEAL,
-                            padding=5,
-                            border_radius=5,
+                            padding=self.ui_scale.px(5),
+                            border_radius=self.ui_scale.px(5),
                         )
                         bg = BG_B
                     elif is_left:
                         trailing_content = ft.Container(
-                            content=ft.Text("A", color="white", size=10, weight="bold"),
+                            content=ft.Text("A", color="white", size=self.ui_scale.font(10), weight="bold"),
                             bgcolor=ft.Colors.INDIGO,
-                            padding=5,
-                            border_radius=5,
+                            padding=self.ui_scale.px(5),
+                            border_radius=self.ui_scale.px(5),
                         )
                         bg = BG_A
                 else:
@@ -705,7 +738,7 @@ class HomeView(ft.Container):
 
                 tile = ft.ListTile(
                     leading=ft.Icon(ft.Icons.RECORD_VOICE_OVER, color=ft.Colors.ON_SURFACE),
-                    title=ft.Text(display_name, size=14, weight="w500"),
+                    title=ft.Text(display_name, size=self.ui_scale.font(14), weight="w500"),
                     trailing=trailing_content,
                     dense=True,
                     data={
@@ -715,7 +748,7 @@ class HomeView(ft.Container):
                         "engine": item.get("engine") if isinstance(item, dict) else None,
                     },
                     on_click=self._on_voice_selected,
-                    shape=ft.RoundedRectangleBorder(radius=8),
+                    shape=ft.RoundedRectangleBorder(radius=self.ui_scale.px(8)),
                     hover_color=ft.Colors.with_opacity(0.1, "primary"),
                     bgcolor=bg
                 )
@@ -742,8 +775,8 @@ class HomeView(ft.Container):
         """Scroll to a region section by control index - more reliable for distant items"""
         try:
             # Calculate approximate offset based on index
-            # Average item height is roughly 50px (ListTile dense + section headers)
-            estimated_offset = index * 50
+            # Average item height follows the configured UI scale.
+            estimated_offset = index * self.ui_scale.px(50)
             list_view.scroll_to(offset=estimated_offset, duration=300)
             self._host_page.update()
         except Exception as e:
@@ -818,7 +851,7 @@ class HomeView(ft.Container):
         # Build overlay content
         self.highlighted_text_column.controls.clear()
         
-        FONT_SIZE = 14
+        font_size = self.ui_scale.font(14)
         word_row = ft.Row(controls=[], wrap=True, spacing=0, run_spacing=0)
         
         # With AlignmentEngine, word_timings now contains "text", "start_char", "end_char"
@@ -835,7 +868,7 @@ class HomeView(ft.Container):
             if start_char > current_char_idx:
                 between_text = original_text[current_char_idx:start_char]
                 if between_text:
-                    word_row.controls.append(ft.Text(between_text, size=FONT_SIZE))
+                    word_row.controls.append(ft.Text(between_text, size=font_size))
             
             # 2. Add the word itself
             # We use the text from original_text to ensure visual fidelity
@@ -846,9 +879,9 @@ class HomeView(ft.Container):
                  actual_text = word_info.get("text")
 
             word_container = ft.Container(
-                content=ft.Text(actual_text, size=FONT_SIZE),
+                content=ft.Text(actual_text, size=font_size),
                 padding=0,
-                border_radius=3,
+                border_radius=self.ui_scale.px(3),
                 bgcolor=None,
                 data=i, # Store index for reference
                 on_click=lambda e, idx=i: self._handle_word_click(idx),
@@ -864,7 +897,7 @@ class HomeView(ft.Container):
         if current_char_idx < len(original_text):
             remaining = original_text[current_char_idx:]
             if remaining:
-                word_row.controls.append(ft.Text(remaining, size=FONT_SIZE))
+                word_row.controls.append(ft.Text(remaining, size=font_size))
         
         self.highlighted_text_column.controls.append(word_row)
         
@@ -875,7 +908,11 @@ class HomeView(ft.Container):
             self.highlighted_text_column.expand = True
             self.highlighted_text_column.height = None
         else:
-            overlay_content_height = self._saved_wrapper_height - 24 if self._saved_wrapper_height else None
+            overlay_content_height = (
+                self._saved_wrapper_height - self.ui_scale.px(24)
+                if self._saved_wrapper_height
+                else None
+            )
             self.highlighted_text_column.height = overlay_content_height
             self.highlighted_text_overlay.height = self._saved_wrapper_height
             self.highlighted_text_overlay.expand = False

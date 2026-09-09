@@ -1,6 +1,12 @@
 import flet as ft
 from utils.i18n import i18n
 from config.constants import APP_VERSION, GITHUB_URL, DATA_DIR
+from config.ui_scale import (
+    DEFAULT_UI_SCALE_PERCENT,
+    SUPPORTED_UI_SCALE_PERCENTS,
+    UiScale,
+    normalize_ui_scale_percent,
+)
 import webbrowser
 import os
 
@@ -14,14 +20,17 @@ def create_dropdown(**kwargs):
 
 
 class SettingsView(ft.Container):
-    def __init__(self, page: ft.Page):
+    def __init__(self, page: ft.Page, ui_scale: UiScale | None = None):
         super().__init__()
         self._host_page = page
+        self.ui_scale = ui_scale or UiScale()
+        px = self.ui_scale.px
+        font = self.ui_scale.font
         self.expand = True
-        self.padding = 20
+        self.padding = px(20)
         
         # Header
-        self.header = ft.Text(i18n.get("tab_settings"), size=24, weight="bold")
+        self.header = ft.Text(i18n.get("tab_settings"), size=font(24), weight="bold")
         
         # Components
         # 1. Appearance
@@ -37,8 +46,20 @@ class SettingsView(ft.Container):
                 ft.dropdown.Option("zh", "中文"),
                 ft.dropdown.Option("en", "English"),
             ],
-            width=120,
+            width=px(120),
+            text_size=font(14),
             on_event=self._on_language_change,
+        )
+
+        self.ui_scale_dropdown = create_dropdown(
+            value=str(DEFAULT_UI_SCALE_PERCENT),
+            options=[
+                ft.dropdown.Option(str(percent), f"{percent}%")
+                for percent in SUPPORTED_UI_SCALE_PERCENTS
+            ],
+            width=px(120),
+            text_size=font(14),
+            on_event=self._save_settings,
         )
         
         # 2. Behavior
@@ -55,19 +76,20 @@ class SettingsView(ft.Container):
                 ft.dropdown.Option("edge_online", i18n.get("tts_engine_edge_online")),
                 ft.dropdown.Option("local_kokoro", i18n.get("tts_engine_local_kokoro")),
             ],
-            width=220,
+            width=px(280),
+            text_size=font(14),
             on_event=self._on_tts_engine_change,
         )
 
         self.local_engine_status_value = ft.Text(
             i18n.get("local_engine_status_not_ready"),
-            size=12,
+            size=font(12),
             color=ft.Colors.OUTLINE,
             selectable=True,
         )
-        self.local_engine_path_text = ft.Text("", size=12, color=ft.Colors.OUTLINE, selectable=True)
+        self.local_engine_path_text = ft.Text("", size=font(12), color=ft.Colors.OUTLINE, selectable=True)
 
-        self.local_engine_busy_ring = ft.ProgressRing(width=16, height=16, visible=False)
+        self.local_engine_busy_ring = ft.ProgressRing(width=px(16), height=px(16), visible=False)
 
         self.local_engine_auto_fallback_switch = ft.Switch(
             label=i18n.get("local_engine_auto_fallback_label"),
@@ -81,7 +103,8 @@ class SettingsView(ft.Container):
                 ft.dropdown.Option("official", i18n.get("local_engine_download_source_official")),
                 ft.dropdown.Option("mirror", i18n.get("local_engine_download_source_mirror")),
             ],
-            width=140,
+            width=px(140),
+            text_size=font(14),
             on_event=self._save_settings,
         )
 
@@ -154,7 +177,8 @@ class SettingsView(ft.Container):
             hint_text="750",
             value="750",
             keyboard_type=ft.KeyboardType.NUMBER,
-            width=100,
+            width=px(100),
+            text_size=font(14),
             on_blur=self._on_window_size_changed
         )
         
@@ -163,7 +187,8 @@ class SettingsView(ft.Container):
             hint_text="850",
             value="850",
             keyboard_type=ft.KeyboardType.NUMBER,
-            width=100,
+            width=px(100),
+            text_size=font(14),
             on_blur=self._on_window_size_changed
         )
         
@@ -177,7 +202,8 @@ class SettingsView(ft.Container):
             label=i18n.get("settings_max_files_label"),
             value="20",
             keyboard_type=ft.KeyboardType.NUMBER,
-            width=200,
+            width=px(200),
+            text_size=font(14),
             on_blur=self._save_settings
         )
         
@@ -188,26 +214,27 @@ class SettingsView(ft.Container):
         )
         
         # Section headers as instance variables for dynamic language update
-        self.section_appearance_text = ft.Text(i18n.get("section_appearance"), weight="bold", size=16)
-        self.language_label_text = ft.Text(i18n.get("language_label"), size=14)
-        self.section_playback_text = ft.Text(i18n.get("section_playback"), weight="bold", size=16)
-        self.section_tts_engine_text = ft.Text(i18n.get("section_tts_engine"), weight="bold", size=16)
-        self.tts_engine_label_text = ft.Text(i18n.get("tts_engine_label"), size=14)
-        self.local_engine_status_label_text = ft.Text(i18n.get("local_engine_status_label"), size=14, color="grey")
-        self.local_engine_source_label_text = ft.Text(i18n.get("local_engine_download_source_label"), size=14)
-        self.section_voice_mode_text = ft.Text(i18n.get("section_voice_mode"), weight="bold", size=16)
-        self.section_selection_mode_text = ft.Text(i18n.get("section_selection_mode"), weight="bold", size=16)
-        self.section_copy_mode_text = ft.Text(i18n.get("section_copy_mode"), weight="bold", size=16)
-        self.section_window_text = ft.Text(i18n.get("section_window"), weight="bold", size=16)
-        self.window_size_label_text = ft.Text(i18n.get("window_size_label"), size=14, color="grey")
-        self.section_storage_text = ft.Text(i18n.get("section_storage"), weight="bold", size=16)
-        self.section_maintenance_text = ft.Text(i18n.get("section_maintenance"), weight="bold", size=16)
+        self.section_appearance_text = ft.Text(i18n.get("section_appearance"), weight="bold", size=font(16))
+        self.language_label_text = ft.Text(i18n.get("language_label"), size=font(14))
+        self.ui_scale_label_text = ft.Text(i18n.get("ui_scale_label"), size=font(14))
+        self.section_playback_text = ft.Text(i18n.get("section_playback"), weight="bold", size=font(16))
+        self.section_tts_engine_text = ft.Text(i18n.get("section_tts_engine"), weight="bold", size=font(16))
+        self.tts_engine_label_text = ft.Text(i18n.get("tts_engine_label"), size=font(14))
+        self.local_engine_status_label_text = ft.Text(i18n.get("local_engine_status_label"), size=font(14), color="grey")
+        self.local_engine_source_label_text = ft.Text(i18n.get("local_engine_download_source_label"), size=font(14))
+        self.section_voice_mode_text = ft.Text(i18n.get("section_voice_mode"), weight="bold", size=font(16))
+        self.section_selection_mode_text = ft.Text(i18n.get("section_selection_mode"), weight="bold", size=font(16))
+        self.section_copy_mode_text = ft.Text(i18n.get("section_copy_mode"), weight="bold", size=font(16))
+        self.section_window_text = ft.Text(i18n.get("section_window"), weight="bold", size=font(16))
+        self.window_size_label_text = ft.Text(i18n.get("window_size_label"), size=font(14), color="grey")
+        self.section_storage_text = ft.Text(i18n.get("section_storage"), weight="bold", size=font(16))
+        self.section_maintenance_text = ft.Text(i18n.get("section_maintenance"), weight="bold", size=font(16))
         self.check_updates_button = ft.OutlinedButton(
             text=i18n.get("check_for_updates"),
             icon=ft.Icons.OPEN_IN_NEW,
             on_click=lambda _: webbrowser.open(GITHUB_URL)
         )
-        self.version_text = ft.Text(f"Version {APP_VERSION}", size=12, color="grey", text_align=ft.TextAlign.CENTER)
+        self.version_text = ft.Text(f"Version {APP_VERSION}", size=font(12), color="grey", text_align=ft.TextAlign.CENTER)
 
         # Dialogs
         self.local_engine_manual_text = ft.TextField(
@@ -221,7 +248,7 @@ class SettingsView(ft.Container):
             title=ft.Text(i18n.get("local_engine_manual_title")),
             content=ft.Column(
                 [
-                    ft.Text(i18n.get("local_engine_manual_hint"), size=12, color=ft.Colors.OUTLINE),
+                    ft.Text(i18n.get("local_engine_manual_hint"), size=font(12), color=ft.Colors.OUTLINE),
                     self.local_engine_manual_text,
                 ],
                 tight=True,
@@ -254,55 +281,64 @@ class SettingsView(ft.Container):
                 ft.Row([
                     self.language_label_text,
                     self.language_dropdown
-                ], spacing=10, vertical_alignment=ft.CrossAxisAlignment.CENTER),
-                ft.Divider(height=10, color="transparent"),
+                ], spacing=px(10), wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                ft.Row([
+                    self.ui_scale_label_text,
+                    self.ui_scale_dropdown
+                ], spacing=px(10), wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                ft.Divider(height=px(10), color="transparent"),
                 
                 self.section_playback_text,
                 self.autoplay_switch,
-                ft.Divider(height=10, color="transparent"),
+                ft.Divider(height=px(10), color="transparent"),
 
                 self.section_tts_engine_text,
                 ft.Row(
                     [self.tts_engine_label_text, self.tts_engine_dropdown],
-                    spacing=10,
+                    spacing=px(10),
+                    wrap=True,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
                 ft.Row(
                     [self.local_engine_status_label_text, self.local_engine_status_value, self.local_engine_busy_ring],
-                    spacing=10,
+                    spacing=px(10),
+                    wrap=True,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
                 self.local_engine_path_text,
                 self.local_engine_auto_fallback_switch,
                 ft.Row(
                     [self.local_engine_source_label_text, self.local_engine_source_dropdown],
-                    spacing=10,
+                    spacing=px(10),
+                    wrap=True,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
                 ft.Row(
                     [self.local_engine_install_button, self.local_engine_healthcheck_button],
-                    spacing=10,
+                    spacing=px(10),
+                    wrap=True,
                 ),
                 ft.Row(
                     [self.local_engine_manual_button, self.local_engine_open_dir_button],
-                    spacing=10,
+                    spacing=px(10),
+                    wrap=True,
                 ),
                 self.local_engine_uninstall_button,
-                ft.Divider(height=10, color="transparent"),
+                ft.Divider(height=px(10), color="transparent"),
 
                 self.section_voice_mode_text,
                 self.dual_voice_mode_switch,
-                ft.Divider(height=10, color="transparent"),
+                ft.Divider(height=px(10), color="transparent"),
 
                 self.section_selection_mode_text,
                 self.selection_switch,
                 self.selection_dual_mode_switch,
-                ft.Divider(height=10, color="transparent"),
+                ft.Divider(height=px(10), color="transparent"),
 
                 self.section_copy_mode_text,
                 self.ctrl_c_switch,
                 self.copy_file_switch,
-                ft.Divider(height=10, color="transparent"),
+                ft.Divider(height=px(10), color="transparent"),
                 
                 self.section_window_text,
                 self.tray_switch,
@@ -310,21 +346,22 @@ class SettingsView(ft.Container):
                 ft.Row(
                     [
                         self.window_width_input,
-                        ft.Text("×", size=20),
+                        ft.Text("×", size=font(20)),
                         self.window_height_input,
                         self.reset_size_button
                     ],
                     alignment=ft.MainAxisAlignment.START,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                    spacing=10
+                    spacing=px(10),
+                    wrap=True,
                 ),
-                ft.Divider(height=10, color="transparent"),
+                ft.Divider(height=px(10), color="transparent"),
                 
                 self.section_storage_text,
                 ft.Row([
                     self.max_files_input,
                     self.open_data_dir_button
-                ], spacing=10, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                ], spacing=px(10), wrap=True, vertical_alignment=ft.CrossAxisAlignment.CENTER),
                 
                 ft.Divider(),
                 self.section_maintenance_text,
@@ -546,7 +583,8 @@ class SettingsView(ft.Container):
                 "monitor_selection_enabled": selection_enabled,
                 "copy_path_enabled": self.copy_file_switch.value,
                 "minimize_to_tray": self.tray_switch.value,
-                "appearance_mode": "dark" if self.theme_switch.value else "light"
+                "appearance_mode": "dark" if self.theme_switch.value else "light",
+                "ui_scale_percent": normalize_ui_scale_percent(self.ui_scale_dropdown.value),
             }
             self.on_save_settings(settings)
 
@@ -571,6 +609,11 @@ class SettingsView(ft.Container):
         self.copy_file_switch.value = settings_dict.get("copy_path_enabled", True)
         self.tray_switch.value = settings_dict.get("minimize_to_tray", False)
         self.theme_switch.value = settings_dict.get("appearance_mode", "light") == "dark"
+
+        ui_scale_percent = normalize_ui_scale_percent(
+            settings_dict.get("ui_scale_percent", DEFAULT_UI_SCALE_PERCENT)
+        )
+        self.ui_scale_dropdown.value = str(ui_scale_percent)
         
         # Window size
         self.window_width_input.value = str(settings_dict.get("window_width", 750))
@@ -654,6 +697,7 @@ class SettingsView(ft.Container):
         self.version_text.value = f"Version {APP_VERSION}"
         self.section_appearance_text.value = i18n.get("section_appearance")
         self.language_label_text.value = i18n.get("language_label")
+        self.ui_scale_label_text.value = i18n.get("ui_scale_label")
         self.section_playback_text.value = i18n.get("section_playback")
         self.section_voice_mode_text.value = i18n.get("section_voice_mode")
         self.section_selection_mode_text.value = i18n.get("section_selection_mode")

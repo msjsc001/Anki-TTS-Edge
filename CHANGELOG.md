@@ -1,5 +1,12 @@
 # 更新日志 / Changelog
 
+## v2.9.4 (2026-09-09)
+
+### ✨ 新功能 / Features
+
+- **应用内界面缩放**：设置页新增 `80% / 90% / 100% / 110% / 120%` 五档缩放，统一调整文字、图标、间距和关键固定区域；短窗口会启用可滚动紧凑布局，设置在下次启动时生效。
+  **In-app interface scaling**: Added `80% / 90% / 100% / 110% / 120%` presets for text, icons, spacing, and key fixed regions. Short windows use a scrollable compact layout, and the setting applies on the next launch.
+
 ## v2.9.3 (2026-08-09)
 
 ### 🔧 修复 / Fixes

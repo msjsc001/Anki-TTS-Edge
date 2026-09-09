@@ -6,6 +6,8 @@ from config.constants import (
     SETTINGS_FILE, DEFAULT_MAX_AUDIO_FILES, DEFAULT_VOICE,
     DEFAULT_APPEARANCE_MODE, DEFAULT_CUSTOM_COLOR
 )
+from config.ui_scale import DEFAULT_UI_SCALE_PERCENT, normalize_ui_scale_percent
+
 
 class SettingsManager:
     def __init__(self):
@@ -42,6 +44,7 @@ class SettingsManager:
             "rate": 0,
             "volume": 0,
             "appearance_mode": DEFAULT_APPEARANCE_MODE,
+            "ui_scale_percent": DEFAULT_UI_SCALE_PERCENT,
             "language_filter_left": "zh",
             "language_filter_right": "en",
             "custom_theme_color": DEFAULT_CUSTOM_COLOR
@@ -88,6 +91,9 @@ class SettingsManager:
                     self.settings["language"] = "zh"
                 if self.settings.get("appearance_mode") not in ["light", "dark"]:
                     self.settings["appearance_mode"] = DEFAULT_APPEARANCE_MODE
+                self.settings["ui_scale_percent"] = normalize_ui_scale_percent(
+                    self.settings.get("ui_scale_percent")
+                )
 
                 if not self.settings.get("selected_voice_right"):
                      self.settings["selected_voice_right"] = self.settings.get("selected_voice_left", DEFAULT_VOICE)
@@ -113,10 +119,15 @@ class SettingsManager:
         return self.settings.get(key, default)
 
     def set(self, key, value):
+        if key == "ui_scale_percent":
+            value = normalize_ui_scale_percent(value)
         self.settings[key] = value
 
     def save_settings(self):
         try:
+            self.settings["ui_scale_percent"] = normalize_ui_scale_percent(
+                self.settings.get("ui_scale_percent")
+            )
             directory = os.path.dirname(os.path.abspath(SETTINGS_FILE))
             os.makedirs(directory, exist_ok=True)
             fd, temporary_path = tempfile.mkstemp(prefix=".settings-", suffix=".tmp", dir=directory)

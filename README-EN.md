@@ -29,7 +29,7 @@ Supports Microsoft Edge online voices, Local Kokoro, dual voices, selection/copy
 - **Synchronized reading and point-read**: Online voices support timestamp highlighting, sentence navigation, and precise seeking; offline point-read works through re-synthesis.
 - **Audio file clipboard support**: Paste a generated MP3 directly into Anki and other applications.
 - **History and cleanup**: Replay, delete, or clear history while reclaiming orphaned application audio.
-- **Desktop integration**: Includes system tray, always-on-top, autoplay, and light/dark themes.
+- **Desktop integration**: Includes system tray, always-on-top, autoplay, light/dark themes, and five interface-scale presets.
 - **Chinese and English UI**: Switch the interface language at any time; settings persist automatically.
 
 ## Download and Run
@@ -37,7 +37,7 @@ Supports Microsoft Edge online voices, Local Kokoro, dual voices, selection/copy
 ### Option 1: Download the Windows package (recommended)
 
 1. Open the [latest Release](https://github.com/EllisMorrow/Anki-TTS-Edge/releases/latest).
-2. Download `Anki-TTS-Edge-v2.9.3-windows-amd64.zip`.
+2. Download `Anki-TTS-Edge-v2.9.4-windows-amd64.zip`.
 3. Extract the complete ZIP, then run `Anki-TTS-Edge.exe`.
 
 > Keep the extracted folder together. Do not move only the EXE.
@@ -63,6 +63,7 @@ python -m venv .venv
 5. **Playback and point-read**: Online mode supports synchronized highlighting, sentence navigation, and text seeking. Offline mode re-synthesizes from the selected position.
 6. **Manage history**: Replay or delete entries on the History page. Clear All also removes associated audio.
 7. **Install the offline engine**: Select Offline under `Settings → TTS Engine`, click Download & Install, then run Re-validate when installation finishes.
+8. **Resize the interface**: Choose `80%` through `120%` under `Settings → Appearance → Interface Scale`, then restart the app. Window dimensions remain independently configurable.
 
 User settings, history, audio, and the optional offline engine are stored under:
 
@@ -70,14 +71,10 @@ User settings, history, audio, and the optional offline engine are stored under:
 %APPDATA%/Anki-TTS-Edge/
 ```
 
-## What's New in v2.9.3
+## What's New in v2.9.4
 
-- Hardened offline-engine downloads, SHA-256 validation, safe extraction, manifest trust, and uninstall boundaries.
-- Made settings, history, and voice-cache writes atomic; history deletion is contained to the application audio directory.
-- Added generated WAV cleanup and corrected offline cache identity.
-- Replaced the pixelated icon with an anti-aliased three-color design, including a 1024px master and nine Windows ICO sizes.
-- Completed GPL-3.0-only and third-party notices, pinned direct dependencies, and added Windows CI plus Dependabot.
-- Flet and flet-desktop remain on the validated 0.28.3 release until a dedicated migration is completed.
+- Added `80% / 90% / 100% / 110% / 120%` interface-scale presets for text, icons, spacing, and key fixed regions.
+- Short windows now use a scrollable compact layout; the saved scale takes effect on the next launch.
 
 See [CHANGELOG.md](CHANGELOG.md) for the full history.
 
