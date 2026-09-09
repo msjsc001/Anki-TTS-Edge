@@ -11,7 +11,7 @@ if str(APP_ROOT) not in sys.path:
 
 import flet as ft
 
-from config.ui_scale import SUPPORTED_UI_SCALE_PERCENTS, UiScale
+from config.ui_scale import MAX_UI_SCALE_PERCENT, MIN_UI_SCALE_PERCENT, UiScale
 from ui.history_view import HistoryView
 from ui.home_view import HomeView
 from ui.settings_view import SettingsView
@@ -22,15 +22,15 @@ def dummy_page():
 
 
 class UiScaleTests(unittest.TestCase):
-    def test_supported_presets_scale_dimensions_and_fonts(self):
-        for percent in SUPPORTED_UI_SCALE_PERCENTS:
+    def test_supported_range_scales_dimensions_and_fonts(self):
+        for percent in (MIN_UI_SCALE_PERCENT, 95, MAX_UI_SCALE_PERCENT):
             with self.subTest(percent=percent):
                 scale = UiScale(percent)
                 self.assertEqual(scale.px(20), 20 * percent / 100)
                 self.assertEqual(scale.font(14), 14 * percent / 100)
 
     def test_invalid_values_use_100_percent(self):
-        for value in (None, True, 80.5, 95, "invalid"):
+        for value in (None, True, 80.5, 29, 201, "invalid"):
             with self.subTest(value=value):
                 self.assertEqual(UiScale(value).percent, 100)
 
@@ -49,7 +49,24 @@ class UiScaleTests(unittest.TestCase):
         self.assertEqual(history.header_text.size, compact.font(24))
         self.assertEqual(settings.padding, compact.px(20))
         self.assertEqual(settings.header.size, compact.font(24))
-        self.assertEqual(settings.ui_scale_dropdown.width, compact.px(120))
+        self.assertEqual(settings.ui_scale_input.width, compact.px(120, minimum=90))
+        self.assertEqual(settings.ui_scale_input.keyboard_type, ft.KeyboardType.NUMBER)
+        self.assertEqual(settings.ui_scale_input.hint_text, "30-200")
+        self.assertEqual(settings.ui_scale_input.suffix_text, "%")
+
+        minimum_settings = SettingsView(dummy_page(), UiScale(MIN_UI_SCALE_PERCENT))
+        self.assertEqual(minimum_settings.ui_scale_input.width, 90)
+
+    def test_settings_accepts_and_saves_a_custom_scale(self):
+        settings = SettingsView(dummy_page())
+        saved_settings = []
+        settings.on_save_settings = saved_settings.append
+        settings._on_ui_scale_input_changed(SimpleNamespace(data="137", control=None))
+
+        settings._on_ui_scale_changed(None)
+
+        self.assertEqual(settings.ui_scale_input.value, "137")
+        self.assertEqual(saved_settings[-1]["ui_scale_percent"], 137)
 
     def test_dynamic_voice_history_and_highlight_controls_are_scaled(self):
         scale = UiScale(120)

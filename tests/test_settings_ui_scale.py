@@ -54,8 +54,8 @@ class SettingsUiScaleTests(unittest.TestCase):
         self.assertEqual(manager.get("ui_scale_percent"), 100)
         self.assertIsInstance(manager.get("ui_scale_percent"), int)
 
-    def test_supported_legacy_representations_are_normalized_to_integer(self):
-        for stored_value, expected in (("80", 80), (90.0, 90), (110, 110)):
+    def test_in_range_representations_are_normalized_to_integer(self):
+        for stored_value, expected in (("30", 30), (95.0, 95), (137, 137), ("200", 200)):
             with self.subTest(stored_value=stored_value):
                 self.write_settings(stored_value)
 
@@ -65,7 +65,7 @@ class SettingsUiScaleTests(unittest.TestCase):
                 self.assertIsInstance(manager.get("ui_scale_percent"), int)
 
     def test_invalid_scale_values_fall_back_to_default(self):
-        for stored_value in (None, True, "", "95", 95, 80.5, [], {}):
+        for stored_value in (None, True, "", 29, "201", 80.5, [], {}):
             with self.subTest(stored_value=stored_value):
                 self.write_settings(stored_value)
 
@@ -75,14 +75,14 @@ class SettingsUiScaleTests(unittest.TestCase):
 
     def test_set_and_save_keep_persisted_scale_in_supported_range(self):
         manager = self.module.SettingsManager()
-        manager.set("ui_scale_percent", "120")
+        manager.set("ui_scale_percent", "137")
         manager.save_settings()
 
         saved = json.loads(self.settings_file.read_text(encoding="utf-8"))
-        self.assertEqual(saved["ui_scale_percent"], 120)
+        self.assertEqual(saved["ui_scale_percent"], 137)
         self.assertIsInstance(saved["ui_scale_percent"], int)
 
-        manager.settings["ui_scale_percent"] = 125
+        manager.settings["ui_scale_percent"] = 201
         manager.save_settings()
         saved = json.loads(self.settings_file.read_text(encoding="utf-8"))
         self.assertEqual(saved["ui_scale_percent"], 100)
